@@ -24,7 +24,7 @@
           <div class="group-header">
             <div class="group-info">
               <span class="group-time">탐지 시간: {{ formatTime(group.timestamp) }}</span>
-              <span class="group-criteria">기준: 변동성 {{ group.criteriaVolatility }}% | 거래량 {{ group.criteriaVolume }}배</span>
+              <span class="group-criteria">기준: {{ group.timeframeLabel }} | 변동성 {{ group.criteriaVolatility }}% | 거래량 {{ group.criteriaVolume }}배</span>
             </div>
             <span class="group-count">{{ group.items.length}}개 코인</span>
           </div>
@@ -147,7 +147,7 @@ export default {
     async checkDetectedData() {
       try {
         const API_BASE = 'http://localhost:8080/api'
-        const response = await fetch(`${API_BASE}/coins/detected-group?exchangeType=future`)
+        const response = await fetch(`${API_BASE}/coins/detected-group?timeframeLabel=1m&exchangeType=future`)
         const data = await response.json()
         
         if (data && data.coins && data.coins.length > 0) {
@@ -157,6 +157,7 @@ export default {
             const newGroup = {
               id: groupId,
               timestamp: new Date(data.detectedAt),
+              timeframeLabel: data.timeframeLabel,
               criteriaVolatility: data.criteriaVolatility,
               criteriaVolume: data.criteriaVolume,
               items: data.coins.map(item => ({
@@ -188,7 +189,17 @@ export default {
     },
     
     formatTime(timestamp) {
-      return new Date(timestamp).toLocaleTimeString('ko-KR')
+      const date = new Date(timestamp)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dayName = dayNames[date.getDay()]
+      const hour = String(date.getHours()).padStart(2, '0')
+      const minute = String(date.getMinutes()).padStart(2, '0')
+      const second = String(date.getSeconds()).padStart(2, '0')
+      
+      return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
     },
     
     formatVolume(volume) {
