@@ -24,14 +24,14 @@
           <div class="group-header">
             <div class="group-info">
               <span class="group-time">탐지 시간: {{ formatTime(group.timestamp) }}</span>
-              <span class="group-criteria">기준: {{ group.timeframeLabel }} | 변동성 {{ group.criteriaVolatility }}% | 거래량 {{ group.criteriaVolume }}배</span>
+              <span class="group-criteria">{{ group.exchangeName }} {{ group.exchangeType }} | {{ group.timeframeLabel }} | 변동성 {{ group.criteriaVolatility }}% | 거래량 {{ group.criteriaVolume }}배</span>
             </div>
             <span class="group-count">{{ group.items.length}}개 코인</span>
           </div>
           <div class="group-items">
             <div v-for="item in group.items" :key="item.id" class="detected-item">
               <div class="detection-info">
-                <div class="coin-symbol">{{ item.symbol }} <span class="exchange-badge">{{ item.exchangeType }}</span></div>
+                <div class="coin-symbol">{{ item.symbol }}</div>
                 <div class="detection-metrics">
                   <span class="metric-item">📈 변동성: <strong>{{ item.change || 0 }}%</strong></span>
                   <span class="metric-separator">|</span>
@@ -147,7 +147,7 @@ export default {
     async checkDetectedData() {
       try {
         const API_BASE = 'http://localhost:8080/api'
-        const response = await fetch(`${API_BASE}/coins/detected-group?timeframeLabel=1m&exchangeType=future`)
+        const response = await fetch(`${API_BASE}/coins/detected-group?exchangeName=binance&timeframeLabel=1m&exchangeType=future`)
         const data = await response.json()
         
         if (data && data.coins && data.coins.length > 0) {
@@ -157,6 +157,8 @@ export default {
             const newGroup = {
               id: groupId,
               timestamp: new Date(data.detectedAt),
+              exchangeName: data.exchangeName,
+              exchangeType: data.exchangeType,
               timeframeLabel: data.timeframeLabel,
               criteriaVolatility: data.criteriaVolatility,
               criteriaVolume: data.criteriaVolume,
@@ -166,7 +168,6 @@ export default {
                 change: item.volatility || 0,
                 volume: item.volume || 0,
                 timestamp: new Date(item.createdAt || Date.now()),
-                exchangeType: item.exchangeType || 'UNKNOWN'
               }))
             }
             
@@ -200,21 +201,9 @@ export default {
       const second = String(date.getSeconds()).padStart(2, '0')
       
       return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
-    },
-    
-    formatVolume(volume) {
-      if (!volume) return 'N/A'
-      if (volume >= 1000000) {
-        return (volume / 1000000).toFixed(1) + 'M'
-      } else if (volume >= 1000) {
-        return (volume / 1000).toFixed(1) + 'K'
-      }
-      return volume.toFixed(0)
-    },
-    
-    getDetectionTypeClass(type) {
-      return 'alert' // 모든 탐지된 코인은 알림으로 처리
     }
+    
+
   }
 }
 </script>
