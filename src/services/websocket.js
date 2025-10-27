@@ -9,6 +9,7 @@ class WebSocketService {
     this.reconnectAttempts = 0
     this.maxReconnectAttempts = 5
     this.callbacks = new Map()
+    this.currentSubscription = null
   }
 
   connect() {
@@ -43,8 +44,18 @@ class WebSocketService {
   }
 
   subscribeToDetection() {
+    this.subscribeToTopic('/topic/detection/5m')
+  }
+  
+  subscribeToTopic(topic) {
     if (this.stompClient && this.connected) {
-      this.stompClient.subscribe('/topic/detection', (message) => {
+      // 기존 구독 해제
+      if (this.currentSubscription) {
+        this.currentSubscription.unsubscribe()
+      }
+      
+      // 새 토픽 구독
+      this.currentSubscription = this.stompClient.subscribe(topic, (message) => {
         try {
           const detection = JSON.parse(message.body)
           console.log('탐지 알림 수신:', detection)
@@ -55,6 +66,8 @@ class WebSocketService {
           console.error('탐지 메시지 파싱 실패:', error)
         }
       })
+      
+      console.log(`구독 전환: ${topic}`)
     }
   }
 

@@ -11,7 +11,17 @@
     <!-- 탐지된 데이터 -->
     <div class="card detection-section">
       <div class="section-header">
-        <h2>🚨 실시간 탐지 데이터</h2>
+        <div class="header-left">
+          <h2>🚨 실시간 탐지 데이터</h2>
+          <select v-model="selectedTimeframe" @change="changeTimeframe" class="timeframe-select">
+            <option value="1m">1분봉</option>
+            <option value="5m">5분봉</option>
+            <option value="15m">15분봉</option>
+            <option value="1h">1시간봉</option>
+            <option value="4h">4시간봉</option>
+            <option value="1d">1일봉</option>
+          </select>
+        </div>
         <div class="status-indicator">
           <span class="status-dot" :class="{ active: isConnected }"></span>
           <span>{{ isConnected ? '실시간 모니터링 중' : '연결 끊김' }}</span>
@@ -57,9 +67,9 @@
     <div v-if="showChartModal" class="modal-overlay" @click="closeChartModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ selectedSymbol }} 차트 ({{ selectedTimeframe }}분봉)</h3>
+          <h3>{{ selectedSymbol }} 차트 ({{ chartTimeframe }}분봉)</h3>
           <div class="modal-info">
-            <span class="timeframe-badge">{{ getTimeframeLabel(selectedTimeframe) }}</span>
+            <span class="timeframe-badge">{{ getTimeframeLabel(chartTimeframe) }}</span>
             <span class="countdown-display">다음 봉: {{ countdownText }}</span>
           </div>
           <button class="close-btn" @click="closeChartModal">×</button>
@@ -86,11 +96,12 @@ export default {
       processedIds: new Set(),
       showChartModal: false,
       selectedSymbol: '',
-      selectedTimeframe: '1',
+      chartTimeframe: '1',
       selectedExchangeType: '',
       popupWidget: null,
       countdownInterval: null,
-      countdownText: '00:00'
+      countdownText: '00:00',
+      selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m'
     }
   },
   
@@ -186,7 +197,7 @@ export default {
 
     openChartModal(symbol, timeframeLabel, exchangeType) {
       this.selectedSymbol = symbol
-      this.selectedTimeframe = this.convertTimeframeToInterval(timeframeLabel)
+      this.chartTimeframe = this.convertTimeframeToInterval(timeframeLabel)
       this.selectedExchangeType = exchangeType
       this.showChartModal = true
       this.countdownText = '00:00'
@@ -219,7 +230,7 @@ export default {
         width: '100%',
         height: 400,
         symbol: `BINANCE:${this.selectedSymbol}${symbolSuffix}`,
-        interval: this.selectedTimeframe,
+        interval: this.chartTimeframe,
         timezone: 'Asia/Seoul',
         theme: theme,
         style: '1',
@@ -250,6 +261,7 @@ export default {
           this.isConnected = true
           this.lastCheck = new Date().toLocaleTimeString()
           console.log('WebSocket 연결 성공')
+          this.subscribeToTimeframe(this.selectedTimeframe)
         })
         
         websocketService.onDetection((detection) => {
@@ -263,6 +275,19 @@ export default {
         
         websocketService.connect()
       })
+    },
+    
+    subscribeToTimeframe(timeframe) {
+      import('../services/websocket.js').then(({ websocketService }) => {
+        websocketService.subscribeToTopic(`/topic/detection/${timeframe}`)
+      })
+    },
+    
+    changeTimeframe() {
+      localStorage.setItem('selectedTimeframe', this.selectedTimeframe)
+      this.detectedGroups = []
+      this.processedIds.clear()
+      this.subscribeToTimeframe(this.selectedTimeframe)
     },
     
     handleDetectionNotification(detection) {
@@ -407,7 +432,7 @@ export default {
     startCustomCountdown() {
       const updateCountdown = () => {
         const now = new Date()
-        const intervalMs = this.getIntervalInMs(this.selectedTimeframe)
+        const intervalMs = this.getIntervalInMs(this.chartTimeframe)
         const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
         const remaining = nextCandle - now
         
@@ -449,7 +474,7 @@ export default {
     startHeaderCountdown() {
       const updateHeaderCountdown = () => {
         const now = new Date()
-        const intervalMs = this.getIntervalInMs(this.selectedTimeframe)
+        const intervalMs = this.getIntervalInMs(this.chartTimeframe)
         const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
         const remaining = nextCandle - now
         
@@ -497,6 +522,33 @@ export default {
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.header-left h2 {
+  margin: 0;
+}
+
+.timeframe-select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.timeframe-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .status-indicator {
@@ -878,6 +930,17 @@ export default {
 
 :global(#app.dark-mode) .no-detection-text {
   color: #10b981;
+}
+
+:global(#app.dark-mode) .timeframe-select {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+
+:global(#app.dark-mode) .timeframe-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 :global(#app.dark-mode) .detected-list::-webkit-scrollbar-track {
