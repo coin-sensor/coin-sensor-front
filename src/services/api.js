@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8080/api'
+import { API_CONFIG } from '../config'
+
+const API_BASE_URL = API_CONFIG.API_URL
 
 export const apiService = {
   // 코인 관련 API

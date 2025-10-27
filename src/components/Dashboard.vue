@@ -31,7 +31,7 @@
           <div class="group-items">
             <div v-for="item in group.items" :key="item.id" class="detected-item">
               <div class="detection-info">
-                <div class="coin-symbol">{{ item.symbol }}</div>
+                <div class="coin-symbol clickable" @click="openChartModal(item.symbol)">{{ item.symbol }}</div>
                 <div class="detection-metrics">
                   <span class="metric-item">📈 변동성: <strong>{{ item.change || 0 }}%</strong></span>
                   <span class="metric-separator">|</span>
@@ -52,6 +52,19 @@
         <div class="no-detection-subtext">시스템이 정상적으로 모니터링 중입니다</div>
       </div>
     </div>
+
+    <!-- 차트 팝업 모달 -->
+    <div v-if="showChartModal" class="modal-overlay" @click="closeChartModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ selectedSymbol }} 차트</h3>
+          <button class="close-btn" @click="closeChartModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div id="popup_tradingview_chart"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -64,9 +77,12 @@ export default {
       isConnected: true,
       lastCheck: new Date().toLocaleTimeString(),
       detectedGroups: [],
-      checkInterval: null,
+
       tradingViewWidget: null,
-      processedIds: new Set()
+      processedIds: new Set(),
+      showChartModal: false,
+      selectedSymbol: '',
+      popupWidget: null
     }
   },
   
@@ -83,13 +99,12 @@ export default {
   },
   mounted() {
     this.initTradingView()
-    this.startDetectionCheck()
+    this.initWebSocket()
+    this.requestNotificationPermission()
   },
   
   beforeUnmount() {
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval)
-    }
+    this.disconnectWebSocket()
   },
   
   methods: {
@@ -137,57 +152,7 @@ export default {
       }
     },
     
-    startDetectionCheck() {
-      this.checkDetectedData()
-      this.checkInterval = setInterval(() => {
-        this.checkDetectedData()
-      }, 5000) // 5초마다 체크
-    },
-    
-    async checkDetectedData() {
-      try {
-        const API_BASE = 'http://localhost:8080/api'
-        const response = await fetch(`${API_BASE}/coins/detected-group?exchangeName=binance&timeframeLabel=1m&exchangeType=future`)
-        const data = await response.json()
-        
-        if (data && data.coins && data.coins.length > 0) {
-          const groupId = `${data.detectedAt}_${data.criteriaVolatility}_${data.criteriaVolume}`
-          
-          if (!this.processedIds.has(groupId)) {
-            const newGroup = {
-              id: groupId,
-              timestamp: new Date(data.detectedAt),
-              exchangeName: data.exchangeName,
-              exchangeType: data.exchangeType,
-              timeframeLabel: data.timeframeLabel,
-              criteriaVolatility: data.criteriaVolatility,
-              criteriaVolume: data.criteriaVolume,
-              items: data.coins.map(item => ({
-                id: item.detectedCoinId,
-                symbol: item.coinTicker || 'N/A',
-                change: item.volatility || 0,
-                volume: item.volume || 0,
-                timestamp: new Date(item.createdAt || Date.now()),
-              }))
-            }
-            
-            this.detectedGroups.unshift(newGroup)
-            this.processedIds.add(groupId)
-            
-            // 최대 10개 그룹만 유지
-            if (this.detectedGroups.length > 10) {
-              this.detectedGroups = this.detectedGroups.slice(0, 10)
-            }
-          }
-        }
-        
-        this.isConnected = true
-        this.lastCheck = new Date().toLocaleTimeString()
-      } catch (error) {
-        console.error('탐지 데이터 로딩 실패:', error)
-        this.isConnected = false
-      }
-    },
+
     
     formatTime(timestamp) {
       const date = new Date(timestamp)
@@ -201,9 +166,115 @@ export default {
       const second = String(date.getSeconds()).padStart(2, '0')
       
       return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
-    }
-    
+    },
 
+    openChartModal(symbol) {
+      this.selectedSymbol = symbol
+      this.showChartModal = true
+      this.$nextTick(() => {
+        this.createPopupChart()
+      })
+    },
+
+    closeChartModal() {
+      this.showChartModal = false
+      this.selectedSymbol = ''
+      if (this.popupWidget) {
+        this.popupWidget = null
+      }
+    },
+
+    createPopupChart() {
+      const theme = this.isDarkMode ? 'dark' : 'light'
+      this.popupWidget = new TradingView.widget({
+        width: '100%',
+        height: 400,
+        symbol: `BINANCE:${this.selectedSymbol}.P`,
+        interval: '1',
+        timezone: 'Asia/Seoul',
+        theme: theme,
+        style: '1',
+        locale: 'kr',
+        toolbar_bg: this.isDarkMode ? '#1e293b' : '#ffffff',
+        enable_publishing: false,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        save_image: false,
+        container_id: 'popup_tradingview_chart'
+      })
+    },
+    
+    initWebSocket() {
+      import('../services/websocket.js').then(({ websocketService }) => {
+        websocketService.onConnect(() => {
+          this.isConnected = true
+          this.lastCheck = new Date().toLocaleTimeString()
+          console.log('WebSocket 연결 성공')
+        })
+        
+        websocketService.onDetection((detection) => {
+          this.handleDetectionNotification(detection)
+        })
+        
+        websocketService.onError((error) => {
+          this.isConnected = false
+          console.error('WebSocket 오류:', error)
+        })
+        
+        websocketService.connect()
+      })
+    },
+    
+    handleDetectionNotification(detection) {
+      console.log('실시간 탐지 알림:', detection)
+      
+      const groupId = `${detection.detectedAt}_${detection.criteriaVolatility}_${detection.criteriaVolume}`
+      
+      if (!this.processedIds.has(groupId)) {
+        const newGroup = {
+          id: groupId,
+          timestamp: new Date(detection.detectedAt),
+          exchangeName: detection.exchangeName,
+          exchangeType: detection.exchangeType,
+          timeframeLabel: detection.timeframeLabel,
+          criteriaVolatility: detection.criteriaVolatility,
+          criteriaVolume: detection.criteriaVolume,
+          items: detection.coins.map(item => ({
+            id: item.detectedCoinId,
+            symbol: item.coinTicker,
+            change: item.volatility,
+            volume: item.volume,
+            timestamp: new Date(item.createdAt)
+          }))
+        }
+        
+        this.detectedGroups.unshift(newGroup)
+        this.processedIds.add(groupId)
+        
+        if (this.detectedGroups.length > 10) {
+          this.detectedGroups = this.detectedGroups.slice(0, 10)
+        }
+        
+        if (Notification.permission === 'granted') {
+          new Notification('코인 탐지 알림', {
+            body: `${detection.exchangeName} ${detection.exchangeType}: ${detection.coins.length}개 코인 탐지`,
+            icon: '/favicon.ico'
+          })
+        }
+      }
+    },
+    
+    disconnectWebSocket() {
+      import('../services/websocket.js').then(({ websocketService }) => {
+        websocketService.disconnect()
+      })
+    },
+    
+    requestNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission()
+      }
+    }
   }
 }
 </script>
@@ -347,6 +418,77 @@ export default {
 
 .detected-item:last-child {
   border-bottom: none;
+}
+
+.coin-symbol.clickable {
+  cursor: pointer;
+  color: #3b82f6;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.coin-symbol.clickable:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 95%;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #374151;
+}
+
+.modal-body {
+  padding: 0;
+  height: 400px;
 }
 
 .detection-time {
