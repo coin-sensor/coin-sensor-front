@@ -31,7 +31,7 @@
           <div class="group-items">
             <div v-for="item in group.items" :key="item.id" class="detected-item">
               <div class="detection-info">
-                <div class="coin-symbol clickable" @click="openChartModal(item.symbol)">{{ item.symbol }}</div>
+                <div class="coin-symbol clickable" @click="openChartModal(item.symbol, group.timeframeLabel, group.exchangeType)">{{ item.symbol }}</div>
                 <div class="detection-metrics">
                   <span class="metric-item">📈 변동성: <strong>{{ item.change || 0 }}%</strong></span>
                   <span class="metric-separator">|</span>
@@ -57,7 +57,11 @@
     <div v-if="showChartModal" class="modal-overlay" @click="closeChartModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>{{ selectedSymbol }} 차트</h3>
+          <h3>{{ selectedSymbol }} 차트 ({{ selectedTimeframe }}분봉)</h3>
+          <div class="modal-info">
+            <span class="timeframe-badge">{{ getTimeframeLabel(selectedTimeframe) }}</span>
+            <span class="countdown-display">다음 봉: {{ countdownText }}</span>
+          </div>
           <button class="close-btn" @click="closeChartModal">×</button>
         </div>
         <div class="modal-body">
@@ -82,7 +86,11 @@ export default {
       processedIds: new Set(),
       showChartModal: false,
       selectedSymbol: '',
-      popupWidget: null
+      selectedTimeframe: '1',
+      selectedExchangeType: '',
+      popupWidget: null,
+      countdownInterval: null,
+      countdownText: '00:00'
     }
   },
   
@@ -95,6 +103,13 @@ export default {
   watch: {
     isDarkMode() {
       this.updateTradingViewTheme()
+    },
+    showChartModal(newVal) {
+      if (newVal) {
+        document.addEventListener('keydown', this.handleEscKey)
+      } else {
+        document.removeEventListener('keydown', this.handleEscKey)
+      }
     }
   },
   mounted() {
@@ -134,7 +149,8 @@ export default {
         hide_top_toolbar: false,
         hide_legend: false,
         save_image: false,
-        container_id: 'tradingview_chart'
+        container_id: 'tradingview_chart',
+        allow_symbol_change: true
       })
     },
     
@@ -168,9 +184,16 @@ export default {
       return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
     },
 
-    openChartModal(symbol) {
+    openChartModal(symbol, timeframeLabel, exchangeType) {
       this.selectedSymbol = symbol
+      this.selectedTimeframe = this.convertTimeframeToInterval(timeframeLabel)
+      this.selectedExchangeType = exchangeType
       this.showChartModal = true
+      this.countdownText = '00:00'
+      
+      // 즉시 카운트다운 시작
+      this.startHeaderCountdown()
+      
       this.$nextTick(() => {
         this.createPopupChart()
       })
@@ -179,18 +202,24 @@ export default {
     closeChartModal() {
       this.showChartModal = false
       this.selectedSymbol = ''
+      this.countdownText = '00:00'
       if (this.popupWidget) {
         this.popupWidget = null
+      }
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval)
+        this.countdownInterval = null
       }
     },
 
     createPopupChart() {
       const theme = this.isDarkMode ? 'dark' : 'light'
+      const symbolSuffix = this.selectedExchangeType === 'future' ? '.P' : ''
       this.popupWidget = new TradingView.widget({
         width: '100%',
         height: 400,
-        symbol: `BINANCE:${this.selectedSymbol}.P`,
-        interval: '1',
+        symbol: `BINANCE:${this.selectedSymbol}${symbolSuffix}`,
+        interval: this.selectedTimeframe,
         timezone: 'Asia/Seoul',
         theme: theme,
         style: '1',
@@ -200,7 +229,18 @@ export default {
         hide_top_toolbar: false,
         hide_legend: false,
         save_image: false,
-        container_id: 'popup_tradingview_chart'
+        container_id: 'popup_tradingview_chart',
+        allow_symbol_change: true,
+        overrides: {
+          'paneProperties.background': this.isDarkMode ? '#1e293b' : '#ffffff',
+          'paneProperties.vertGridProperties.color': this.isDarkMode ? '#334155' : '#e5e7eb',
+          'paneProperties.horzGridProperties.color': this.isDarkMode ? '#334155' : '#e5e7eb'
+        },
+        onChartReady: () => {
+          setTimeout(() => {
+            this.addCustomCountdown()
+          }, 1000)
+        }
       })
     },
     
@@ -274,6 +314,158 @@ export default {
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission()
       }
+    },
+    
+    handleEscKey(event) {
+      if (event.key === 'Escape' && this.showChartModal) {
+        this.closeChartModal()
+      }
+    },
+    
+    convertTimeframeToInterval(timeframeLabel) {
+      const timeframeMap = {
+        '1m': '1',
+        '3m': '3', 
+        '5m': '5',
+        '15m': '15',
+        '30m': '30',
+        '1h': '60',
+        '2h': '120',
+        '4h': '240',
+        '6h': '360',
+        '8h': '480',
+        '12h': '720',
+        '1d': '1D',
+        '3d': '3D',
+        '1w': '1W',
+        '1M': '1M'
+      }
+      return timeframeMap[timeframeLabel] || '1'
+    },
+    
+    getTimeframeLabel(interval) {
+      const labelMap = {
+        '1': '1분',
+        '3': '3분',
+        '5': '5분', 
+        '15': '15분',
+        '30': '30분',
+        '60': '1시간',
+        '120': '2시간',
+        '240': '4시간',
+        '360': '6시간',
+        '480': '8시간',
+        '720': '12시간',
+        '1D': '1일',
+        '3D': '3일',
+        '1W': '1주',
+        '1M': '1개월'
+      }
+      return labelMap[interval] || '1분'
+    },
+    
+    addCustomCountdown() {
+      // 기존 카운트다운 제거
+      const existingCountdown = document.getElementById('custom-countdown')
+      if (existingCountdown) {
+        existingCountdown.remove()
+      }
+      
+      const chartContainer = document.getElementById('popup_tradingview_chart')
+      if (chartContainer) {
+        // 컨테이너에 relative position 설정
+        chartContainer.style.position = 'relative'
+        
+        const countdownDiv = document.createElement('div')
+        countdownDiv.id = 'custom-countdown'
+        countdownDiv.style.cssText = `
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: ${this.isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
+          color: ${this.isDarkMode ? '#f1f5f9' : '#1f2937'};
+          border: 1px solid ${this.isDarkMode ? '#475569' : '#d1d5db'};
+          padding: 6px 10px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 600;
+          font-family: monospace;
+          z-index: 9999;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          pointer-events: none;
+        `
+        countdownDiv.textContent = '로딩 중...'
+        chartContainer.appendChild(countdownDiv)
+        
+        // 짧은 지연 후 카운트다운 시작
+        setTimeout(() => {
+          this.startCustomCountdown()
+        }, 500)
+      }
+    },
+    
+    startCustomCountdown() {
+      const updateCountdown = () => {
+        const now = new Date()
+        const intervalMs = this.getIntervalInMs(this.selectedTimeframe)
+        const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
+        const remaining = nextCandle - now
+        
+        const minutes = Math.floor(remaining / 60000)
+        const seconds = Math.floor((remaining % 60000) / 1000)
+        
+        const timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        this.countdownText = timeText
+        
+        const countdownElement = document.getElementById('custom-countdown')
+        if (countdownElement) {
+          countdownElement.textContent = `다음 봉: ${timeText}`
+        }
+      }
+      
+      updateCountdown()
+      this.countdownInterval = setInterval(updateCountdown, 1000)
+    },
+    
+    getIntervalInMs(interval) {
+      const intervalMap = {
+        '1': 60000,
+        '3': 180000,
+        '5': 300000,
+        '15': 900000,
+        '30': 1800000,
+        '60': 3600000,
+        '120': 7200000,
+        '240': 14400000,
+        '360': 21600000,
+        '480': 28800000,
+        '720': 43200000,
+        '1D': 86400000,
+        '1W': 604800000
+      }
+      return intervalMap[interval] || 60000
+    },
+    
+    startHeaderCountdown() {
+      const updateHeaderCountdown = () => {
+        const now = new Date()
+        const intervalMs = this.getIntervalInMs(this.selectedTimeframe)
+        const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
+        const remaining = nextCandle - now
+        
+        const minutes = Math.floor(remaining / 60000)
+        const seconds = Math.floor((remaining % 60000) / 1000)
+        
+        this.countdownText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+      }
+      
+      updateHeaderCountdown()
+      
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval)
+      }
+      
+      this.countdownInterval = setInterval(updateHeaderCountdown, 1000)
     }
   }
 }
@@ -462,10 +654,41 @@ export default {
   border-bottom: 1px solid #e5e7eb;
 }
 
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .modal-header h3 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
+  flex: 1;
+}
+
+.modal-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.timeframe-badge {
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.countdown-info {
+  color: #6b7280;
+  font-size: 0.75rem;
 }
 
 .close-btn {
