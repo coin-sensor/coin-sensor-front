@@ -13,6 +13,11 @@
       <div class="section-header">
         <div class="header-left">
           <h2>🚨 실시간 탐지 데이터</h2>
+          <select v-model="selectedExchange" @change="changeExchange" class="timeframe-select">
+            <option value="binance-spot">binance-spot</option>
+            <option value="binance-future">binance-future</option>
+          </select>
+
           <select v-model="selectedTimeframe" @change="changeTimeframe" class="timeframe-select">
             <option value="1m">1분봉</option>
             <option value="5m">5분봉</option>
@@ -101,7 +106,8 @@ export default {
       popupWidget: null,
       countdownInterval: null,
       countdownText: '00:00',
-      selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m'
+      selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m',
+      selectedExchange: localStorage.getItem('selectedExchange') || 'binance-future'
     }
   },
   
@@ -261,7 +267,7 @@ export default {
           this.isConnected = true
           this.lastCheck = new Date().toLocaleTimeString()
           console.log('WebSocket 연결 성공')
-          this.subscribeToTimeframe(this.selectedTimeframe)
+          this.subscribeToExchangeAndTimeframe()
         })
         
         websocketService.onDetection((detection) => {
@@ -276,18 +282,26 @@ export default {
         websocketService.connect()
       })
     },
-    
-    subscribeToTimeframe(timeframe) {
+
+    subscribeToExchangeAndTimeframe() {
+      const [exchangeName, exchangeType] = this.selectedExchange.split('-')
       import('../services/websocket.js').then(({ websocketService }) => {
-        websocketService.subscribeToTopic(`/topic/detection/${timeframe}`)
+        websocketService.subscribeToTopic(`/topic/detection/exchanges/${exchangeName}/exchangeTypes/${exchangeType}/timeframes/${this.selectedTimeframe}`)
       })
+    },
+
+    changeExchange() {
+      localStorage.setItem('selectedExchange', this.selectedExchange)
+      this.detectedGroups = []
+      this.processedIds.clear()
+      this.subscribeToExchangeAndTimeframe()
     },
     
     changeTimeframe() {
       localStorage.setItem('selectedTimeframe', this.selectedTimeframe)
       this.detectedGroups = []
       this.processedIds.clear()
-      this.subscribeToTimeframe(this.selectedTimeframe)
+      this.subscribeToExchangeAndTimeframe()
     },
     
     handleDetectionNotification(detection) {
@@ -939,6 +953,17 @@ export default {
 }
 
 :global(#app.dark-mode) .timeframe-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+:global(#app.dark-mode) .exchange-select {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+
+:global(#app.dark-mode) .exchange-select:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }

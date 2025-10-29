@@ -44,7 +44,7 @@ class WebSocketService {
   }
 
   subscribeToDetection() {
-    this.subscribeToTopic('/topic/detection/5m')
+    this.subscribeToTopic('/topic/detection/exchanges/binance/exchangeTypes/future/timeframes/5m')
   }
   
   subscribeToTopic(topic) {
