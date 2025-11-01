@@ -5,18 +5,21 @@
         <h1>Coin Sensor</h1>
       </div>
       <div class="nav-center">
-        <button @click="currentView = 'dashboard'" :class="{ active: currentView === 'dashboard' }">
+        <router-link to="/" :class="{ active: $route.path === '/' }" class="nav-link">
           대시보드
-        </button>
-        <button @click="currentView = 'analysis'" :class="{ active: currentView === 'analysis' }">
+        </router-link>
+        <router-link to="/analysis" :class="{ active: $route.path === '/analysis' }" class="nav-link">
           분석
-        </button>
-        <button @click="currentView = 'community'" :class="{ active: currentView === 'community' }">
+        </router-link>
+        <router-link to="/community" :class="{ active: $route.path === '/community' }" class="nav-link">
           커뮤니티
-        </button>
-        <button @click="currentView = 'news'" :class="{ active: currentView === 'news' }">
+        </router-link>
+        <router-link to="/news" :class="{ active: $route.path === '/news' }" class="nav-link">
           뉴스
-        </button>
+        </router-link>
+        <router-link to="/admin" :class="{ active: $route.path === '/admin' }" class="nav-link">
+          관리자
+        </router-link>
       </div>
       <div class="nav-actions">
         <button @click="toggleDarkMode" class="theme-toggle">
@@ -26,31 +29,23 @@
     </nav>
 
     <main class="main-content">
-      <Dashboard v-if="currentView === 'dashboard'" />
-      <Analysis v-if="currentView === 'analysis'" />
-      <Community v-if="currentView === 'community'" />
-      <News v-if="currentView === 'news'" />
+      <router-view />
     </main>
+    
+    <FloatingChat />
   </div>
 </template>
 
 <script>
-import Dashboard from './components/Dashboard.vue'
-import Analysis from './components/Analysis.vue'
-import Community from './components/Community.vue'
-import News from './components/News.vue'
+import FloatingChat from './components/FloatingChat.vue'
 
 export default {
   name: 'App',
   components: {
-    Dashboard,
-    Analysis,
-    Community,
-    News
+    FloatingChat
   },
   data() {
     return {
-      currentView: 'dashboard',
       isDarkMode: false
     }
   },
@@ -61,6 +56,8 @@ export default {
       localStorage.setItem('darkMode', this.isDarkMode)
     }
   },
+  
+
   
   mounted() {
     const savedTheme = localStorage.getItem('darkMode')
@@ -99,7 +96,7 @@ body {
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  max-width: 1300px;
+  max-width: 1200px;
   margin: 0 auto;
   padding-left: 2rem;
   padding-right: 2rem;
@@ -116,7 +113,7 @@ body {
   gap: 0.5rem;
 }
 
-.nav-center button {
+.nav-link {
   background: transparent;
   border: none;
   color: #6b7280;
@@ -125,14 +122,16 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
 }
 
-.nav-center button:hover {
+.nav-link:hover {
   background: #f3f4f6;
   color: #374151;
 }
 
-.nav-center button.active {
+.nav-link.active {
   background: #3b82f6;
   color: white;
 }
@@ -154,7 +153,7 @@ body {
 
 .main-content {
   padding: 2rem;
-  max-width: 1300px;
+  max-width: 1200px;
   margin: 0 auto;
   background: #f9fafb;
   min-height: calc(100vh - 80px);
@@ -199,16 +198,16 @@ body {
   color: #f1f5f9;
 }
 
-#app.dark-mode .nav-center button {
+#app.dark-mode .nav-link {
   color: #94a3b8;
 }
 
-#app.dark-mode .nav-center button:hover {
+#app.dark-mode .nav-link:hover {
   background: #334155;
   color: #e2e8f0;
 }
 
-#app.dark-mode .nav-center button.active {
+#app.dark-mode .nav-link.active {
   background: #3b82f6;
   color: white;
 }
@@ -264,6 +263,30 @@ body {
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {

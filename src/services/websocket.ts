@@ -1,74 +1,95 @@
-import { io, Socket } from 'socket.io-client'
-import { useMarketStore } from '@/stores/market'
-import { useCommunityStore } from '@/stores/community'
+import { Client, Frame, StompSubscription } from '@stomp/stompjs'
+import { API_CONFIG } from '../config'
+import { getOrCreateUUID } from '../utils/uuid'
+
+interface ChatMessage {
+  roomId: number
+  nickname: string
+  message: string
+  messageId?: number
+  createdAt?: string
+  timestamp?: string
+}
+
+interface DetectionData {
+  [key: string]: any
+}
+
+type CallbackEvent = 'connect' | 'detection' | 'chat' | 'error'
+type CallbackFunction = (data?: any) => void
 
 class WebSocketService {
-  private socket: Socket | null = null
-  private reconnectAttempts = 0
-  private maxReconnectAttempts = 5
+  private stompClient: Client | null = null
+  private connected: boolean = false
+  private reconnectAttempts: number = 0
+  private maxReconnectAttempts: number = 5
+  private callbacks: Map<CallbackEvent, CallbackFunction[]> = new Map()
+  private currentSubscription: StompSubscription | null = null
+  private chatSubscription: StompSubscription | null = null
 
-  connect() {
+  connect(): void {
     try {
-      this.socket = io('ws://localhost:8080', {
-        transports: ['websocket'],
-        timeout: 5000
-      })
+      const uuid = getOrCreateUUID()
 
-      this.socket.on('connect', () => {
-        console.log('WebSocket 연결됨')
-        this.reconnectAttempts = 0
-        if (window.showNotification) {
-          window.showNotification('실시간 연결이 활성화되었습니다', 'success')
+      this.stompClient = new Client({
+        brokerURL: `ws://localhost:8080/ws?uuid=${uuid}`,
+        debug: (str) => console.log('STOMP:', str),
+        connectHeaders: {
+          'uuid': uuid
+        },
+        onConnect: (frame: Frame) => {
+          console.log('WebSocket 연결됨:', frame)
+          this.connected = true
+          this.reconnectAttempts = 0
+          
+          // 탐지 알림 구독
+          this.subscribeToDetection()
+          
+          // 연결 성공 콜백 실행
+          this.executeCallbacks('connect')
+        },
+        onStompError: (error) => {
+          console.error('WebSocket 연결 실패:', error)
+          this.connected = false
+          this.handleReconnect()
         }
       })
-
-      this.socket.on('disconnect', () => {
-        console.log('WebSocket 연결 해제됨')
-        if (window.showNotification) {
-          window.showNotification('실시간 연결이 해제되었습니다', 'warning')
-        }
-      })
-
-      this.socket.on('connect_error', (error) => {
-        console.error('WebSocket 연결 오류:', error)
-        this.handleReconnect()
-      })
-
-      // 실시간 데이터 수신
-      this.socket.on('coins', (data) => {
-        const marketStore = useMarketStore()
-        marketStore.setCoins(data)
-      })
-
-      this.socket.on('abnormal_coins', (data) => {
-        const marketStore = useMarketStore()
-        marketStore.setAbnormalCoins(data)
-        if (window.showNotification && data.length > 0) {
-          window.showNotification(`${data.length}개의 이상 코인이 감지되었습니다`, 'warning')
-        }
-      })
-
-      this.socket.on('market_data', (data) => {
-        const marketStore = useMarketStore()
-        marketStore.setMarketData(data)
-      })
-
-      this.socket.on('chat_message', (message) => {
-        const communityStore = useCommunityStore()
-        communityStore.addMessage(message)
-      })
-
-      this.socket.on('keywords_update', (keywords) => {
-        const communityStore = useCommunityStore()
-        communityStore.setKeywords(keywords)
-      })
-
+      
+      this.stompClient.activate()
     } catch (error) {
       console.error('WebSocket 초기화 실패:', error)
     }
   }
 
-  private handleReconnect() {
+  private subscribeToDetection(): void {
+    this.subscribeToTopic('/topic/detection/exchanges/binance/exchangeTypes/future/timeframes/5m')
+  }
+  
+  private subscribeToTopic(topic: string): void {
+    if (this.stompClient && this.connected) {
+      // 기존 구독 해제
+      if (this.currentSubscription) {
+        this.currentSubscription.unsubscribe()
+      }
+      
+      // 새 토픽 구독
+      this.currentSubscription = this.stompClient.subscribe(topic, (message) => {
+        try {
+          const detection: DetectionData = JSON.parse(message.body)
+          console.log('탐지 알림 수신:', detection)
+          
+          // 탐지 데이터 콜백 실행
+          this.executeCallbacks('detection', detection)
+        } catch (error) {
+          console.error('탐지 메시지 파싱 실패:', error)
+        }
+      })
+      
+      console.log(`구독 전환: ${topic}`)
+    }
+  }
+
+  private handleReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++
       console.log(`재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`)
@@ -78,48 +99,116 @@ class WebSocketService {
       }, 2000 * this.reconnectAttempts)
     } else {
       console.error('최대 재연결 시도 횟수 초과')
-      if (window.showNotification) {
-        window.showNotification('실시간 연결에 실패했습니다. 페이지를 새로고침해주세요.', 'error')
-      }
+      this.executeCallbacks('error', '연결 실패')
     }
   }
 
-  sendMessage(message: string, room = 'main') {
-    if (this.socket && this.socket.connected) {
-      this.socket.emit('chat_message', {
-        message,
-        room,
-        timestamp: new Date()
+  // 콜백 등록
+  onConnect(callback: CallbackFunction): void {
+    this.addCallback('connect', callback)
+  }
+
+  onDetection(callback: CallbackFunction): void {
+    this.addCallback('detection', callback)
+  }
+
+  onError(callback: CallbackFunction): void {
+    this.addCallback('error', callback)
+  }
+  
+  onChat(callback: CallbackFunction): void {
+    this.addCallback('chat', callback)
+  }
+  
+  subscribeToChat(roomId: number): void {
+    console.log('=== 채팅 구독 시도 ===')
+    console.log('STOMP Client 존재:', !!this.stompClient)
+    console.log('연결 상태:', this.connected)
+    console.log('방 ID:', roomId)
+    
+    if (this.stompClient && this.connected) {
+      // 기존 채팅 구독 해제
+      if (this.chatSubscription) {
+        console.log('기존 채팅 구독 해제')
+        this.chatSubscription.unsubscribe()
+      }
+      
+      const topic = `/topic/chat/rooms/${roomId}`
+      console.log(`채팅 구독 경로: ${topic}`)
+      
+      this.chatSubscription = this.stompClient.subscribe(topic, (message) => {
+        try {
+          console.log('채팅 메시지 수신:', message.body)
+          const chatMessage: ChatMessage = JSON.parse(message.body)
+          console.log('파싱된 채팅 메시지:', chatMessage)
+          this.executeCallbacks('chat', chatMessage)
+        } catch (error) {
+          console.error('채팅 메시지 파싱 실패:', error)
+        }
       })
+      
+      console.log('채팅 구독 완료')
     } else {
-      console.warn('WebSocket이 연결되지 않음')
-      if (window.showNotification) {
-        window.showNotification('메시지 전송 실패: 연결이 끊어졌습니다', 'error')
+      console.error('채팅 구독 실패: WebSocket 연결되지 않음')
+    }
+  }
+  
+  sendChatMessage(roomId: number, nickname: string, message: string): Promise<void> {
+    if (!this.stompClient || !this.connected || !this.stompClient.connected) {
+      return Promise.reject('연결되지 않음')
+    }
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const uuid = getOrCreateUUID()
+        const chatMessage: ChatMessage = {
+          roomId: Number(roomId),
+          nickname: nickname,
+          message: message
+        }
+        
+        this.stompClient!.publish({
+          destination: '/app/ws/chat/send',
+          headers: {
+            'uuid': uuid
+          },
+          body: JSON.stringify(chatMessage)
+        })
+        resolve()
+      } catch (error) {
+        reject(error)
       }
+    })
+  }
+
+  private addCallback(event: CallbackEvent, callback: CallbackFunction): void {
+    if (!this.callbacks.has(event)) {
+      this.callbacks.set(event, [])
+    }
+    this.callbacks.get(event)!.push(callback)
+  }
+
+  private executeCallbacks(event: CallbackEvent, data?: any): void {
+    if (this.callbacks.has(event)) {
+      this.callbacks.get(event)!.forEach(callback => {
+        try {
+          callback(data)
+        } catch (error) {
+          console.error(`콜백 실행 실패 (${event}):`, error)
+        }
+      })
     }
   }
 
-  joinRoom(roomId: string) {
-    if (this.socket && this.socket.connected) {
-      this.socket.emit('join_room', roomId)
-    }
-  }
-
-  leaveRoom(roomId: string) {
-    if (this.socket && this.socket.connected) {
-      this.socket.emit('leave_room', roomId)
-    }
-  }
-
-  disconnect() {
-    if (this.socket) {
-      this.socket.disconnect()
-      this.socket = null
+  disconnect(): void {
+    if (this.stompClient) {
+      this.stompClient.deactivate()
+      this.connected = false
     }
   }
 
   isConnected(): boolean {
-    return this.socket?.connected || false
+    return this.connected
   }
 }
 

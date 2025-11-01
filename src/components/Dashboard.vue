@@ -84,6 +84,8 @@
         </div>
       </div>
     </div>
+
+
   </div>
 </template>
 
@@ -93,7 +95,7 @@ export default {
   data() {
     return {
       loading: false,
-      isConnected: true,
+      isConnected: false,
       lastCheck: new Date().toLocaleTimeString(),
       detectedGroups: [],
 
@@ -131,7 +133,7 @@ export default {
   },
   mounted() {
     this.initTradingView()
-    this.initWebSocket()
+    this.initDetectionWebSocket()
     this.requestNotificationPermission()
   },
   
@@ -261,8 +263,11 @@ export default {
       })
     },
     
-    initWebSocket() {
-      import('../services/websocket.js').then(({ websocketService }) => {
+    initDetectionWebSocket() {
+      import('../services/websocket').then(({ websocketService }) => {
+        // 연결 상태 초기화
+        this.isConnected = websocketService.isConnected()
+        
         websocketService.onConnect(() => {
           this.isConnected = true
           this.lastCheck = new Date().toLocaleTimeString()
@@ -279,13 +284,23 @@ export default {
           console.error('WebSocket 오류:', error)
         })
         
-        websocketService.connect()
+        // 연결 상태 확인 후 연결 또는 구독
+        if (websocketService.isConnected()) {
+          console.log('WebSocket 이미 연결됨')
+          this.isConnected = true
+          this.lastCheck = new Date().toLocaleTimeString()
+          this.subscribeToExchangeAndTimeframe()
+        } else {
+          console.log('WebSocket 연결 시도 중...')
+          this.isConnected = false
+          websocketService.connect()
+        }
       })
     },
 
     subscribeToExchangeAndTimeframe() {
       const [exchangeName, exchangeType] = this.selectedExchange.split('-')
-      import('../services/websocket.js').then(({ websocketService }) => {
+      import('../services/websocket').then(({ websocketService }) => {
         websocketService.subscribeToTopic(`/topic/detection/exchanges/${exchangeName}/exchangeTypes/${exchangeType}/timeframes/${this.selectedTimeframe}`)
       })
     },
@@ -344,7 +359,7 @@ export default {
     },
     
     disconnectWebSocket() {
-      import('../services/websocket.js').then(({ websocketService }) => {
+      import('../services/websocket').then(({ websocketService }) => {
         websocketService.disconnect()
       })
     },

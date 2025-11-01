@@ -1,149 +1,263 @@
 <template>
-  <v-card height="500">
-    <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-chat</v-icon>
-      실시간 채팅
-      <v-spacer></v-spacer>
-      <v-chip color="primary" size="small">
-        <v-icon start size="small">mdi-account-group</v-icon>
-        {{ currentRoomUsers }}명
-      </v-chip>
-    </v-card-title>
-    
-    <v-card-subtitle>
-      <v-chip-group v-model="selectedRoom" mandatory>
-        <v-chip
-          v-for="room in chatRooms"
-          :key="room.id"
-          :value="room.id"
-          size="small"
-          @click="changeRoom(room.id)"
-        >
-          {{ room.name }}
-        </v-chip>
-      </v-chip-group>
-    </v-card-subtitle>
-    
-    <v-divider></v-divider>
-    
-    <div class="chat-messages pa-2" ref="messagesContainer">
-      <div
-        v-for="message in messages"
-        :key="message.id"
-        class="message mb-2"
-      >
-        <div class="d-flex align-start">
-          <v-avatar size="24" class="mr-2">
-            <v-icon size="16">mdi-account</v-icon>
-          </v-avatar>
-          <div class="flex-grow-1">
-            <div class="d-flex align-center">
-              <span class="text-caption font-weight-bold mr-2">
-                {{ message.user || '익명' }}
-              </span>
-              <span class="text-caption text-medium-emphasis">
-                {{ formatTime(message.timestamp) }}
-              </span>
-            </div>
-            <div class="text-body-2 mt-1">{{ message.message }}</div>
-          </div>
-        </div>
+  <div class="card chat-section">
+    <div class="chat-header">
+      <h3>💬 실시간 채팅</h3>
+      <div class="chat-status">
+        <span class="status-dot" :class="{ active: isConnected }"></span>
+        <span>{{ isConnected ? '연결됨' : '연결 끊김' }}</span>
       </div>
     </div>
     
-    <v-divider></v-divider>
-    
-    <v-card-actions class="pa-2">
-      <v-text-field
-        v-model="newMessage"
-        placeholder="메시지를 입력하세요..."
-        variant="outlined"
-        density="compact"
-        hide-details
-        @keyup.enter="sendMessage"
+    <div class="chat-rooms">
+      <button 
+        v-for="room in chatRooms" 
+        :key="room.id"
+        @click="changeRoom(room.id)"
+        :class="{ active: selectedRoom === room.id }"
+        class="room-btn"
       >
-        <template v-slot:append-inner>
-          <v-btn
-            icon="mdi-send"
-            size="small"
-            variant="text"
-            @click="sendMessage"
-            :disabled="!newMessage.trim()"
-          ></v-btn>
-        </template>
-      </v-text-field>
-    </v-card-actions>
-  </v-card>
+        {{ room.name }}
+      </button>
+    </div>
+    
+    <div class="chat-messages" ref="messagesContainer">
+      <div v-for="message in messages" :key="message.id" class="message">
+        <div class="message-header">
+          <span class="nickname">{{ message.nickname || '익명' }}</span>
+          <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
+        </div>
+        <div class="message-content">{{ message.message }}</div>
+      </div>
+    </div>
+    
+    <div class="chat-input">
+      <input 
+        v-model="newMessage"
+        @keyup.enter="sendMessage"
+        placeholder="메시지를 입력하세요..."
+        class="message-input"
+      />
+      <button @click="sendMessage" :disabled="!newMessage.trim()" class="send-btn">
+        전송
+      </button>
+    </div>
+  </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, nextTick, watch } from 'vue'
-import { useCommunityStore } from '@/stores/community'
-
-const communityStore = useCommunityStore()
-const messages = computed(() => communityStore.messages)
-const chatRooms = computed(() => communityStore.chatRooms)
-const selectedRoom = ref('main')
-const newMessage = ref('')
-const messagesContainer = ref<HTMLElement>()
-
-const currentRoomUsers = computed(() => {
-  const room = chatRooms.value.find(r => r.id === selectedRoom.value)
-  return room?.userCount || 0
-})
-
-const changeRoom = (roomId: string) => {
-  communityStore.setCurrentRoom(roomId)
-  selectedRoom.value = roomId
-}
-
-const sendMessage = () => {
-  if (!newMessage.value.trim()) return
+<script>
+export default {
+  name: 'ChatRoom',
+  data() {
+    return {
+      messages: [],
+      selectedRoom: 'main',
+      newMessage: '',
+      nickname: localStorage.getItem('nickname') || `사용자${Math.floor(Math.random() * 1000)}`,
+      isConnected: false,
+      chatRooms: [
+        { id: 'main', name: '메인 채팅' },
+        { id: 'btc', name: 'BTC 채팅' },
+        { id: 'eth', name: 'ETH 채팅' }
+      ]
+    }
+  },
   
-  const message = {
-    id: Date.now().toString(),
-    message: newMessage.value,
-    timestamp: new Date(),
-    user: '나'
+  mounted() {
+    this.initWebSocket()
+    localStorage.setItem('nickname', this.nickname)
+  },
+  
+  methods: {
+    initWebSocket() {
+      import('../services/websocket.js').then(({ websocketService }) => {
+        websocketService.onConnect(() => {
+          this.isConnected = true
+          websocketService.subscribeToChat(this.selectedRoom)
+        })
+        
+        websocketService.onChat((message) => {
+          this.messages.push({
+            id: Date.now() + Math.random(),
+            nickname: message.nickname,
+            message: message.message,
+            timestamp: new Date(message.timestamp)
+          })
+          
+          this.$nextTick(() => {
+            this.scrollToBottom()
+          })
+        })
+        
+        websocketService.onError(() => {
+          this.isConnected = false
+        })
+      })
+    },
+    
+    changeRoom(roomId) {
+      this.selectedRoom = roomId
+      this.messages = []
+      
+      import('../services/websocket.js').then(({ websocketService }) => {
+        websocketService.subscribeToChat(roomId)
+      })
+    },
+    
+    sendMessage() {
+      if (!this.newMessage.trim()) return
+      
+      import('../services/websocket.js').then(({ websocketService }) => {
+        websocketService.sendChatMessage(this.selectedRoom, this.nickname, this.newMessage)
+      })
+      
+      this.newMessage = ''
+    },
+    
+    scrollToBottom() {
+      const container = this.$refs.messagesContainer
+      if (container) {
+        container.scrollTop = container.scrollHeight
+      }
+    },
+    
+    formatTime(timestamp) {
+      return new Date(timestamp).toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
   }
-  
-  communityStore.addMessage(message)
-  newMessage.value = ''
-  
-  nextTick(() => {
-    scrollToBottom()
-  })
 }
-
-const scrollToBottom = () => {
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-  }
-}
-
-const formatTime = (timestamp: Date) => {
-  return new Date(timestamp).toLocaleTimeString('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-watch(messages, () => {
-  nextTick(() => {
-    scrollToBottom()
-  })
-})
 </script>
 
 <style scoped>
+.chat-section {
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-header h3 {
+  margin: 0;
+}
+
+.chat-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.status-dot.active {
+  background: #10b981;
+}
+
+.chat-rooms {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.room-btn {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.room-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
 .chat-messages {
-  height: 300px;
+  flex: 1;
   overflow-y: auto;
-  background-color: rgba(0, 0, 0, 0.02);
+  padding: 1rem;
+  background: #f9fafb;
 }
 
 .message {
+  margin-bottom: 1rem;
   animation: fadeIn 0.3s ease-in;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.nickname {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.timestamp {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.message-content {
+  color: #1f2937;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.chat-input {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.message-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.message-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.send-btn {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.send-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }
 
 @keyframes fadeIn {
