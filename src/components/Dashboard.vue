@@ -744,8 +744,7 @@ export default {
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: #fff9e6;
-  border-bottom: 1px solid #ffe4a3;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .detected-item:last-child {
