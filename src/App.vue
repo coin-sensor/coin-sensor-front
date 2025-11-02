@@ -46,7 +46,7 @@ export default {
   },
   data() {
     return {
-      isDarkMode: false
+      isDarkMode: localStorage.getItem('darkMode') === 'true'
     }
   },
   
@@ -57,15 +57,7 @@ export default {
       window.dispatchEvent(new CustomEvent('theme-changed', { detail: { isDarkMode: this.isDarkMode } }))
     }
   },
-  
 
-  
-  mounted() {
-    const savedTheme = localStorage.getItem('darkMode')
-    if (savedTheme !== null) {
-      this.isDarkMode = savedTheme === 'true'
-    }
-  }
 }
 </script>
 

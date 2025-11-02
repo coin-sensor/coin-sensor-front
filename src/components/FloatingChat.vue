@@ -170,12 +170,13 @@ export default {
           })
           
           websocketService.onChat((message) => {
-            console.log('채팅 메시지 수신 처리:', message)
             this.messages.push({
-              id: message.messageId || Date.now() + Math.random(),
+              messageId: message.messageId,
+              roomId: message.roomId,
+              uuid: message.uuid,
               nickname: message.nickname,
               message: message.message,
-              timestamp: new Date(message.createdAt || message.timestamp)
+              timestamp: new Date(message.createdAt)
             })
             
             this.$nextTick(() => {
