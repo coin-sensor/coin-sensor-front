@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../components/Dashboard.vue'
-import Analysis from '../components/Analysis.vue'
+import Insight from '../views/Insight.vue'
 import Community from '../components/Community.vue'
 import News from '../components/News.vue'
 import Admin from '../views/Admin.vue'
@@ -12,9 +12,9 @@ const routes = [
     component: Dashboard
   },
   {
-    path: '/analysis',
-    name: 'Analysis', 
-    component: Analysis
+    path: '/insight',
+    name: 'Insight', 
+    component: Insight
   },
   {
     path: '/community',

@@ -6,10 +6,10 @@
       </div>
       <div class="nav-center">
         <router-link to="/" :class="{ active: $route.path === '/' }" class="nav-link">
-          대시보드
+          메인
         </router-link>
-        <router-link to="/analysis" :class="{ active: $route.path === '/analysis' }" class="nav-link">
-          분석
+        <router-link to="/insight" :class="{ active: $route.path === '/insight' }" class="nav-link">
+          인사이트
         </router-link>
         <router-link to="/community" :class="{ active: $route.path === '/community' }" class="nav-link">
           커뮤니티
