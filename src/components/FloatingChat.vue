@@ -37,8 +37,8 @@
         <div v-if="loading" class="loading-indicator">
           로딩 중...
         </div>
-        <div v-for="message in messages" :key="message.messageId" class="message" :class="{ 'my-message': message.uuid === uuid }">
-          <div class="nickname">{{ message.nickname || '익명' }}</div>
+        <div v-for="message in groupedMessages" :key="message.messageId" class="message" :class="{ 'my-message': message.uuid === uuid, 'no-nickname': !message.showNickname }">
+          <div v-if="message.showNickname" class="nickname">{{ message.nickname || '익명' }}</div>
           <div class="message-row">
             <div class="message-bubble">
               {{ message.message }}
@@ -114,6 +114,16 @@ export default {
       isConnected: false,
       showNicknameModal: false,
       newNickname: ''
+    }
+  },
+  
+  computed: {
+    groupedMessages() {
+      return this.messages.map((msg, index) => {
+        const prevMsg = this.messages[index - 1]
+        const showNickname = !prevMsg || prevMsg.uuid !== msg.uuid
+        return { ...msg, showNickname }
+      })
     }
   },
   
@@ -310,11 +320,13 @@ export default {
         this.loading = true
         const oldestMessage = this.messages[0]
         const { apiService } = await import('../services/api')
-        const olderMessages = await apiService.getMessagesBefore(this.selectedRoom, oldestMessage.id, 20)
+        const olderMessages = await apiService.getMessagesBefore(this.selectedRoom, oldestMessage.messageId, 20)
         
         if (olderMessages.length > 0) {
           const formattedMessages = olderMessages.map(msg => ({
-            id: msg.messageId,
+            messageId: msg.messageId,
+            roomId: msg.roomId,
+            uuid: msg.uuid,
             nickname: msg.nickname,
             message: msg.message,
             timestamp: new Date(msg.createdAt)
@@ -541,8 +553,16 @@ export default {
 }
 
 .message {
-  margin-bottom: 1rem;
+  margin-bottom: 0.2rem;
   animation: fadeIn 0.3s ease-in;
+}
+
+.message.no-nickname {
+  margin-bottom: 0.2rem;
+}
+
+.message:not(.no-nickname) {
+  margin-top: 0.8rem;
 }
 
 .message.my-message {
