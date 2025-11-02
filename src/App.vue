@@ -29,7 +29,7 @@
     </nav>
 
     <main class="main-content">
-      <router-view />
+      <router-view ref="routerView" />
     </main>
     
     <FloatingChat />
@@ -54,6 +54,7 @@ export default {
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode
       localStorage.setItem('darkMode', this.isDarkMode)
+      window.dispatchEvent(new CustomEvent('theme-changed', { detail: { isDarkMode: this.isDarkMode } }))
     }
   },
   
@@ -190,7 +191,7 @@ body {
 }
 
 #app.dark-mode .navbar {
-  background: #1e293b;
+  background: #000000;
   border-bottom: 1px solid #334155;
 }
 

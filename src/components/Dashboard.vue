@@ -13,12 +13,12 @@
       <div class="section-header">
         <div class="header-left">
           <h2>🚨 실시간 탐지 데이터</h2>
-          <select v-model="selectedExchange" @change="changeExchange" class="timeframe-select">
+          <select v-model="selectedExchange" @change="changeExchange" class="timeframe-select" :class="{ 'dark': isDarkMode }">
             <option value="binance-spot">binance-spot</option>
             <option value="binance-future">binance-future</option>
           </select>
 
-          <select v-model="selectedTimeframe" @change="changeTimeframe" class="timeframe-select">
+          <select v-model="selectedTimeframe" @change="changeTimeframe" class="timeframe-select" :class="{ 'dark': isDarkMode }">
             <option value="1m">1분봉</option>
             <option value="5m">5분봉</option>
             <option value="15m">15분봉</option>
@@ -30,11 +30,10 @@
         <div class="status-indicator">
           <span class="status-dot" :class="{ active: isConnected }"></span>
           <span>{{ isConnected ? '실시간 모니터링 중' : '연결 끊김' }}</span>
-          <span class="last-check">마지막 체크: {{ lastCheck }}</span>
         </div>
       </div>
       
-      <div v-if="detectedGroups.length > 0" class="detected-list">
+      <div v-if="detectedGroups.length > 0" class="detected-list" :class="{ 'dark': isDarkMode }">
         <div v-for="group in detectedGroups" :key="group.id" class="detection-group">
           <div class="group-header">
             <div class="group-info">
@@ -70,7 +69,7 @@
 
     <!-- 차트 팝업 모달 -->
     <div v-if="showChartModal" class="modal-overlay" @click="closeChartModal">
-      <div class="modal-content" @click.stop>
+      <div class="modal-content" :class="{ 'dark': isDarkMode }" @click.stop>
         <div class="modal-header">
           <h3>{{ selectedSymbol }} 차트 ({{ chartTimeframe }}분봉)</h3>
           <div class="modal-info">
@@ -96,7 +95,6 @@ export default {
     return {
       loading: false,
       isConnected: false,
-      lastCheck: new Date().toLocaleTimeString(),
       detectedGroups: [],
 
       tradingViewWidget: null,
@@ -109,36 +107,21 @@ export default {
       countdownInterval: null,
       countdownText: '00:00',
       selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m',
-      selectedExchange: localStorage.getItem('selectedExchange') || 'binance-future'
+      selectedExchange: localStorage.getItem('selectedExchange') || 'binance-future',
+      isDarkMode: localStorage.getItem('darkMode') === 'true'
     }
   },
-  
-  computed: {
-    isDarkMode() {
-      return this.$parent.isDarkMode
-    }
-  },
-  
-  watch: {
-    isDarkMode() {
-      this.updateTradingViewTheme()
-    },
-    showChartModal(newVal) {
-      if (newVal) {
-        document.addEventListener('keydown', this.handleEscKey)
-      } else {
-        document.removeEventListener('keydown', this.handleEscKey)
-      }
-    }
-  },
+
   mounted() {
     this.initTradingView()
     this.initDetectionWebSocket()
     this.requestNotificationPermission()
+    window.addEventListener('theme-changed', this.handleThemeChange)
   },
   
   beforeUnmount() {
     this.disconnectWebSocket()
+    window.removeEventListener('theme-changed', this.handleThemeChange)
   },
   
   methods: {
@@ -154,6 +137,9 @@ export default {
     
     createTradingViewWidget() {
       const theme = this.isDarkMode ? 'dark' : 'light'
+      const backgroundColor = this.isDarkMode ? '#0F0F0F' : '#ffffff'
+      const gridColor = this.isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
+      
       this.tradingViewWidget = new TradingView.widget({
         width: '100%',
         height: 500,
@@ -163,32 +149,40 @@ export default {
         theme: theme,
         style: '1',
         locale: 'kr',
-        toolbar_bg: this.isDarkMode ? '#1e293b' : '#ffffff',
-        enable_publishing: false,
         hide_top_toolbar: false,
         hide_legend: false,
         save_image: false,
         container_id: 'tradingview_chart',
-        allow_symbol_change: true
+        allow_symbol_change: true,
+        backgroundColor: backgroundColor,
+        gridColor: gridColor
       })
     },
-    
-    updateTradingViewTheme() {
+
+    handleThemeChange(event) {
+      this.isDarkMode = event.detail.isDarkMode
+      
       if (this.tradingViewWidget) {
-        // 기존 위젯 제거
         const container = document.getElementById('tradingview_chart')
         if (container) {
           container.innerHTML = ''
         }
-        // 새 테마로 위젯 재생성
         setTimeout(() => {
           this.createTradingViewWidget()
         }, 100)
       }
+      
+      if (this.showChartModal && this.popupWidget) {
+        const popupContainer = document.getElementById('popup_tradingview_chart')
+        if (popupContainer) {
+          popupContainer.innerHTML = ''
+        }
+        setTimeout(() => {
+          this.createPopupChart()
+        }, 100)
+      }
     },
-    
 
-    
     formatTime(timestamp) {
       const date = new Date(timestamp)
       const year = date.getFullYear()
@@ -199,7 +193,7 @@ export default {
       const hour = String(date.getHours()).padStart(2, '0')
       const minute = String(date.getMinutes()).padStart(2, '0')
       const second = String(date.getSeconds()).padStart(2, '0')
-      
+
       return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
     },
 
@@ -209,10 +203,10 @@ export default {
       this.selectedExchangeType = exchangeType
       this.showChartModal = true
       this.countdownText = '00:00'
-      
+
       // 즉시 카운트다운 시작
       this.startHeaderCountdown()
-      
+
       this.$nextTick(() => {
         this.createPopupChart()
       })
@@ -233,7 +227,10 @@ export default {
 
     createPopupChart() {
       const theme = this.isDarkMode ? 'dark' : 'light'
+      const backgroundColor = this.isDarkMode ? '#0F0F0F' : '#ffffff'
+      const gridColor = this.isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
       const symbolSuffix = this.selectedExchangeType === 'future' ? '.P' : ''
+
       this.popupWidget = new TradingView.widget({
         width: '100%',
         height: 400,
@@ -243,24 +240,15 @@ export default {
         theme: theme,
         style: '1',
         locale: 'kr',
-        toolbar_bg: this.isDarkMode ? '#1e293b' : '#ffffff',
-        enable_publishing: false,
         hide_top_toolbar: false,
         hide_legend: false,
-        save_image: false,
+        save_image: true,
         container_id: 'popup_tradingview_chart',
         allow_symbol_change: true,
-        overrides: {
-          'paneProperties.background': this.isDarkMode ? '#1e293b' : '#ffffff',
-          'paneProperties.vertGridProperties.color': this.isDarkMode ? '#334155' : '#e5e7eb',
-          'paneProperties.horzGridProperties.color': this.isDarkMode ? '#334155' : '#e5e7eb'
-        },
-        onChartReady: () => {
-          setTimeout(() => {
-            this.addCustomCountdown()
-          }, 1000)
-        }
+        backgroundColor: backgroundColor,
+        gridColor: gridColor
       })
+
     },
     
     initDetectionWebSocket() {
@@ -270,7 +258,6 @@ export default {
         
         websocketService.onConnect(() => {
           this.isConnected = true
-          this.lastCheck = new Date().toLocaleTimeString()
           console.log('WebSocket 연결 성공')
           this.subscribeToExchangeAndTimeframe()
         })
@@ -288,7 +275,6 @@ export default {
         if (websocketService.isConnected()) {
           console.log('WebSocket 이미 연결됨')
           this.isConnected = true
-          this.lastCheck = new Date().toLocaleTimeString()
           this.subscribeToExchangeAndTimeframe()
         } else {
           console.log('WebSocket 연결 시도 중...')
@@ -580,6 +566,17 @@ export default {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+.timeframe-select.dark {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+
+.timeframe-select.dark:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
 .status-indicator {
   display: flex;
   align-items: center;
@@ -598,11 +595,6 @@ export default {
 
 .status-dot.active {
   background: #10b981;
-}
-
-.last-check {
-  color: #9ca3af;
-  font-size: 0.75rem;
 }
 
 .detected-list {
@@ -632,20 +624,86 @@ export default {
   background: #94a3b8;
 }
 
+.detected-list.dark::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.detected-list.dark::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.detected-list.dark::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.detected-list.dark .detection-group {
+  border-color: #4b5563;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.detected-list.dark .group-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+  border-bottom-color: rgba(255,255,255,0.1);
+}
+
+.detected-list.dark .group-time {
+  color: #ffffff;
+}
+
+.detected-list.dark .group-criteria {
+  color: rgba(255,255,255,0.85);
+}
+
+.detected-list.dark .group-count {
+  background: rgba(255,255,255,0.15);
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+}
+
+.detected-list.dark .detected-item {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+.detected-list.dark .coin-symbol {
+  color: #e2e8f0;
+}
+
+.detected-list.dark .coin-symbol.clickable {
+  color: #60a5fa;
+}
+
+.detected-list.dark .coin-symbol.clickable:hover {
+  color: #93c5fd;
+}
+
+.detected-list.dark .detection-metrics {
+  color: #cbd5e1;
+}
+
+.detected-list.dark .metric-item strong {
+  color: #f1f5f9;
+}
+
+.detected-list.dark .metric-separator {
+  color: #64748b;
+}
+
 .detection-group {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .group-header {
-  background: #f3f4f6;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 0.75rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .group-info {
@@ -656,23 +714,24 @@ export default {
 
 .group-time {
   font-weight: 600;
-  color: #374151;
+  color: #ffffff;
   font-size: 0.875rem;
 }
 
 .group-criteria {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: rgba(255,255,255,0.9);
   font-weight: 500;
 }
 
 .group-count {
-  background: #3b82f6;
+  background: rgba(255,255,255,0.2);
   color: white;
   padding: 0.25rem 0.5rem;
   border-radius: 12px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
 }
 
 .group-items {
@@ -685,8 +744,8 @@ export default {
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: #fef3c7;
-  border-bottom: 1px solid #fbbf24;
+  background: #fff9e6;
+  border-bottom: 1px solid #ffe4a3;
 }
 
 .detected-item:last-child {
@@ -899,10 +958,6 @@ export default {
   color: #94a3b8;
 }
 
-:global(#app.dark-mode) .last-check {
-  color: #64748b;
-}
-
 :global(#app.dark-mode) .detection-group {
   border-color: #374151;
 }
@@ -993,6 +1048,56 @@ export default {
 
 :global(#app.dark-mode) .detected-list::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+.modal-content.dark {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+.modal-content.dark .modal-header {
+  border-bottom-color: #334155;
+}
+
+.modal-content.dark .modal-header h3 {
+  color: #f1f5f9;
+}
+
+.modal-content.dark .close-btn {
+  color: #94a3b8;
+}
+
+.modal-content.dark .close-btn:hover {
+  color: #f1f5f9;
+}
+
+.modal-content.dark .timeframe-badge {
+  background: #1e40af;
+}
+
+.modal-content.dark .countdown-display {
+  color: #94a3b8;
+}
+
+:global(#app.dark-mode) .modal-content {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+:global(#app.dark-mode) .modal-header {
+  border-bottom-color: #334155;
+}
+
+:global(#app.dark-mode) .modal-header h3 {
+  color: #f1f5f9;
+}
+
+:global(#app.dark-mode) .close-btn {
+  color: #94a3b8;
+}
+
+:global(#app.dark-mode) .close-btn:hover {
+  color: #f1f5f9;
 }
 
 @keyframes pulse {
