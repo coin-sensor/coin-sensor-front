@@ -14,7 +14,7 @@ interface ChatMessage {
   roomId: number;
   uuid: string
   nickname: string
-  message: string
+  content: string
   createdAt: string
 }
 

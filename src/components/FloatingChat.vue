@@ -41,7 +41,7 @@
           <div v-if="message.showNickname" class="nickname">{{ message.nickname || '익명' }}</div>
           <div class="message-row">
             <div class="message-bubble">
-              {{ message.message }}
+              {{ message.content }}
             </div>
             <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
           </div>
@@ -185,7 +185,7 @@ export default {
               roomId: message.roomId,
               uuid: message.uuid,
               nickname: message.nickname,
-              message: message.message,
+              content: message.content,
               timestamp: new Date(message.createdAt)
             })
             
@@ -274,7 +274,7 @@ export default {
           roomId: msg.roomId,
           uuid: msg.uuid,
           nickname: msg.nickname,
-          message: msg.message,
+          content: msg.content,
           timestamp: new Date(msg.createdAt)
         }))
         
@@ -286,20 +286,7 @@ export default {
       } catch (error) {
         console.error('최근 메시지 로드 실패:', error)
         // 실패 시 임시 데이터
-        this.messages = [
-          {
-            id: 1,
-            nickname: '트레이더123',
-            message: '안녕하세요!',
-            timestamp: new Date(Date.now() - 60000)
-          },
-          {
-            id: 2,
-            nickname: '코인러버',
-            message: 'BTC 어떻게 보시나요?',
-            timestamp: new Date(Date.now() - 30000)
-          }
-        ]
+        this.messages = []
         this.hasMoreMessages = false
       } finally {
         this.loading = false
@@ -328,7 +315,7 @@ export default {
             roomId: msg.roomId,
             uuid: msg.uuid,
             nickname: msg.nickname,
-            message: msg.message,
+            content: msg.content,
             timestamp: new Date(msg.createdAt)
           }))
           

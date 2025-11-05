@@ -23,7 +23,7 @@ export interface AbnormalCoin {
 
 export interface ChatMessage {
   id: string
-  message: string
+  content: string
   timestamp: Date
   user?: string
 }

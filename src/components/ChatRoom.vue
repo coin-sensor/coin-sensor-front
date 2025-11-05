@@ -26,7 +26,7 @@
           <span class="nickname">{{ message.nickname || '익명' }}</span>
           <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
         </div>
-        <div class="message-content">{{ message.message }}</div>
+        <div class="message-content">{{ message.content }}</div>
       </div>
     </div>
     
@@ -77,10 +77,10 @@ export default {
         
         websocketService.onChat((message) => {
           this.messages.push({
-            id: Date.now() + Math.random(),
+            id: message.messageId || Date.now() + Math.random(),
             nickname: message.nickname,
-            message: message.message,
-            timestamp: new Date(message.timestamp)
+            content: message.content,
+            timestamp: message.createdAt || message.timestamp
           })
           
           this.$nextTick(() => {

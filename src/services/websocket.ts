@@ -5,7 +5,7 @@ import { getOrCreateUUID } from '../utils/uuid'
 interface ChatMessage {
   roomId: number
   nickname: string
-  message: string
+  content: string
   messageId?: number
   createdAt?: string
   timestamp?: string
@@ -153,7 +153,7 @@ class WebSocketService {
     }
   }
   
-  sendChatMessage(roomId: number, nickname: string, message: string): Promise<void> {
+  sendChatMessage(roomId: number, nickname: string, content: string): Promise<void> {
     if (!this.stompClient || !this.connected || !this.stompClient.connected) {
       return Promise.reject('연결되지 않음')
     }
@@ -164,7 +164,7 @@ class WebSocketService {
         const chatMessage: ChatMessage = {
           roomId: Number(roomId),
           nickname: nickname,
-          message: message
+          content: content
         }
         
         this.stompClient!.publish({
