@@ -324,7 +324,7 @@ export default {
             symbol: item.coinTicker,
             change: item.volatility,
             volume: item.volume,
-            timestamp: new Date(item.createdAt)
+            timestamp: new Date(item.detectedAt)
           }))
         }
         
