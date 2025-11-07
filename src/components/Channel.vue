@@ -1,26 +1,26 @@
 <template>
-  <div class="card chat-section">
-    <div class="chat-header">
+  <div class="card channel-section">
+    <div class="channel-header">
       <h3>💬 실시간 채팅</h3>
-      <div class="chat-status">
+      <div class="channel-status">
         <span class="status-dot" :class="{ active: isConnected }"></span>
         <span>{{ isConnected ? '연결됨' : '연결 끊김' }}</span>
       </div>
     </div>
     
-    <div class="chat-rooms">
+    <div class="channels">
       <button 
-        v-for="room in chatRooms" 
-        :key="room.id"
-        @click="changeRoom(room.id)"
-        :class="{ active: selectedRoom === room.id }"
-        class="room-btn"
+        v-for="channel in channels"
+        :key="channel.id"
+        @click="changeChannel(channel.id)"
+        :class="{ active: selectedChannel === channel.id }"
+        class="channel-btn"
       >
-        {{ room.name }}
+        {{ channel.name }}
       </button>
     </div>
     
-    <div class="chat-messages" ref="messagesContainer">
+    <div class="channel-messages" ref="messagesContainer">
       <div v-for="message in messages" :key="message.id" class="message">
         <div class="message-header">
           <span class="nickname">{{ message.nickname || '익명' }}</span>
@@ -30,7 +30,7 @@
       </div>
     </div>
     
-    <div class="chat-input">
+    <div class="channel-input">
       <input 
         v-model="newMessage"
         @keyup.enter="sendMessage"
@@ -46,19 +46,15 @@
 
 <script>
 export default {
-  name: 'ChatRoom',
+  name: 'Channel',
   data() {
     return {
       messages: [],
-      selectedRoom: 'main',
+      selectedChannel: 'main',
       newMessage: '',
       nickname: localStorage.getItem('nickname') || `사용자${Math.floor(Math.random() * 1000)}`,
       isConnected: false,
-      chatRooms: [
-        { id: 'main', name: '메인 채팅' },
-        { id: 'btc', name: 'BTC 채팅' },
-        { id: 'eth', name: 'ETH 채팅' }
-      ]
+      channels: []
     }
   },
   
@@ -72,7 +68,7 @@ export default {
       import('../services/websocket.js').then(({ websocketService }) => {
         websocketService.onConnect(() => {
           this.isConnected = true
-          websocketService.subscribeToChat(this.selectedRoom)
+          websocketService.subscribeToChat(this.selectedChannel)
         })
         
         websocketService.onChat((message) => {
@@ -94,12 +90,12 @@ export default {
       })
     },
     
-    changeRoom(roomId) {
-      this.selectedRoom = roomId
+    changeChannel(channelId) {
+      this.selectedChannel = channelId
       this.messages = []
       
       import('../services/websocket.js').then(({ websocketService }) => {
-        websocketService.subscribeToChat(roomId)
+        websocketService.subscribeToChat(channelId)
       })
     },
     
@@ -107,7 +103,7 @@ export default {
       if (!this.newMessage.trim()) return
       
       import('../services/websocket.js').then(({ websocketService }) => {
-        websocketService.sendChatMessage(this.selectedRoom, this.nickname, this.newMessage)
+        websocketService.sendMessage(this.selectedChannel, this.nickname, this.newMessage)
       })
       
       this.newMessage = ''
@@ -131,13 +127,13 @@ export default {
 </script>
 
 <style scoped>
-.chat-section {
+.channel-section {
   height: 500px;
   display: flex;
   flex-direction: column;
 }
 
-.chat-header {
+.channel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -145,11 +141,11 @@ export default {
   border-bottom: 1px solid #e5e7eb;
 }
 
-.chat-header h3 {
+.channel-header h3 {
   margin: 0;
 }
 
-.chat-status {
+.channel-status {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -167,14 +163,14 @@ export default {
   background: #10b981;
 }
 
-.chat-rooms {
+.channels {
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.room-btn {
+.channel-btn {
   padding: 0.25rem 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 4px;
@@ -183,13 +179,13 @@ export default {
   font-size: 0.875rem;
 }
 
-.room-btn.active {
+.channel-btn.active {
   background: #3b82f6;
   color: white;
   border-color: #3b82f6;
 }
 
-.chat-messages {
+.channel-messages {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
@@ -225,7 +221,7 @@ export default {
   line-height: 1.4;
 }
 
-.chat-input {
+.channel-input {
   display: flex;
   gap: 0.5rem;
   padding: 1rem;

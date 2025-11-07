@@ -2,22 +2,22 @@
   <div>
     <div class="grid grid-2">
       <!-- 실시간 채팅 -->
-      <div class="card chat-card">
+      <div class="card channel-card">
         <h2>💬 실시간 채팅</h2>
         
-        <div class="chat-rooms">
+        <div class="channels">
           <button 
-            v-for="room in chatRooms" 
-            :key="room.id"
-            @click="currentRoom = room.id"
-            :class="{ active: currentRoom === room.id }"
-            class="room-btn"
+            v-for="channel in channels"
+            :key="channel.id"
+            @click="currentChannel = channel.id"
+            :class="{ active: currentChannel === channel.id }"
+            class="channel-btn"
           >
-            {{ room.name }} ({{ room.userCount }})
+            {{ channel.name }} ({{ channel.userCount }})
           </button>
         </div>
         
-        <div class="chat-messages" ref="messagesContainer">
+        <div class="channel-messages" ref="messagesContainer">
           <div v-for="message in messages" :key="message.id" class="message">
             <div class="message-header">
               <span class="username">{{ message.user }}</span>
@@ -27,7 +27,7 @@
           </div>
         </div>
         
-        <div class="chat-input">
+        <div class="channel-input">
           <input 
             v-model="newMessage"
             @keyup.enter="sendMessage"
@@ -119,11 +119,11 @@
           </div>
         </div>
         
-        <div class="room-stats">
+        <div class="channel-stats">
           <h3>채팅방별 사용자</h3>
-          <div v-for="room in chatRooms" :key="room.id" class="room-stat">
-            <span>{{ room.name }}</span>
-            <span class="user-count">{{ room.userCount }}명</span>
+          <div v-for="channel in channels" :key="channel.id" class="channel-stat">
+            <span>{{ channel.name }}</span>
+            <span class="user-count">{{ channel.userCount }}명</span>
           </div>
         </div>
       </div>
@@ -136,12 +136,12 @@ export default {
   name: 'Community',
   data() {
     return {
-      currentRoom: 'main',
+      currentChannel: 'main',
       newMessage: '',
       isSpinning: false,
       rotation: 0,
       lastResult: null,
-      chatRooms: [
+      channels: [
         { id: 'main', name: '메인 채팅', userCount: 150 },
         { id: 'btc', name: '비트코인', userCount: 89 },
         { id: 'eth', name: '이더리움', userCount: 67 }
@@ -163,7 +163,7 @@ export default {
   },
   computed: {
     totalUsers() {
-      return this.chatRooms.reduce((sum, room) => sum + room.userCount, 0)
+      return this.channels.reduce((sum, channel) => sum + channel.userCount, 0)
     },
     activeUsers() {
       return Math.floor(this.totalUsers * 0.7)
@@ -246,20 +246,20 @@ export default {
 </script>
 
 <style scoped>
-.chat-card {
+.channel-card {
   height: 500px;
   display: flex;
   flex-direction: column;
 }
 
-.chat-rooms {
+.channels {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
 }
 
-.room-btn {
+.channel-btn {
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2);
   color: #ffffff;
@@ -270,16 +270,16 @@ export default {
   font-size: 0.9rem;
 }
 
-.room-btn:hover {
+.channel-btn:hover {
   background: rgba(255,255,255,0.2);
 }
 
-.room-btn.active {
+.channel-btn.active {
   background: #4CAF50;
   border-color: #4CAF50;
 }
 
-.chat-messages {
+.channel-messages {
   flex: 1;
   overflow-y: auto;
   background: rgba(0,0,0,0.2);
@@ -317,7 +317,7 @@ export default {
   border-left: 3px solid #4CAF50;
 }
 
-.chat-input {
+.channel-input {
   display: flex;
   gap: 0.5rem;
 }
@@ -488,12 +488,12 @@ export default {
   font-size: 0.9rem;
 }
 
-.room-stats h3 {
+.channel-stats h3 {
   margin-bottom: 1rem;
   color: #4CAF50;
 }
 
-.room-stat {
+.channel-stat {
   display: flex;
   justify-content: space-between;
   align-items: center;

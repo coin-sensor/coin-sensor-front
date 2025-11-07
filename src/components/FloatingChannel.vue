@@ -3,15 +3,15 @@
     <!-- 채팅 토글 버튼 -->
     <button 
       @click="toggleChat" 
-      class="chat-toggle-btn"
-      :class="{ active: showChat }"
+      class="channel-toggle-btn"
+      :class="{ active: showChannel }"
     >
       <FontAwesomeIcon :icon="faMessage" />
     </button>
 
     <!-- 플로팅 채팅창 -->
-    <div v-if="showChat" class="floating-chat">
-      <div class="chat-header">
+    <div v-if="showChannel" class="floating-channel">
+      <div class="channel-header">
         <h4><FontAwesomeIcon :icon="faMessage" /> 채팅</h4>
         <div class="header-right">
           <button @click="showNicknameModal = true" class="user-btn">
@@ -21,19 +21,19 @@
         </div>
       </div>
       
-      <div class="chat-rooms">
+      <div class="channels">
         <button 
-          v-for="room in chatRooms" 
-          :key="room.id"
-          @click="changeRoom(room.id)"
-          :class="{ active: selectedRoom === room.id }"
-          class="room-btn"
+          v-for="channel in channels"
+          :key="channel.id"
+          @click="changeChannel(channel.id)"
+          :class="{ active: selectedChannel === channel.id }"
+          class="channel-btn"
         >
-          {{ room.name }}
+          {{ channel.name }}
         </button>
       </div>
       
-      <div class="chat-messages" ref="messagesContainer" @scroll="handleScroll">
+      <div class="channel-messages" ref="messagesContainer" @scroll="handleScroll">
         <div v-if="loading" class="loading-indicator">
           로딩 중...
         </div>
@@ -48,7 +48,7 @@
         </div>
       </div>
       
-      <div class="chat-input">
+      <div class="channel-input">
         <input 
           v-model="newMessage"
           @keyup.enter="sendMessage"
@@ -90,7 +90,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faMessage, faUser } from '@fortawesome/free-regular-svg-icons'
 
 export default {
-  name: 'FloatingChat',
+  name: 'FloatingChannel',
   components: {
     FontAwesomeIcon
   },
@@ -102,13 +102,13 @@ export default {
   },
   data() {
     return {
-      showChat: false,
+      showChannel: false,
       messages: [],
-      selectedRoom: null,
+      selectedChannel: null,
       newMessage: '',
       nickname: null,
       uuid: localStorage.getItem('uuid'),
-      chatRooms: [],
+      channels: [],
       loading: false,
       hasMoreMessages: true,
       isConnected: false,
@@ -133,14 +133,14 @@ export default {
   
   methods: {
     async toggleChat() {
-      this.showChat = !this.showChat
-      if (this.showChat) {
+      this.showChannel = !this.showChannel
+      if (this.showChannel) {
         // 처음 열 때 WebSocket 연결 및 채팅방 목록 로드
         if (!this.isConnected) {
           await this.initWebSocket()
         }
-        if (this.chatRooms.length === 0) { // 채팅방이 비어있으면
-          await this.loadChatRooms()
+        if (this.channels.length === 0) { // 채팅방이 비어있으면
+          await this.loadChannels()
         }
         // 메시지가 비어있을 때만 로드
         if (this.messages.length === 0) {
@@ -164,11 +164,11 @@ export default {
           
           websocketService.onConnect(() => {
             console.log('채팅 WebSocket 연결 성공')
-            console.log('선택된 방 ID:', this.selectedRoom)
+            console.log('선택된 방 ID:', this.selectedChannel)
             this.isConnected = true
-            if (this.selectedRoom) {
-              console.log(`방 ${this.selectedRoom}에 구독 시도`)
-              websocketService.subscribeToChat(this.selectedRoom)
+            if (this.selectedChannel) {
+              console.log(`방 ${this.selectedChannel}에 구독 시도`)
+              websocketService.subscribeToChat(this.selectedChannel)
             }
             resolve() // 연결 완료 신호
           })
@@ -182,7 +182,7 @@ export default {
           websocketService.onChat((message) => {
             this.messages.push({
               messageId: message.messageId,
-              roomId: message.roomId,
+              channelId: message.channelId,
               uuid: message.uuid,
               nickname: message.nickname,
               content: message.content,
@@ -202,9 +202,9 @@ export default {
             console.log('WebSocket 이미 연결됨')
             this.isConnected = true
             // 이미 연결된 경우 즉시 채팅방 구독
-            if (this.selectedRoom) {
-              console.log(`이미 연결된 상태에서 방 ${this.selectedRoom}에 구독`)
-              websocketService.subscribeToChat(this.selectedRoom)
+            if (this.selectedChannel) {
+              console.log(`이미 연결된 상태에서 방 ${this.selectedChannel}에 구독`)
+              websocketService.subscribeToChat(this.selectedChannel)
             }
             resolve() // 이미 연결된 경우
           }
@@ -215,17 +215,17 @@ export default {
       })
     },
     
-    changeRoom(roomId) {
-      console.log(`방 변경: ${this.selectedRoom} -> ${roomId}`)
-      this.selectedRoom = roomId
+    changeChannel(channelId) {
+      console.log(`방 변경: ${this.selectedChannel} -> ${channelId}`)
+      this.selectedChannel = channelId
       this.messages = []
       this.hasMoreMessages = true
       this.loadRecentMessages()
       
       import('../services/websocket').then(({ websocketService }) => {
-        console.log(`새 방 ${roomId}에 구독 시도`)
+        console.log(`새 방 ${channelId}에 구독 시도`)
         console.log('WebSocket 연결 상태:', websocketService.isConnected())
-        websocketService.subscribeToChat(roomId)
+        websocketService.subscribeToChat(channelId)
       })
     },
     
@@ -246,15 +246,15 @@ export default {
         
         // 메시지 전송 전에 채팅방 구독 상태 확인
         console.log('메시지 전송 전 채팅방 구독 재확인')
-        websocketService.subscribeToChat(this.selectedRoom)
+        websocketService.subscribeToChat(this.selectedChannel)
         
         console.log('메시지 전송 시도:', {
-          roomId: this.selectedRoom,
+          channelId: this.selectedChannel,
           nickname: this.nickname,
           message: messageText
         })
         
-        await websocketService.sendChatMessage(this.selectedRoom, this.nickname, messageText)
+        await websocketService.sendMessage(this.selectedChannel, this.nickname, messageText)
         console.log('메시지 전송 성공')
       } catch (error) {
         console.error('메시지 전송 실패:', error)
@@ -267,11 +267,11 @@ export default {
       try {
         this.loading = true
         const { apiService } = await import('../services/api')
-        const recentMessages = await apiService.getRecentMessages(this.selectedRoom, 20)
+        const recentMessages = await apiService.getRecentMessages(this.selectedChannel, 20)
         
         this.messages = recentMessages.map(msg => ({
           messageId: msg.messageId,
-          roomId: msg.roomId,
+          channelId: msg.channelId,
           uuid: msg.uuid,
           nickname: msg.nickname,
           content: msg.content,
@@ -307,12 +307,12 @@ export default {
         this.loading = true
         const oldestMessage = this.messages[0]
         const { apiService } = await import('../services/api')
-        const olderMessages = await apiService.getMessagesBefore(this.selectedRoom, oldestMessage.messageId, 20)
+        const olderMessages = await apiService.getMessagesBefore(this.selectedChannel, oldestMessage.messageId, 20)
         
         if (olderMessages.length > 0) {
           const formattedMessages = olderMessages.map(msg => ({
             messageId: msg.messageId,
-            roomId: msg.roomId,
+            channelId: msg.channelId,
             uuid: msg.uuid,
             nickname: msg.nickname,
             content: msg.content,
@@ -348,26 +348,26 @@ export default {
     
 
 
-    async loadChatRooms() {
+    async loadChannels() {
       try {
         const { apiService } = await import('../services/api')
-        const rooms = await apiService.getChatRooms()
+        const channels = await apiService.getChannels()
         
-        if (Array.isArray(rooms) && rooms.length > 0) {
-          this.chatRooms = rooms.map(room => ({
-            id: room.roomId,
-            name: room.roomName
+        if (Array.isArray(channels) && channels.length > 0) {
+          this.channels = channels.map(channel => ({
+            id: channel.channelId,
+            name: channel.name
           }))
           
           // "일반" 채팅방 찾기
-          const generalRoom = this.chatRooms.find(room => room.name === '일반')
-          if (generalRoom) {
-            this.selectedRoom = generalRoom.id
-            console.log('"일반" 채팅방 선택:', generalRoom.id)
+          const generalChannel = this.channels.find(channel => channel.name === '일반')
+          if (generalChannel) {
+            this.selectedChannel = generalChannel.id
+            console.log('"일반" 채팅방 선택:', generalChannel.id)
           } else {
             // "일반" 채팅방이 없으면 첫 번째 방 선택
-            this.selectedRoom = this.chatRooms[0].id
-            console.log('"일반" 채팅방이 없어서 첫 번째 방 선택:', this.selectedRoom)
+            this.selectedChannel = this.channels[0].id
+            console.log('"일반" 채팅방이 없어서 첫 번째 방 선택:', this.selectedChannel)
           }
         }
       } catch (error) {
@@ -412,7 +412,7 @@ export default {
 </script>
 
 <style scoped>
-.chat-toggle-btn {
+.channel-toggle-btn {
   position: fixed;
   bottom: 20px;
   right: 20px;
@@ -429,16 +429,16 @@ export default {
   transition: all 0.3s ease;
 }
 
-.chat-toggle-btn:hover {
+.channel-toggle-btn:hover {
   background: #2563eb;
   transform: scale(1.1);
 }
 
-.chat-toggle-btn.active {
+.channel-toggle-btn.active {
   background: #ef4444;
 }
 
-.floating-chat {
+.floating-channel {
   position: fixed;
   bottom: 90px;
   right: 20px;
@@ -453,7 +453,7 @@ export default {
   overflow: hidden;
 }
 
-.chat-header {
+.channel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -462,7 +462,7 @@ export default {
   color: white;
 }
 
-.chat-header h4 {
+.channel-header h4 {
   margin: 0;
   font-size: 1rem;
 }
@@ -508,14 +508,14 @@ export default {
   height: 24px;
 }
 
-.chat-rooms {
+.channels {
   display: flex;
   padding: 0.5rem;
   background: #f8fafc;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.room-btn {
+.channel-btn {
   padding: 0.25rem 0.75rem;
   margin-right: 0.5rem;
   border: 1px solid #d1d5db;
@@ -526,13 +526,13 @@ export default {
   transition: all 0.2s;
 }
 
-.room-btn.active {
+.channel-btn.active {
   background: #3b82f6;
   color: white;
   border-color: #3b82f6;
 }
 
-.chat-messages {
+.channel-messages {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
@@ -608,7 +608,7 @@ export default {
   border-radius: 8px;
 }
 
-.chat-input {
+.channel-input {
   display: flex;
   padding: 0.75rem;
   border-top: 1px solid #e5e7eb;
@@ -728,7 +728,7 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .floating-chat {
+  .floating-channel {
     width: calc(100vw - 40px);
     right: 20px;
     left: 20px;

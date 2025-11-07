@@ -2,8 +2,8 @@ import { Client, Frame, StompSubscription } from '@stomp/stompjs'
 import { API_CONFIG } from '../config'
 import { getOrCreateUUID } from '../utils/uuid'
 
-interface ChatMessage {
-  roomId: number
+interface Message {
+  channelId: number
   nickname: string
   content: string
   messageId?: number
@@ -15,7 +15,7 @@ interface DetectionData {
   [key: string]: any
 }
 
-type CallbackEvent = 'connect' | 'detection' | 'chat' | 'error'
+type CallbackEvent = 'connect' | 'detection' | 'channel' | 'error'
 type CallbackFunction = (data?: any) => void
 
 class WebSocketService {
@@ -25,7 +25,7 @@ class WebSocketService {
   private maxReconnectAttempts: number = 5
   private callbacks: Map<CallbackEvent, CallbackFunction[]> = new Map()
   private currentSubscription: StompSubscription | null = null
-  private chatSubscription: StompSubscription | null = null
+  private channelSubscription: StompSubscription | null = null
 
   connect(): void {
     try {
@@ -117,31 +117,31 @@ class WebSocketService {
   }
   
   onChat(callback: CallbackFunction): void {
-    this.addCallback('chat', callback)
+    this.addCallback('channel', callback)
   }
   
-  subscribeToChat(roomId: number): void {
+  subscribeToChat(channelId: number): void {
     console.log('=== 채팅 구독 시도 ===')
     console.log('STOMP Client 존재:', !!this.stompClient)
     console.log('연결 상태:', this.connected)
-    console.log('방 ID:', roomId)
+    console.log('방 ID:', channelId)
     
     if (this.stompClient && this.connected) {
       // 기존 채팅 구독 해제
-      if (this.chatSubscription) {
+      if (this.channelSubscription) {
         console.log('기존 채팅 구독 해제')
-        this.chatSubscription.unsubscribe()
+        this.channelSubscription.unsubscribe()
       }
       
-      const topic = `/topic/chat/rooms/${roomId}`
+      const topic = `/topic/channels/${channelId}`
       console.log(`채팅 구독 경로: ${topic}`)
       
-      this.chatSubscription = this.stompClient.subscribe(topic, (message) => {
+      this.channelSubscription = this.stompClient.subscribe(topic, (message) => {
         try {
           console.log('채팅 메시지 수신:', message.body)
-          const chatMessage: ChatMessage = JSON.parse(message.body)
-          console.log('파싱된 채팅 메시지:', chatMessage)
-          this.executeCallbacks('chat', chatMessage)
+          const channelMessage: Message = JSON.parse(message.body)
+          console.log('파싱된 채팅 메시지:', channelMessage)
+          this.executeCallbacks('channel', channelMessage)
         } catch (error) {
           console.error('채팅 메시지 파싱 실패:', error)
         }
@@ -153,7 +153,7 @@ class WebSocketService {
     }
   }
   
-  sendChatMessage(roomId: number, nickname: string, content: string): Promise<void> {
+  sendMessage(channelId: number, nickname: string, content: string): Promise<void> {
     if (!this.stompClient || !this.connected || !this.stompClient.connected) {
       return Promise.reject('연결되지 않음')
     }
@@ -161,18 +161,18 @@ class WebSocketService {
     return new Promise((resolve, reject) => {
       try {
         const uuid = getOrCreateUUID()
-        const chatMessage: ChatMessage = {
-          roomId: Number(roomId),
+        const channelMessage: Message = {
+          channelId: Number(channelId),
           nickname: nickname,
           content: content
         }
         
         this.stompClient!.publish({
-          destination: '/app/ws/chat/send',
+          destination: '/app/ws/channel/send',
           headers: {
             'uuid': uuid
           },
-          body: JSON.stringify(chatMessage)
+          body: JSON.stringify(channelMessage)
         })
         resolve()
       } catch (error) {

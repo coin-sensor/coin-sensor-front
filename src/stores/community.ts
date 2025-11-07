@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { ChatMessage, ChatKeyword, ChatRoom } from '@/types'
+import type { Message, ChatKeyword, Channel } from '@/types'
 
 export const useCommunityStore = defineStore('community', () => {
-  const messages = ref<ChatMessage[]>([])
+  const messages = ref<Message[]>([])
   const keywords = ref<ChatKeyword[]>([])
-  const chatRooms = ref<ChatRoom[]>([])
-  const currentRoom = ref<string>('main')
+  const channels = ref<Channel[]>([])
+  const currentChannel = ref<string>('main')
 
-  const addMessage = (message: ChatMessage) => {
+  const addMessage = (message: Message) => {
     messages.value.push(message)
     if (messages.value.length > 100) {
       messages.value = messages.value.slice(-100)
@@ -19,22 +19,22 @@ export const useCommunityStore = defineStore('community', () => {
     keywords.value = newKeywords
   }
 
-  const setChatRooms = (rooms: ChatRoom[]) => {
-    chatRooms.value = rooms
+  const setChannels = (newChannels: Channel[]) => {
+    channels.value = newChannels
   }
 
-  const setCurrentRoom = (roomId: string) => {
-    currentRoom.value = roomId
+  const setCurrentChannel = (channelId: string) => {
+    currentChannel.value = channelId
   }
 
   return {
     messages,
     keywords,
-    chatRooms,
-    currentRoom,
+    channels,
+    currentChannel,
     addMessage,
     setKeywords,
-    setChatRooms,
-    setCurrentRoom
+    setChannels,
+    setCurrentChannel
   }
 })

@@ -93,13 +93,13 @@ npm run build
 - **코인 데이터**: `GET /api/coins/volatile`, `GET /api/coins/abnormal`
 - **마켓 데이터**: `GET /api/market/overview`, `GET /api/market/fear-greed`
 - **뉴스**: `GET /api/news`, `GET /api/news/calendar`
-- **커뮤니티**: `GET /api/community/chat/rooms`, `GET /api/community/chat/keywords`
+- **커뮤니티**: `GET /api/community/channel/channels`, `GET /api/community/channel/keywords`
 
 ### WebSocket 이벤트
 - `coins`: 실시간 코인 데이터
 - `abnormal_coins`: 이상 코인 알림
 - `market_data`: 시장 데이터 업데이트
-- `chat_message`: 채팅 메시지
+- `channel_message`: 채팅 메시지
 - `keywords_update`: 키워드 업데이트
 
 ## 📊 주요 컴포넌트
@@ -113,7 +113,7 @@ npm run build
 ### 3. AbnormalCoinsList.vue
 - 실시간 이상 코인 알림 리스트
 
-### 4. ChatRoom.vue
+### 4. Channel.vue
 - 실시간 채팅 기능
 
 ### 5. PopularKeywords.vue

@@ -21,7 +21,7 @@ export interface AbnormalCoin {
   reason?: string
 }
 
-export interface ChatMessage {
+export interface Message {
   id: string
   content: string
   timestamp: Date
@@ -62,7 +62,7 @@ export interface EconomicEvent {
   description: string
 }
 
-export interface ChatRoom {
+export interface Channel {
   id: string
   name: string
   userCount: number

@@ -17,18 +17,18 @@
         </button>
       </div>
 
-      <div class="chatroom-list">
-        <div v-for="room in chatRooms" :key="room.id" class="chatroom-item">
-          <div class="room-info">
-            <div class="room-name">{{ room.roomName }}</div>
-            <div class="room-details">
-              <span>ID: {{ room.roomId }}</span>
-              <span>생성일: {{ formatDate(room.createdAt) }}</span>
+      <div class="channelchannel-list">
+        <div v-for="channel in channels" :key="channel.id" class="channelchannel-item">
+          <div class="channel-info">
+            <div class="channel-name">{{ channel.name }}</div>
+            <div class="channel-details">
+              <span>ID: {{ channel.channelId }}</span>
+              <span>생성일: {{ formatDate(channel.createdAt) }}</span>
             </div>
           </div>
-          <div class="room-actions">
-            <button @click="editRoom(room)" class="edit-btn">수정</button>
-            <button @click="deleteRoom(room.roomId)" class="delete-btn">삭제</button>
+          <div class="channel-actions">
+            <button @click="editChannel(channel)" class="edit-btn">수정</button>
+            <button @click="deleteChannel(channel.channelId)" class="delete-btn">삭제</button>
           </div>
         </div>
       </div>
@@ -45,7 +45,7 @@
           <div class="form-group">
             <label>채팅방 이름</label>
             <input 
-              v-model="roomForm.roomName" 
+              v-model="channelForm.name"
               placeholder="채팅방 이름을 입력하세요"
               class="form-input"
             />
@@ -53,7 +53,7 @@
         </div>
         <div class="modal-footer">
           <button @click="closeModal" class="cancel-btn">취소</button>
-          <button @click="saveRoom" class="save-btn">
+          <button @click="saveChannel" class="save-btn">
             {{ showEditModal ? '수정' : '생성' }}
           </button>
         </div>
@@ -70,35 +70,35 @@ export default {
   data() {
     return {
       isConnected: false,
-      chatRooms: [],
+      channels: [],
       showCreateModal: false,
       showEditModal: false,
-      roomForm: {
-        roomName: ''
+      channelForm: {
+        name: ''
       },
-      editingRoom: null
+      editingChannel: null
     }
   },
 
   mounted() {
-    this.loadChatRooms()
+    this.loadChannels()
     this.initWebSocket()
   },
 
   methods: {
-    async loadChatRooms() {
+    async loadChannels() {
       try {
         console.log('채팅방 목록 로드 시도...')
-        this.chatRooms = await apiService.getChatRooms()
-        console.log('채팅방 목록 로드 성공:', this.chatRooms)
+        this.channels = await apiService.getChannels()
+        console.log('채팅방 목록 로드 성공:', this.channels)
       } catch (error) {
         console.error('채팅방 목록 로드 실패:', error)
         console.error('에러 상세:', error.response?.data || error.message)
         // 기본 채팅방 설정
-        this.chatRooms = [
-          { roomId: 1, roomName: '메인 채팅', createdAt: new Date() },
-          { roomId: 2, roomName: 'BTC 채팅', createdAt: new Date() },
-          { roomId: 3, roomName: 'ETH 채팅', createdAt: new Date() }
+        this.channels = [
+          { channelId: 1, name: '메인 채팅', createdAt: new Date() },
+          { channelId: 2, name: 'BTC 채팅', createdAt: new Date() },
+          { channelId: 3, name: 'ETH 채팅', createdAt: new Date() }
         ]
       }
     },
@@ -115,18 +115,18 @@ export default {
       })
     },
 
-    editRoom(room) {
-      this.editingRoom = room
-      this.roomForm = { roomName: room.roomName }
+    editChannel(channel) {
+      this.editingChannel = channel
+      this.channelForm = { name: channel.name }
       this.showEditModal = true
     },
 
-    async deleteRoom(roomId) {
+    async deleteChannel(channelId) {
       if (!confirm('정말로 이 채팅방을 삭제하시겠습니까?')) return
 
       try {
-        await apiService.deleteChatRoom(roomId)
-        this.chatRooms = this.chatRooms.filter(room => room.roomId !== roomId)
+        await apiService.deleteChannel(channelId)
+        this.channels = this.channels.filter(channel => channel.channelId !== channelId)
         alert('채팅방이 삭제되었습니다.')
       } catch (error) {
         console.error('채팅방 삭제 실패:', error)
@@ -134,33 +134,33 @@ export default {
       }
     },
 
-    async saveRoom() {
-      if (!this.roomForm.roomName) {
+    async saveChannel() {
+      if (!this.channelForm.name) {
         alert('채팅방 이름을 입력해주세요.')
         return
       }
 
-      console.log('채팅방 저장 시도:', this.roomForm)
+      console.log('채팅방 저장 시도:', this.channelForm)
 
       try {
         if (this.showEditModal) {
           // 수정
-          console.log('채팅방 수정:', this.editingRoom.roomId, this.roomForm)
-          const updatedRoom = await apiService.updateChatRoom(this.editingRoom.roomId, this.roomForm)
-          console.log('수정 결과:', updatedRoom)
+          console.log('채팅방 수정:', this.editingChannel.channelId, this.channelForm)
+          const updatedChannel = await apiService.updateChannel(this.editingChannel.channelId, this.channelForm)
+          console.log('수정 결과:', updatedChannel)
           
-          const index = this.chatRooms.findIndex(room => room.roomId === this.editingRoom.roomId)
+          const index = this.channels.findIndex(channel => channel.channelId === this.editingChannel.channelId)
           if (index !== -1) {
-            this.chatRooms[index].roomName = this.roomForm.roomName
+            this.channels[index].name = this.channelForm.name
           }
           alert('채팅방이 수정되었습니다.')
         } else {
           // 생성
-          console.log('채팅방 생성 요청:', this.roomForm)
-          const newRoom = await apiService.createChatRoom(this.roomForm)
-          console.log('생성 결과:', newRoom)
+          console.log('채팅방 생성 요청:', this.channelForm)
+          const newChannel = await apiService.createChannel(this.channelForm)
+          console.log('생성 결과:', newChannel)
           
-          this.chatRooms.push(newRoom)
+          this.channels.push(newChannel)
           alert('채팅방이 생성되었습니다.')
         }
         
@@ -175,8 +175,8 @@ export default {
     closeModal() {
       this.showCreateModal = false
       this.showEditModal = false
-      this.roomForm = { roomName: '' }
-      this.editingRoom = null
+      this.channelForm = { name: '' }
+      this.editingChannel = null
     },
 
     formatDate(date) {
@@ -253,13 +253,13 @@ export default {
   background: #2563eb;
 }
 
-.chatroom-list {
+.channelchannel-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.chatroom-item {
+.channelchannel-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -269,24 +269,24 @@ export default {
   background: white;
 }
 
-.room-info {
+.channel-info {
   flex: 1;
 }
 
-.room-name {
+.channel-name {
   font-weight: 600;
   color: #1f2937;
   margin-bottom: 0.25rem;
 }
 
-.room-details {
+.channel-details {
   display: flex;
   gap: 1rem;
   font-size: 0.875rem;
   color: #6b7280;
 }
 
-.room-actions {
+.channel-actions {
   display: flex;
   gap: 0.5rem;
 }

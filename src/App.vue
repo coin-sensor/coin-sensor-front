@@ -32,17 +32,17 @@
       <router-view ref="routerView" />
     </main>
     
-    <FloatingChat />
+    <FloatingChannel />
   </div>
 </template>
 
 <script>
-import FloatingChat from './components/FloatingChat.vue'
+import FloatingChannel from './components/FloatingChannel.vue'
 
 export default {
   name: 'App',
   components: {
-    FloatingChat
+    FloatingChannel: FloatingChannel
   },
   data() {
     return {

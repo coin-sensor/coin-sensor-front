@@ -3,15 +3,15 @@ import { getOrCreateUUID } from '../utils/uuid'
 
 const API_BASE_URL = 'http://localhost:8080/api'
 
-interface ChatRoom {
-  roomId: number
-  roomName: string
+interface Channel {
+  channelId: number
+  name: string
   createdAt: string
 }
 
-interface ChatMessage {
+interface Message {
   messageId: number
-  roomId: number;
+  channelId: number;
   uuid: string
   nickname: string
   content: string
@@ -117,73 +117,73 @@ export const apiService = {
   // 커뮤니티 관련 API
   async getChatKeywords(): Promise<any[]> {
     try {
-      const response: AxiosResponse = await api.get('/community/chat/keywords')
+      const response: AxiosResponse = await api.get('/community/channel/keywords')
       return response.data
     } catch (error) {
-      console.error('Failed to fetch chat keywords:', error)
+      console.error('Failed to fetch channel keywords:', error)
       return []
     }
   },
 
   // 채팅방 관리 API
-  _chatRoomsLoading: false,
-  async getChatRooms(): Promise<ChatRoom[]> {
-    if (this._chatRoomsLoading) {
+  channelsLoading: false,
+  async getChannels(): Promise<Channel[]> {
+    if (this.channelsLoading) {
       console.log('채팅방 목록 요청 중복 방지')
       return []
     }
     
     try {
-      this._chatRoomsLoading = true
+      this.channelsLoading = true
       console.log('API 채팅방 목록 요청...')
-      const response: AxiosResponse = await api.get('/chat/rooms')
+      const response: AxiosResponse = await api.get('/channels')
       console.log('API 채팅방 목록 응답:', response.data)
       return response.data
     } catch (error) {
-      console.error('Failed to fetch chat rooms:', error)
+      console.error('Failed to fetch channel channels:', error)
       console.error('API 에러 상세:', (error as any).response?.data)
       throw error
     } finally {
-      this._chatRoomsLoading = false
+      this.channelsLoading = false
     }
   },
 
-  async createChatRoom(roomData: { roomName: string }): Promise<ChatRoom> {
+  async createChannel(channelData: { name: string }): Promise<Channel> {
     try {
-      console.log('API 채팅방 생성 요청:', roomData)
-      const response: AxiosResponse = await api.post('/chat/rooms', roomData)
+      console.log('API 채팅방 생성 요청:', channelData)
+      const response: AxiosResponse = await api.post('/channels', channelData)
       console.log('API 채팅방 생성 응답:', response.data)
       return response.data
     } catch (error) {
-      console.error('Failed to create chat room:', error)
+      console.error('Failed to create channel channel:', error)
       console.error('API 에러 상세:', (error as any).response?.data)
       throw error
     }
   },
 
-  async updateChatRoom(roomId: number, roomData: { roomName: string }): Promise<ChatRoom> {
+  async updateChannel(channelId: number, channelData: { name: string }): Promise<Channel> {
     try {
-      const response: AxiosResponse = await api.put(`/chat/rooms/${roomId}`, roomData)
+      const response: AxiosResponse = await api.put(`/channels/${channelId}`, channelData)
       return response.data
     } catch (error) {
-      console.error('Failed to update chat room:', error)
+      console.error('Failed to update channel channel:', error)
       throw error
     }
   },
 
-  async deleteChatRoom(roomId: number): Promise<void> {
+  async deleteChannel(channelId: number): Promise<void> {
     try {
-      const response: AxiosResponse = await api.delete(`/chat/rooms/${roomId}`)
+      const response: AxiosResponse = await api.delete(`/channels/${channelId}`)
       return response.data
     } catch (error) {
-      console.error('Failed to delete chat room:', error)
+      console.error('Failed to delete channel channel:', error)
       throw error
     }
   },
 
-  async getRecentMessages(roomId: number, limit: number = 20): Promise<ChatMessage[]> {
+  async getRecentMessages(channelId: number, limit: number = 20): Promise<Message[]> {
     try {
-      const response: AxiosResponse = await api.get(`/chat/rooms/${roomId}/messages`, {
+      const response: AxiosResponse = await api.get(`/channels/${channelId}/messages`, {
         params: { limit }
       })
       return response.data
@@ -193,9 +193,9 @@ export const apiService = {
     }
   },
 
-  async getMessagesBefore(roomId: number, lastMessageId: number, limit: number = 20): Promise<ChatMessage[]> {
+  async getMessagesBefore(channelId: number, lastMessageId: number, limit: number = 20): Promise<Message[]> {
     try {
-      const response: AxiosResponse = await api.get(`/chat/rooms/${roomId}/messages/before/${lastMessageId}`, {
+      const response: AxiosResponse = await api.get(`/channels/${channelId}/messages/before/${lastMessageId}`, {
         params: { limit }
       })
       return response.data
