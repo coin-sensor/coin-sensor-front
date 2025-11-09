@@ -1,9 +1,8 @@
-import axios from 'axios'
-import { API_CONFIG } from '../config'
+import { api } from './api'
 
 export const detectionApi = {
-  getDetectionGroups(exchange: string, exchangeType: string, timeframe: string) {
-    return axios.get(`${API_CONFIG.API_URL}/detection`, {
+  getDetections(exchange: string, exchangeType: string, timeframe: string) {
+    return api.get('/detection', {
       params: { exchange, exchangeType, timeframe }
     })
   }

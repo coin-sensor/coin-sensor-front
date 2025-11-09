@@ -402,6 +402,7 @@ export default {
         this.nickname = updatedUser.nickname
         this.showNicknameModal = false
         this.newNickname = ''
+        alert(`닉네임이 '${updatedUser.nickname}'로 변경되었습니다.`)
       } catch (error) {
         console.error('닉네임 변경 실패:', error)
         alert('닉네임 변경에 실패했습니다.')

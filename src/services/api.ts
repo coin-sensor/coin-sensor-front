@@ -24,17 +24,6 @@ interface UserInfo {
   nickname: string
 }
 
-interface MarketOverview {
-  bitcoinPrice: number
-  bitcoinChangePercent: number
-  fearGreedIndex: number
-  fearGreedLabel: string
-  longShortRatio: number
-  kimchiPremium: number
-  totalCoins: number
-  abnormalCoins: number
-}
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
@@ -49,81 +38,10 @@ api.interceptors.request.use(config => {
   return config
 })
 
+// 다른 API 파일에서 사용할 수 있도록 export
+export { api }
+
 export const apiService = {
-  // 코인 관련 API
-  async getVolatileCoins(): Promise<any[]> {
-    try {
-      const response: AxiosResponse = await api.get('/coins/volatile')
-      return response.data
-    } catch (error) {
-      console.error('Failed to fetch volatile coins:', error)
-      return []
-    }
-  },
-
-  async getAbnormalCoins(): Promise<any[]> {
-    try {
-      const response: AxiosResponse = await api.get('/coins/abnormal')
-      return response.data
-    } catch (error) {
-      console.error('Failed to fetch abnormal coins:', error)
-      return []
-    }
-  },
-
-  async getAllCoins(): Promise<any[]> {
-    try {
-      const response: AxiosResponse = await api.get('/coins')
-      return response.data
-    } catch (error) {
-      console.error('Failed to fetch all coins:', error)
-      return []
-    }
-  },
-
-  // 마켓 관련 API
-  async getMarketOverview(): Promise<MarketOverview> {
-    try {
-      const response: AxiosResponse = await api.get('/market/overview')
-      return response.data
-    } catch (error) {
-      console.error('Failed to fetch market overview:', error)
-      return {
-        bitcoinPrice: 0,
-        bitcoinChangePercent: 0,
-        fearGreedIndex: 50,
-        fearGreedLabel: 'Neutral',
-        longShortRatio: 50,
-        kimchiPremium: 0,
-        totalCoins: 0,
-        abnormalCoins: 0
-      }
-    }
-  },
-
-  // 뉴스 관련 API
-  async getNews(page: number = 0, size: number = 20): Promise<any[]> {
-    try {
-      const response: AxiosResponse = await api.get('/news', {
-        params: { page, size }
-      })
-      return response.data
-    } catch (error) {
-      console.error('Failed to fetch news:', error)
-      return []
-    }
-  },
-
-  // 커뮤니티 관련 API
-  async getChatKeywords(): Promise<any[]> {
-    try {
-      const response: AxiosResponse = await api.get('/community/channel/keywords')
-      return response.data
-    } catch (error) {
-      console.error('Failed to fetch channel keywords:', error)
-      return []
-    }
-  },
 
   // 채팅방 관리 API
   channelsLoading: false,
