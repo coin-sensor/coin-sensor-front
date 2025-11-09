@@ -33,26 +33,26 @@
         </div>
       </div>
       
-      <div v-if="detectedGroups.length > 0" class="detected-list" :class="{ 'dark': isDarkMode }">
-        <div v-for="group in detectedGroups" :key="group.id" class="detection-group">
-          <div class="group-header">
-            <div class="group-info">
-              <span class="group-time">탐지 시간: {{ formatTime(group.detectedAt) }}</span>
-              <span class="group-criteria">{{ group.exchangeName }} {{ group.exchangeType }} | {{ group.timeframeLabel }} | 변동성 {{ group.criteriaVolatility }}% | 거래량 {{ group.criteriaVolume }}배</span>
+      <div v-if="detections.length > 0" class="detection-list" :class="{ 'dark': isDarkMode }">
+        <div v-for="detection in detections" :key="detection.id" class="detection-item">
+          <div class="detection-header">
+            <div class="detection-info">
+              <span class="detection-time">탐지 시간: {{ formatTime(detection.detectedAt) }}</span>
+              <span class="detection-criteria">{{ detection.exchangeName }} {{ detection.exchangeType }} | {{ detection.timeframeLabel }} | 변동성 {{ detection.criteriaVolatility }}% | 거래량 {{ detection.criteriaVolume }}배</span>
             </div>
-            <span class="group-count">{{ group.detectedCoins.length}}개 코인</span>
+            <span class="detection-count">{{ detection.detectedCoins.length}}개 코인</span>
           </div>
-          <div class="group-items">
-            <div v-for="detectedCoin in group.detectedCoins" :key="detectedCoin.id" class="detected-item">
-              <div class="detection-info">
-                <div class="coin-symbol clickable" @click="openChartModal(detectedCoin.symbol, group.timeframeLabel, group.exchangeType)">{{ detectedCoin.symbol }}</div>
-                <div class="detection-metrics">
+          <div class="detection-coins">
+            <div v-for="detectedCoin in detection.detectedCoins" :key="detectedCoin.id" class="coin-item">
+              <div class="coin-info">
+                <div class="coin-symbol clickable" @click="openChartModal(detectedCoin.symbol, detection.timeframeLabel, detection.exchangeType)">{{ detectedCoin.symbol }}</div>
+                <div class="coin-metrics">
                   <span class="metric-item">📈 변동성: <strong>{{ Number(detectedCoin.change || 0).toFixed(2) }}%</strong></span>
                   <span class="metric-separator">|</span>
                   <span class="metric-item">📊 거래량: <strong>{{ Number(detectedCoin.volume || 0).toFixed(2) }}배</strong></span>
                 </div>
               </div>
-              <div class="detection-change" :class="Number(detectedCoin.change) > 0 ? 'positive' : 'negative'">
+              <div class="coin-change" :class="Number(detectedCoin.change) > 0 ? 'positive' : 'negative'">
                 {{ Number(detectedCoin.change) > 0 ? '+' : '' }}{{ Number(detectedCoin.change).toFixed(2) }}%
               </div>
             </div>
@@ -95,7 +95,7 @@ export default {
     return {
       loading: false,
       isConnected: false,
-      detectedGroups: [],
+      detections: [],
 
       tradingViewWidget: null,
       processedIds: new Set(),
@@ -114,8 +114,8 @@ export default {
 
   mounted() {
     this.initTradingView()
-    this.loadInitialDetectionData()
-    this.initDetectionWebSocket()
+    this.loadInitialData()
+    this.initWebSocket()
     this.requestNotificationPermission()
     window.addEventListener('theme-changed', this.handleThemeChange)
   },
@@ -252,21 +252,21 @@ export default {
 
     },
     
-    async loadInitialDetectionData() {
+    async loadInitialData() {
       try {
         const { detectionApi } = await import('../services/detectionApi')
         const [exchange, exchangeType] = this.selectedExchange.split('-')
-        const response = await detectionApi.getDetectionGroups(exchange, exchangeType, this.selectedTimeframe)
+        const response = await detectionApi.getDetections(exchange, exchangeType, this.selectedTimeframe)
         
-        this.detectedGroups = response.data.map(group => ({
-          id: `${group.detectedAt}_${group.criteriaVolatility}_${group.criteriaVolume}`,
-          detectedAt: new Date(group.detectedAt),
-          exchangeName: group.exchangeName,
-          exchangeType: group.exchangeType,
-          timeframeLabel: group.timeframeLabel,
-          criteriaVolatility: group.criteriaVolatility,
-          criteriaVolume: group.criteriaVolume,
-          detectedCoins: group.coins.map(coin => ({
+        this.detections = response.data.map(detection => ({
+          id: `${detection.detectedAt}_${detection.criteriaVolatility}_${detection.criteriaVolume}`,
+          detectedAt: new Date(detection.detectedAt),
+          exchangeName: detection.exchangeName,
+          exchangeType: detection.exchangeType,
+          timeframeLabel: detection.timeframeLabel,
+          criteriaVolatility: detection.criteriaVolatility,
+          criteriaVolume: detection.criteriaVolume,
+          detectedCoins: detection.coins.map(coin => ({
             id: coin.detectedCoinId,
             symbol: coin.coinTicker,
             change: coin.volatility,
@@ -275,11 +275,11 @@ export default {
           }))
         }))
       } catch (error) {
-        console.error('초기 탐지 데이터 로드 실패:', error)
+        console.error('초기 데이터 로드 실패:', error)
       }
     },
 
-    initDetectionWebSocket() {
+    initWebSocket() {
       import('../services/websocket').then(({ websocketService }) => {
         // 연결 상태 초기화
         this.isConnected = websocketService.isConnected()
@@ -291,7 +291,7 @@ export default {
         })
         
         websocketService.onDetection((detection) => {
-          this.handleDetectionNotification(detection)
+          this.handleNotification(detection)
         })
         
         websocketService.onError((error) => {
@@ -321,28 +321,28 @@ export default {
 
     changeExchange() {
       localStorage.setItem('selectedExchange', this.selectedExchange)
-      this.detectedGroups = []
+      this.detections = []
       this.processedIds.clear()
-      this.loadInitialDetectionData()
+      this.loadInitialData()
       this.subscribeToExchangeAndTimeframe()
     },
     
     changeTimeframe() {
       localStorage.setItem('selectedTimeframe', this.selectedTimeframe)
-      this.detectedGroups = []
+      this.detections = []
       this.processedIds.clear()
-      this.loadInitialDetectionData()
+      this.loadInitialData()
       this.subscribeToExchangeAndTimeframe()
     },
     
-    handleDetectionNotification(detection) {
-      console.log('실시간 탐지 알림:', detection)
+    handleNotification(detection) {
+      console.log('실시간 알림:', detection)
       
-      const groupId = `${detection.detectedAt}_${detection.criteriaVolatility}_${detection.criteriaVolume}`
+      const detectionId = `${detection.detectedAt}_${detection.criteriaVolatility}_${detection.criteriaVolume}`
       
-      if (!this.processedIds.has(groupId)) {
-        const newGroup = {
-          id: groupId,
+      if (!this.processedIds.has(detectionId)) {
+        const newDetection = {
+          id: detectionId,
           detectedAt: new Date(detection.detectedAt),
           exchangeName: detection.exchangeName,
           exchangeType: detection.exchangeType,
@@ -358,11 +358,11 @@ export default {
           }))
         }
         
-        this.detectedGroups.unshift(newGroup)
-        this.processedIds.add(groupId)
+        this.detections.unshift(newDetection)
+        this.processedIds.add(detectionId)
         
-        if (this.detectedGroups.length > 10) {
-          this.detectedGroups = this.detectedGroups.slice(0, 10)
+        if (this.detections.length > 10) {
+          this.detections = this.detections.slice(0, 10)
         }
         
         if (Notification.permission === 'granted') {
@@ -627,7 +627,7 @@ export default {
   background: #10b981;
 }
 
-.detected-list {
+.detection-list {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -636,61 +636,61 @@ export default {
   padding-right: 0.5rem;
 }
 
-.detected-list::-webkit-scrollbar {
+.detection-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.detected-list::-webkit-scrollbar-track {
+.detection-list::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 3px;
 }
 
-.detected-list::-webkit-scrollbar-thumb {
+.detection-list::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 3px;
 }
 
-.detected-list::-webkit-scrollbar-thumb:hover {
+.detection-list::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-.detected-list.dark::-webkit-scrollbar-track {
+.detection-list.dark::-webkit-scrollbar-track {
   background: #374151;
 }
 
-.detected-list.dark::-webkit-scrollbar-thumb {
+.detection-list.dark::-webkit-scrollbar-thumb {
   background: #6b7280;
 }
 
-.detected-list.dark::-webkit-scrollbar-thumb:hover {
+.detection-list.dark::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
 
-.detected-list.dark .detection-group {
+.detection-list.dark .detection-item {
   border-color: #4b5563;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.detected-list.dark .group-header {
+.detection-list.dark .detection-header {
   background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
   border-bottom-color: rgba(255,255,255,0.1);
 }
 
-.detected-list.dark .group-time {
+.detection-list.dark .detection-time {
   color: #ffffff;
 }
 
-.detected-list.dark .group-criteria {
+.detection-list.dark .detection-criteria {
   color: rgba(255,255,255,0.85);
 }
 
-.detected-list.dark .group-count {
+.detection-list.dark .detection-count {
   background: rgba(255,255,255,0.15);
   color: #ffffff;
   backdrop-filter: blur(10px);
 }
 
-.detected-list.dark .detected-item {
+.detection-list.dark .coin-item {
   background: #1e293b;
   border-bottom-color: #334155;
 }
@@ -719,7 +719,7 @@ export default {
   color: #64748b;
 }
 
-.detection-group {
+.detection-item {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
@@ -727,7 +727,7 @@ export default {
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.group-header {
+.detection-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 0.75rem 1rem;
   display: flex;
@@ -736,25 +736,25 @@ export default {
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.group-info {
+.detection-info {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.group-time {
+.detection-time {
   font-weight: 600;
   color: #ffffff;
   font-size: 0.875rem;
 }
 
-.group-criteria {
+.detection-criteria {
   font-size: 0.75rem;
   color: rgba(255,255,255,0.9);
   font-weight: 500;
 }
 
-.group-count {
+.detection-count {
   background: rgba(255,255,255,0.2);
   color: white;
   padding: 0.25rem 0.5rem;
@@ -764,12 +764,12 @@ export default {
   backdrop-filter: blur(10px);
 }
 
-.group-items {
+.detection-coins {
   display: flex;
   flex-direction: column;
 }
 
-.detected-item {
+.coin-item {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -777,7 +777,7 @@ export default {
   border-bottom: 1px solid #e5e7eb;
 }
 
-.detected-item:last-child {
+.coin-item:last-child {
   border-bottom: none;
 }
 
@@ -883,13 +883,7 @@ export default {
   height: 400px;
 }
 
-.detection-time {
-  font-size: 0.75rem;
-  color: #6b7280;
-  min-width: 80px;
-}
-
-.detection-info {
+.coin-info {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -914,7 +908,7 @@ export default {
   font-weight: 500;
 }
 
-.detection-metrics {
+.coin-metrics {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -938,18 +932,18 @@ export default {
   font-weight: 300;
 }
 
-.detection-change {
+.coin-change {
   font-weight: 600;
   font-size: 1rem;
   min-width: 80px;
   text-align: right;
 }
 
-.detection-change.positive {
+.coin-change.positive {
   color: #059669;
 }
 
-.detection-change.negative {
+.coin-change.negative {
   color: #dc2626;
 }
 
@@ -987,34 +981,30 @@ export default {
   color: #94a3b8;
 }
 
-:global(#app.dark-mode) .detection-group {
+:global(#app.dark-mode) .detection-item {
   border-color: #374151;
 }
 
-:global(#app.dark-mode) .group-header {
+:global(#app.dark-mode) .detection-header {
   background: #374151;
   border-bottom-color: #4b5563;
 }
 
-:global(#app.dark-mode) .group-time {
+:global(#app.dark-mode) .detection-time {
   color: #f9fafb;
 }
 
-:global(#app.dark-mode) .group-criteria {
+:global(#app.dark-mode) .detection-criteria {
   color: #94a3b8;
 }
 
-:global(#app.dark-mode) .group-count {
+:global(#app.dark-mode) .detection-count {
   background: #1e40af;
 }
 
-:global(#app.dark-mode) .detected-item {
+:global(#app.dark-mode) .coin-item {
   background: #451a03;
   border-bottom-color: #92400e;
-}
-
-:global(#app.dark-mode) .detection-time {
-  color: #94a3b8;
 }
 
 :global(#app.dark-mode) .coin-symbol {
@@ -1025,7 +1015,7 @@ export default {
   background: #1e40af;
 }
 
-:global(#app.dark-mode) .detection-metrics {
+:global(#app.dark-mode) .coin-metrics {
   color: #94a3b8;
 }
 
@@ -1067,15 +1057,15 @@ export default {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-:global(#app.dark-mode) .detected-list::-webkit-scrollbar-track {
+:global(#app.dark-mode) .detection-list::-webkit-scrollbar-track {
   background: #374151;
 }
 
-:global(#app.dark-mode) .detected-list::-webkit-scrollbar-thumb {
+:global(#app.dark-mode) .detection-list::-webkit-scrollbar-thumb {
   background: #6b7280;
 }
 
-:global(#app.dark-mode) .detected-list::-webkit-scrollbar-thumb:hover {
+:global(#app.dark-mode) .detection-list::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
 
@@ -1141,13 +1131,13 @@ export default {
     align-items: flex-start;
   }
   
-  .detected-item {
+  .coin-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
   
-  .detection-change {
+  .coin-change {
     text-align: left;
   }
 }
