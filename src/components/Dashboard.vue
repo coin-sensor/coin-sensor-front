@@ -19,12 +19,12 @@
           </select>
 
           <select v-model="selectedTimeframe" @change="changeTimeframe" class="timeframe-select" :class="{ 'dark': isDarkMode }">
-            <option value="1m">1분봉</option>
-            <option value="5m">5분봉</option>
-            <option value="15m">15분봉</option>
-            <option value="1h">1시간봉</option>
-            <option value="4h">4시간봉</option>
-            <option value="1d">1일봉</option>
+            <option value="1m">1분</option>
+            <option value="5m">5분</option>
+            <option value="15m">15분</option>
+            <option value="1h">1시간</option>
+            <option value="4h">4시간</option>
+            <option value="1d">1일</option>
           </select>
         </div>
         <div class="status-indicator">
@@ -37,23 +37,23 @@
         <div v-for="group in detectedGroups" :key="group.id" class="detection-group">
           <div class="group-header">
             <div class="group-info">
-              <span class="group-time">탐지 시간: {{ formatTime(group.timestamp) }}</span>
+              <span class="group-time">탐지 시간: {{ formatTime(group.detectedAt) }}</span>
               <span class="group-criteria">{{ group.exchangeName }} {{ group.exchangeType }} | {{ group.timeframeLabel }} | 변동성 {{ group.criteriaVolatility }}% | 거래량 {{ group.criteriaVolume }}배</span>
             </div>
-            <span class="group-count">{{ group.items.length}}개 코인</span>
+            <span class="group-count">{{ group.detectedCoins.length}}개 코인</span>
           </div>
           <div class="group-items">
-            <div v-for="item in group.items" :key="item.id" class="detected-item">
+            <div v-for="detectedCoin in group.detectedCoins" :key="detectedCoin.id" class="detected-item">
               <div class="detection-info">
-                <div class="coin-symbol clickable" @click="openChartModal(item.symbol, group.timeframeLabel, group.exchangeType)">{{ item.symbol }}</div>
+                <div class="coin-symbol clickable" @click="openChartModal(detectedCoin.symbol, group.timeframeLabel, group.exchangeType)">{{ detectedCoin.symbol }}</div>
                 <div class="detection-metrics">
-                  <span class="metric-item">📈 변동성: <strong>{{ item.change || 0 }}%</strong></span>
+                  <span class="metric-item">📈 변동성: <strong>{{ Number(detectedCoin.change || 0).toFixed(2) }}%</strong></span>
                   <span class="metric-separator">|</span>
-                  <span class="metric-item">📊 거래량: <strong>{{ item.volume || 0 }}배</strong></span>
+                  <span class="metric-item">📊 거래량: <strong>{{ Number(detectedCoin.volume || 0).toFixed(2) }}배</strong></span>
                 </div>
               </div>
-              <div class="detection-change" :class="item.change > 0 ? 'positive' : 'negative'">
-                {{ item.change > 0 ? '+' : '' }}{{ item.change }}%
+              <div class="detection-change" :class="Number(detectedCoin.change) > 0 ? 'positive' : 'negative'">
+                {{ Number(detectedCoin.change) > 0 ? '+' : '' }}{{ Number(detectedCoin.change).toFixed(2) }}%
               </div>
             </div>
           </div>
@@ -71,7 +71,7 @@
     <div v-if="showChartModal" class="modal-overlay" @click="closeChartModal">
       <div class="modal-content" :class="{ 'dark': isDarkMode }" @click.stop>
         <div class="modal-header">
-          <h3>{{ selectedSymbol }} 차트 ({{ chartTimeframe }}분봉)</h3>
+          <h3>{{ selectedSymbol }} 차트 ({{ getTimeframeLabel(chartTimeframe) }})</h3>
           <div class="modal-info">
             <span class="timeframe-badge">{{ getTimeframeLabel(chartTimeframe) }}</span>
             <span class="countdown-display">다음 봉: {{ countdownText }}</span>
@@ -114,6 +114,7 @@ export default {
 
   mounted() {
     this.initTradingView()
+    this.loadInitialDetectionData()
     this.initDetectionWebSocket()
     this.requestNotificationPermission()
     window.addEventListener('theme-changed', this.handleThemeChange)
@@ -251,6 +252,33 @@ export default {
 
     },
     
+    async loadInitialDetectionData() {
+      try {
+        const { detectionApi } = await import('../services/detectionApi')
+        const [exchange, exchangeType] = this.selectedExchange.split('-')
+        const response = await detectionApi.getDetectionGroups(exchange, exchangeType, this.selectedTimeframe)
+        
+        this.detectedGroups = response.data.map(group => ({
+          id: `${group.detectedAt}_${group.criteriaVolatility}_${group.criteriaVolume}`,
+          detectedAt: new Date(group.detectedAt),
+          exchangeName: group.exchangeName,
+          exchangeType: group.exchangeType,
+          timeframeLabel: group.timeframeLabel,
+          criteriaVolatility: group.criteriaVolatility,
+          criteriaVolume: group.criteriaVolume,
+          detectedCoins: group.coins.map(coin => ({
+            id: coin.detectedCoinId,
+            symbol: coin.coinTicker,
+            change: coin.volatility,
+            volume: coin.volume,
+            detectedAt: new Date(coin.detectedAt)
+          }))
+        }))
+      } catch (error) {
+        console.error('초기 탐지 데이터 로드 실패:', error)
+      }
+    },
+
     initDetectionWebSocket() {
       import('../services/websocket').then(({ websocketService }) => {
         // 연결 상태 초기화
@@ -295,6 +323,7 @@ export default {
       localStorage.setItem('selectedExchange', this.selectedExchange)
       this.detectedGroups = []
       this.processedIds.clear()
+      this.loadInitialDetectionData()
       this.subscribeToExchangeAndTimeframe()
     },
     
@@ -302,6 +331,7 @@ export default {
       localStorage.setItem('selectedTimeframe', this.selectedTimeframe)
       this.detectedGroups = []
       this.processedIds.clear()
+      this.loadInitialDetectionData()
       this.subscribeToExchangeAndTimeframe()
     },
     
@@ -313,18 +343,18 @@ export default {
       if (!this.processedIds.has(groupId)) {
         const newGroup = {
           id: groupId,
-          timestamp: new Date(detection.detectedAt),
+          detectedAt: new Date(detection.detectedAt),
           exchangeName: detection.exchangeName,
           exchangeType: detection.exchangeType,
           timeframeLabel: detection.timeframeLabel,
           criteriaVolatility: detection.criteriaVolatility,
           criteriaVolume: detection.criteriaVolume,
-          items: detection.coins.map(item => ({
+          detectedCoins: detection.coins.map(item => ({
             id: item.detectedCoinId,
             symbol: item.coinTicker,
             change: item.volatility,
             volume: item.volume,
-            timestamp: new Date(item.detectedAt)
+            detectedAt: new Date(item.detectedAt)
           }))
         }
         

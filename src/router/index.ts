@@ -4,6 +4,7 @@ import Insight from '../views/Insight.vue'
 import Community from '../components/Community.vue'
 import News from '../components/News.vue'
 import Admin from '../views/Admin.vue'
+import Detection from '../views/Detection.vue'
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/admin',
     name: 'Admin',
     component: Admin
+  },
+  {
+    path: '/detection',
+    name: 'Detection',
+    component: Detection
   }
 ]
 

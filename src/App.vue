@@ -2,6 +2,7 @@
   <div id="app" :class="{ 'dark-mode': isDarkMode }">
     <nav class="navbar">
       <div class="nav-brand">
+        <img src="/favicon.png" alt="Coin Sensor" class="brand-logo" />
         <h1>Coin Sensor</h1>
       </div>
       <div class="nav-center">
@@ -93,6 +94,17 @@ body {
   margin: 0 auto;
   padding-left: 2rem;
   padding-right: 2rem;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-logo {
+  width: 32px;
+  height: 32px;
 }
 
 .nav-brand h1 {
