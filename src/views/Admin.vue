@@ -130,7 +130,7 @@ export default {
         alert('채팅방이 삭제되었습니다.')
       } catch (error) {
         console.error('채팅방 삭제 실패:', error)
-        alert('채팅방 삭제에 실패했습니다.')
+        alert(`${error.response?.data?.message || error.message}`)
       }
     },
 
@@ -168,7 +168,7 @@ export default {
       } catch (error) {
         console.error('채팅방 저장 실패:', error)
         console.error('에러 상세:', error.response?.data || error.message)
-        alert(`채팅방 저장에 실패했습니다: ${error.response?.data?.message || error.message}`)
+        alert(`${error.response?.data?.message || error.message}`)
       }
     },
 
