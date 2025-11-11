@@ -24,7 +24,7 @@
       <div v-for="message in messages" :key="message.id" class="message">
         <div class="message-header">
           <span class="nickname">{{ message.nickname || '익명' }}</span>
-          <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
+          <span class="timestamp">{{ formatTime(message.createdAt) }}</span>
         </div>
         <div class="message-content">{{ message.content }}</div>
       </div>
@@ -76,7 +76,7 @@ export default {
             id: message.messageId || Date.now() + Math.random(),
             nickname: message.nickname,
             content: message.content,
-            timestamp: message.createdAt || message.timestamp
+            createdAt: message.createdAt
           })
           
           this.$nextTick(() => {

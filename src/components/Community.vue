@@ -21,7 +21,7 @@
           <div v-for="message in messages" :key="message.id" class="message">
             <div class="message-header">
               <span class="username">{{ message.user }}</span>
-              <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
+              <span class="timestamp">{{ formatTime(message.createdAt) }}</span>
             </div>
             <div class="message-content">{{ message.message }}</div>
           </div>
@@ -147,9 +147,9 @@ export default {
         { id: 'eth', name: '이더리움', userCount: 67 }
       ],
       messages: [
-        { id: 1, user: '트레이더123', message: '비트코인 상승세 계속될까요?', timestamp: new Date() },
-        { id: 2, user: '코인러버', message: '이더리움도 좋은 흐름이네요', timestamp: new Date() },
-        { id: 3, user: '투자고수', message: '조심스럽게 접근하는게 좋을 것 같아요', timestamp: new Date() }
+        { id: 1, user: '트레이더123', message: '비트코인 상승세 계속될까요?', createdAt: new Date() },
+        { id: 2, user: '코인러버', message: '이더리움도 좋은 흐름이네요', createdAt: new Date() },
+        { id: 3, user: '투자고수', message: '조심스럽게 접근하는게 좋을 것 같아요', createdAt: new Date() }
       ],
       keywords: [
         { keyword: '비트코인', count: 245, rank: 1 },
@@ -183,7 +183,7 @@ export default {
         id: Date.now(),
         user: '나',
         message: this.newMessage,
-        timestamp: new Date()
+        createdAt: new Date()
       }
       
       this.messages.push(message)

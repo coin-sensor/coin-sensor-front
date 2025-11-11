@@ -43,7 +43,7 @@
             <div class="message-bubble">
               {{ message.content }}
             </div>
-            <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
+            <span class="timestamp">{{ formatTime(message.createdAt) }}</span>
           </div>
         </div>
       </div>
@@ -186,7 +186,7 @@ export default {
               uuid: message.uuid,
               nickname: message.nickname,
               content: message.content,
-              timestamp: new Date(message.createdAt)
+              createdAt: new Date(message.createdAt)
             })
             
             this.$nextTick(() => {
@@ -275,7 +275,7 @@ export default {
           uuid: msg.uuid,
           nickname: msg.nickname,
           content: msg.content,
-          timestamp: new Date(msg.createdAt)
+          createdAt: new Date(msg.createdAt)
         }))
         
         this.hasMoreMessages = recentMessages.length === 20
@@ -316,7 +316,7 @@ export default {
             uuid: msg.uuid,
             nickname: msg.nickname,
             content: msg.content,
-            timestamp: new Date(msg.createdAt)
+            createdAt: new Date(msg.createdAt)
           }))
           
           const container = this.$refs.messagesContainer

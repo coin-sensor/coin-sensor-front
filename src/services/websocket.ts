@@ -3,12 +3,11 @@ import { API_CONFIG } from '../config'
 import { getOrCreateUUID } from '../utils/uuid'
 
 interface Message {
+  messageId?: number
   channelId: number
   nickname: string
   content: string
-  messageId?: number
   createdAt?: string
-  timestamp?: string
 }
 
 interface DetectionData {
