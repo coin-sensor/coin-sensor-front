@@ -45,7 +45,7 @@
           <div class="detection-coins">
             <div v-for="detectedCoin in detection.detectedCoins" :key="detectedCoin.id" class="coin-item">
               <div class="coin-info">
-                <div class="coin-symbol clickable" @click="openChartModal(detectedCoin.symbol, detection.timeframeLabel, detection.exchangeType)">{{ detectedCoin.symbol }}</div>
+                <div class="coin-symbol clickable" @click="openChartModal(detectedCoin.symbol, detection.timeframeLabel, detection.exchangeType, detectedCoin.id)">{{ detectedCoin.symbol }}</div>
                 <div class="coin-metrics">
                   <span class="metric-item">📈 변동성: <strong>{{ Number(detectedCoin.change || 0).toFixed(2) }}%</strong></span>
                   <span class="metric-separator">|</span>
@@ -89,6 +89,8 @@
 </template>
 
 <script>
+import { api } from '../services/api'
+
 export default {
   name: 'Dashboard',
   data() {
@@ -198,12 +200,22 @@ export default {
       return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
     },
 
-    openChartModal(symbol, timeframeLabel, exchangeType) {
+    async openChartModal(symbol, timeframeLabel, exchangeType, detectedCoinId) {
       this.selectedSymbol = symbol
       this.chartTimeframe = this.convertTimeframeToInterval(timeframeLabel)
       this.selectedExchangeType = exchangeType
       this.showChartModal = true
       this.countdownText = '00:00'
+
+      // API 호출
+      if (detectedCoinId) {
+        try {
+          await api.post(`/coins/detected/${detectedCoinId}/view`)
+          console.info('탐지된 코인 조회')
+        } catch (error) {
+          console.error('탐지된 코인 조회 API 호출 실패:', error)
+        }
+      }
 
       // 즉시 카운트다운 시작
       this.startHeaderCountdown()
