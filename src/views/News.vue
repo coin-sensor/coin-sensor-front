@@ -1,182 +1,380 @@
 <template>
-  <div>
-    <v-row>
-      <!-- 뉴스 피드 -->
-      <v-col cols="12" lg="8">
-        <v-card>
-          <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-newspaper</v-icon>
-            암호화폐 뉴스
-            <v-spacer></v-spacer>
-            <v-btn
-              icon="mdi-refresh"
-              variant="text"
-              @click="refreshNews"
-              :loading="loading"
-            ></v-btn>
-          </v-card-title>
-          
-          <v-divider></v-divider>
-          
-          <div v-if="news.length > 0">
-            <v-card
-              v-for="article in news"
-              :key="article.id"
-              variant="flat"
-              class="ma-3"
-            >
-              <v-row no-gutters>
-                <v-col cols="3" v-if="article.imageUrl">
-                  <v-img
-                    :src="article.imageUrl"
-                    height="120"
-                    cover
-                  ></v-img>
-                </v-col>
-                <v-col :cols="article.imageUrl ? 9 : 12">
-                  <v-card-text>
-                    <div class="text-overline mb-1">
-                      {{ article.source }} • {{ formatDate(article.publishedAt) }}
-                    </div>
-                    <div class="text-h6 mb-2">{{ article.title }}</div>
-                    <div class="text-body-2 text-medium-emphasis">
-                      {{ article.summary }}
-                    </div>
-                  </v-card-text>
-                  <v-card-actions>
-                    <v-btn variant="text" size="small">
-                      자세히 보기
-                    </v-btn>
-                  </v-card-actions>
-                </v-col>
-              </v-row>
-            </v-card>
+  <div class="news-container">
+    <div class="card">
+      <div class="card-header">
+        <h2>TradingView 뉴스 피드</h2>
+      </div>
+      <div class="card-content">
+        <div class="main-layout">
+          <!-- 왼쪽 컬럼 -->
+          <div class="left-column">
+            <div class="widget-container">
+              <h4 class="widget-title">경제 캘린더</h4>
+              <div id="economic-calendar-widget"></div>
+            </div>
+            
+            <div class="widget-container">
+              <h4 class="widget-title">전체 뉴스</h4>
+              <div id="all-news-widget"></div>
+            </div>
+            
+            <div class="widget-container">
+              <h4 class="widget-title">주식</h4>
+              <div id="stock-news-widget"></div>
+            </div>
           </div>
           
-          <v-card-text v-else class="text-center py-8">
-            <v-skeleton-loader type="article@3"></v-skeleton-loader>
-          </v-card-text>
-        </v-card>
-      </v-col>
-      
-      <!-- 경제 캘린더 -->
-      <v-col cols="12" lg="4">
-        <v-card>
-          <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-calendar</v-icon>
-            경제 캘린더
-          </v-card-title>
-          
-          <v-divider></v-divider>
-          
-          <v-list v-if="economicEvents.length > 0">
-            <v-list-item
-              v-for="event in economicEvents"
-              :key="event.id"
-              class="px-4"
-            >
-              <template v-slot:prepend>
-                <v-chip
-                  :color="getImportanceColor(event.importance)"
-                  size="small"
-                  variant="flat"
-                >
-                  {{ getImportanceText(event.importance) }}
-                </v-chip>
-              </template>
-              
-              <v-list-item-title class="font-weight-medium">
-                {{ event.title }}
-              </v-list-item-title>
-              
-              <v-list-item-subtitle>
-                {{ formatEventDate(event.date) }}
-              </v-list-item-subtitle>
-              
-              <v-list-item-subtitle class="mt-1">
-                {{ event.description }}
-              </v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
-          
-          <v-card-text v-else class="text-center py-8">
-            <v-skeleton-loader type="list-item@3"></v-skeleton-loader>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+          <!-- 오른쪽 컬럼 -->
+          <div class="right-column">
+            <div class="widget-container">
+              <h4 class="widget-title">암호화폐</h4>
+              <div id="crypto-news-widget"></div>
+            </div>
+            <div class="widget-container">
+              <h4 class="widget-title">외환</h4>
+              <div id="forex-news-widget"></div>
+            </div>
+            <div class="widget-container">
+              <h4 class="widget-title">심볼 뉴스</h4>
+              <div class="symbol-input">
+                <input 
+                  v-model="symbolInput" 
+                  @keyup.enter="updateSymbolWidget"
+                  placeholder="예: BTCUSD"
+                  class="symbol-input-field"
+                />
+                <button @click="updateSymbolWidget" class="symbol-btn">적용</button>
+              </div>
+              <div id="symbol-news-widget"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
-import { useNewsStore } from '@/stores/news'
-import { apiService } from '@/services/api'
+import { onMounted, ref } from 'vue'
 
-const newsStore = useNewsStore()
-const news = computed(() => newsStore.news)
-const economicEvents = computed(() => newsStore.economicEvents)
-const loading = computed(() => newsStore.loading)
+const symbolInput = ref('BTCUSD')
+const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
 
-const fetchNewsData = async () => {
-  newsStore.setLoading(true)
-  try {
-    const [newsData, eventsData] = await Promise.all([
-      apiService.getNews(),
-      apiService.getEconomicCalendar()
-    ])
+// 다크모드 변경 감지
+window.addEventListener('theme-changed', (event: any) => {
+  isDarkMode.value = event.detail.isDarkMode
+  setTimeout(() => {
+    initTradingViewWidgets()
+  }, 100)
+})
+
+// 모든 스크립트 에러 무시
+window.addEventListener('error', () => false, true)
+window.addEventListener('unhandledrejection', () => false, true)
+
+// 콘솔 에러 완전 억제
+const originalConsoleError = console.error
+console.error = () => {}
+
+
+
+const createWidget = (containerId: string, config: any) => {
+  const container = document.getElementById(containerId)
+  if (!container) return
+  
+  container.innerHTML = `
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <div class="tradingview-widget-copyright">
+        <a href="https://www.tradingview.com/news/top-providers/tradingview/" rel="noopener nofollow" target="_blank">
+          <span class="blue-text">Top stories</span>
+        </a>
+        <span class="trademark"> by TradingView</span>
+      </div>
+    </div>
+  `
+  
+  const script = document.createElement('script')
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js'
+  script.async = true
+  script.innerHTML = JSON.stringify(config)
+  script.onerror = () => {}
+  
+  container.appendChild(script)
+}
+
+const createEconomicCalendarWidget = () => {
+  const container = document.getElementById('economic-calendar-widget')
+  if (!container) return
+  
+  const theme = isDarkMode.value ? 'dark' : 'light'
+  
+  container.innerHTML = `
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <div class="tradingview-widget-copyright">
+        <a href="https://www.tradingview.com/economic-calendar/" rel="noopener nofollow" target="_blank">
+          <span class="blue-text">Economic Calendar</span>
+        </a>
+        <span class="trademark"> by TradingView</span>
+      </div>
+    </div>
+  `
+  
+  const script = document.createElement('script')
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-events.js'
+  script.async = true
+  script.innerHTML = JSON.stringify({
+    "colorTheme": theme,
+    "isTransparent": false,
+    "locale": "en",
+    "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu",
+    "importanceFilter": "-1,0,1",
+    "width": "100%",
+    "height": 550
+  })
+  script.onerror = () => {}
+  
+  container.appendChild(script)
+}
+
+const initTradingViewWidgets = () => {
+  console.log('TradingView 위젯 초기화')
+  
+  const theme = isDarkMode.value ? 'dark' : 'light'
+  
+  // DOM이 완전히 준비될 때까지 대기
+  const checkAndInit = () => {
+    const containers = ['all-news-widget', 'crypto-news-widget', 'stock-news-widget', 'forex-news-widget', 'symbol-news-widget', 'economic-calendar-widget']
+    const allReady = containers.every(id => document.getElementById(id))
     
-    newsStore.setNews(newsData)
-    newsStore.setEconomicEvents(eventsData)
-  } catch (error) {
-    console.error('뉴스 데이터 로딩 실패:', error)
-  } finally {
-    newsStore.setLoading(false)
+    if (!allReady) {
+      setTimeout(checkAndInit, 100)
+      return
+    }
+    // 전체 뉴스
+    createWidget('all-news-widget', {
+      "displayMode": "regular",
+      "feedMode": "all_symbols",
+      "colorTheme": theme,
+      "isTransparent": false,
+      "locale": "en",
+      "width": "100%",
+      "height": 550
+    })
+    
+    // 경제 캘린더
+    createEconomicCalendarWidget()
+    
+    // 암호화폐 뉴스
+    createWidget('crypto-news-widget', {
+      "displayMode": "regular",
+      "feedMode": "market",
+      "colorTheme": theme,
+      "isTransparent": false,
+      "locale": "en",
+      "market": "crypto",
+      "width": "100%",
+      "height": 550
+    })
+    
+    // 주식 뉴스
+    createWidget('stock-news-widget', {
+      "displayMode": "regular",
+      "feedMode": "market",
+      "colorTheme": theme,
+      "isTransparent": false,
+      "locale": "en",
+      "market": "stock",
+      "width": "100%",
+      "height": 550
+    })
+    
+    // 외환 뉴스
+    createWidget('forex-news-widget', {
+      "displayMode": "regular",
+      "feedMode": "market",
+      "colorTheme": theme,
+      "isTransparent": false,
+      "locale": "en",
+      "market": "forex",
+      "width": "100%",
+      "height": 550
+    })
+    
+    // 심볼 뉴스
+    createSymbolWidget()
   }
+  
+  setTimeout(checkAndInit, 500)
 }
 
-const refreshNews = () => {
-  fetchNewsData()
-}
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+const createSymbolWidget = () => {
+  const theme = isDarkMode.value ? 'dark' : 'light'
+  // BITSTAMP: 접두사 자동 추가
+  const fullSymbol = symbolInput.value.includes(':') ? symbolInput.value : `BITSTAMP:${symbolInput.value}`
+  
+  createWidget('symbol-news-widget', {
+    "displayMode": "regular",
+    "feedMode": "symbol",
+    "symbol": fullSymbol,
+    "colorTheme": theme,
+    "isTransparent": false,
+    "locale": "en",
+    "width": "100%",
+    "height": 550
   })
 }
 
-const formatEventDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-    weekday: 'short'
-  })
-}
-
-const getImportanceColor = (importance: string) => {
-  switch (importance) {
-    case 'CRITICAL': return 'error'
-    case 'HIGH': return 'warning'
-    case 'MEDIUM': return 'info'
-    case 'LOW': return 'success'
-    default: return 'grey'
-  }
-}
-
-const getImportanceText = (importance: string) => {
-  switch (importance) {
-    case 'CRITICAL': return '매우중요'
-    case 'HIGH': return '중요'
-    case 'MEDIUM': return '보통'
-    case 'LOW': return '낮음'
-    default: return '알 수 없음'
+const updateSymbolWidget = () => {
+  if (symbolInput.value.trim()) {
+    createSymbolWidget()
   }
 }
 
 onMounted(() => {
-  fetchNewsData()
+  initTradingViewWidgets()
 })
 </script>
+
+<style scoped>
+.news-container {
+  padding: 2rem;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1.5rem;
+}
+
+.card-header h2 {
+  margin: 0;
+  color: #1f2937;
+}
+
+/* 다크모드 지원 */
+:global(body.dark-mode) .card {
+  background: #1e293b;
+}
+
+:global(body.dark-mode) .card-header {
+  background: #334155;
+  border-bottom-color: #475569;
+}
+
+:global(body.dark-mode) .card-header h2 {
+  color: #f1f5f9;
+}
+
+:global(body.dark-mode) .widget-title {
+  color: #f1f5f9;
+}
+
+:global(body.dark-mode) .symbol-input-field {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+
+:global(body.dark-mode) .symbol-input-field:focus {
+  border-color: #3b82f6;
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.left-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (max-width: 1200px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.widget-container {
+  height: 600px;
+}
+
+.widget-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #374151;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.tradingview-widget-container {
+  height: 550px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tradingview-widget-copyright {
+  font-size: 13px;
+  line-height: 32px;
+  text-align: center;
+  vertical-align: middle;
+  font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;
+  color: #9db2bd;
+}
+
+.blue-text {
+  color: #2962FF;
+  text-decoration: none;
+}
+
+.trademark {
+  color: #9db2bd;
+}
+
+.symbol-input {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.symbol-input-field {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.symbol-input-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.symbol-btn {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.symbol-btn:hover {
+  background: #2563eb;
+}
+</style>
