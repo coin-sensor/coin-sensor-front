@@ -2,6 +2,9 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import { setupGlobalFetch } from './utils/api'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faEye } from '@fortawesome/free-solid-svg-icons'
 
 // localStorage 초기값 설정 (앱 시작 전)
 if (!localStorage.getItem('darkMode')) {
@@ -20,4 +23,8 @@ if (!localStorage.getItem('uuid')) {
 // 앱 시작 전에 전역 fetch 설정
 setupGlobalFetch()
 
-createApp(App).use(router).mount('#app')
+library.add(faEye)
+
+const app = createApp(App)
+app.component('FontAwesomeIcon', FontAwesomeIcon)
+app.use(router).mount('#app')

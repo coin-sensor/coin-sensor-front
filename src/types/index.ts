@@ -1,26 +1,3 @@
-export interface CoinData {
-  symbol: string
-  name: string
-  currentPrice: number
-  volume24h: number
-  priceChangePercent24h: number
-  high24h: number
-  low24h: number
-  lastUpdated: string
-  isAbnormal: boolean
-  volatilityScore: number
-}
-
-export interface AbnormalCoin {
-  symbol: string
-  name: string
-  currentPrice: number
-  priceChangePercent24h: number
-  volume24h: number
-  isAbnormal: boolean
-  reason?: string
-}
-
 export interface Message {
   id: string
   content: string
@@ -28,38 +5,10 @@ export interface Message {
   user?: string
 }
 
-export interface NewsItem {
-  id: number
-  title: string
-  summary: string
-  source: string
-  publishedAt: string
-  imageUrl?: string
-}
-
-export interface MarketData {
-  fearGreedIndex: number
-  fearGreedLabel: string
-  longShortRatio: number
-  kimchiPremium: number
-  bitcoinPrice: number
-  bitcoinChangePercent: number
-  totalCoins: number
-  abnormalCoins: number
-}
-
 export interface ChatKeyword {
   keyword: string
   count: number
   rank: number
-}
-
-export interface EconomicEvent {
-  id: number
-  title: string
-  date: string
-  importance: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
-  description: string
 }
 
 export interface Channel {
@@ -71,4 +20,43 @@ export interface Channel {
 export interface RouletteResult {
   result: string
   timestamp: number
+}
+
+export interface DetectedCoinResponse {
+  detectedCoinId: number
+  coinTicker: string
+  volatility: number
+  volume: number
+  viewCount: number
+  detectedAt: string
+}
+
+export interface DetectionInfoResponse {
+  exchangeName: string
+  exchangeType: string
+  timeframeLabel: string
+  criteriaVolatility: number
+  criteriaVolume: number
+  detectedAt: string
+  coins: DetectedCoinResponse[]
+}
+
+export interface DetectedCoin {
+  id: number
+  symbol: string
+  change: number
+  volume: number
+  viewCount: number
+  detectedAt: Date
+}
+
+export interface Detection {
+  id: string
+  detectedAt: Date
+  exchangeName: string
+  exchangeType: string
+  timeframeLabel: string
+  criteriaVolatility: number
+  criteriaVolume: number
+  detectedCoins: DetectedCoin[]
 }

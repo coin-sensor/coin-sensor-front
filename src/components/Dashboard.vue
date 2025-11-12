@@ -40,20 +40,22 @@
               <span class="detection-time">탐지 시간: {{ formatTime(detection.detectedAt) }}</span>
               <span class="detection-criteria">{{ detection.exchangeName }} {{ detection.exchangeType }} | {{ detection.timeframeLabel }} | 변동성 {{ detection.criteriaVolatility }}% | 거래량 {{ detection.criteriaVolume }}배</span>
             </div>
-            <span class="detection-count">{{ detection.detectedCoins.length}}개 코인</span>
+            <span class="detection-count">{{ detection.coins.length}}개 코인</span>
           </div>
           <div class="detection-coins">
-            <div v-for="detectedCoin in detection.detectedCoins" :key="detectedCoin.id" class="coin-item">
+            <div v-for="coin in detection.coins" :key="coin.detectedCoinId" class="coin-item">
               <div class="coin-info">
-                <div class="coin-symbol clickable" @click="openChartModal(detectedCoin.symbol, detection.timeframeLabel, detection.exchangeType, detectedCoin.id)">{{ detectedCoin.symbol }}</div>
+                <div class="coin-symbol clickable" @click="openChartModal(coin.coinTicker, detection.timeframeLabel, detection.exchangeType, coin.detectedCoinId)">{{ coin.coinTicker }}</div>
                 <div class="coin-metrics">
-                  <span class="metric-item">📈 변동성: <strong>{{ Number(detectedCoin.change || 0).toFixed(2) }}%</strong></span>
+                  <span class="metric-item">📈 변동성: <strong>{{ Number(coin.volatility || 0).toFixed(2) }}%</strong></span>
                   <span class="metric-separator">|</span>
-                  <span class="metric-item">📊 거래량: <strong>{{ Number(detectedCoin.volume || 0).toFixed(2) }}배</strong></span>
+                  <span class="metric-item">📊 거래량: <strong>{{ Number(coin.volume || 0).toFixed(2) }}배</strong></span>
+                  <span class="metric-separator">|</span>
+                  <span class="metric-item"><FontAwesomeIcon icon="eye" /> <strong>{{ coin.viewCount || 0 }}</strong></span>
                 </div>
               </div>
-              <div class="coin-change" :class="Number(detectedCoin.change) > 0 ? 'positive' : 'negative'">
-                {{ Number(detectedCoin.change) > 0 ? '+' : '' }}{{ Number(detectedCoin.change).toFixed(2) }}%
+              <div class="coin-change" :class="Number(coin.volatility) > 0 ? 'positive' : 'negative'">
+                {{ Number(coin.volatility) > 0 ? '+' : '' }}{{ Number(coin.volatility).toFixed(2) }}%
               </div>
             </div>
           </div>
@@ -90,9 +92,11 @@
 
 <script>
 import { api } from '../services/api'
+import { DetectionInfoResponse } from '../types'
 
 export default {
   name: 'Dashboard',
+
   data() {
     return {
       loading: false,
@@ -100,7 +104,7 @@ export default {
       detections: [],
 
       tradingViewWidget: null,
-      processedIds: new Set(),
+
       showChartModal: false,
       selectedSymbol: '',
       chartTimeframe: '1',
@@ -270,24 +274,10 @@ export default {
         const [exchange, exchangeType] = this.selectedExchange.split('-')
         const response = await detectionApi.getDetections(exchange, exchangeType, this.selectedTimeframe)
         
-        this.detections = response.data.map(detection => ({
-          id: `${detection.detectedAt}_${detection.criteriaVolatility}_${detection.criteriaVolume}`,
-          detectedAt: new Date(detection.detectedAt),
-          exchangeName: detection.exchangeName,
-          exchangeType: detection.exchangeType,
-          timeframeLabel: detection.timeframeLabel,
-          criteriaVolatility: detection.criteriaVolatility,
-          criteriaVolume: detection.criteriaVolume,
-          detectedCoins: detection.coins.map(coin => ({
-            id: coin.detectedCoinId,
-            symbol: coin.coinTicker,
-            change: coin.volatility,
-            volume: coin.volume,
-            detectedAt: new Date(coin.detectedAt)
-          }))
-        }))
+        this.detections = response.data || []
       } catch (error) {
         console.error('초기 데이터 로드 실패:', error)
+        this.detections = []
       }
     },
 
@@ -334,7 +324,6 @@ export default {
     changeExchange() {
       localStorage.setItem('selectedExchange', this.selectedExchange)
       this.detections = []
-      this.processedIds.clear()
       this.loadInitialData()
       this.subscribeToExchangeAndTimeframe()
     },
@@ -342,47 +331,32 @@ export default {
     changeTimeframe() {
       localStorage.setItem('selectedTimeframe', this.selectedTimeframe)
       this.detections = []
-      this.processedIds.clear()
       this.loadInitialData()
       this.subscribeToExchangeAndTimeframe()
     },
     
     handleNotification(detection) {
       console.log('실시간 알림:', detection)
-      
+
       const detectionId = `${detection.detectedAt}_${detection.criteriaVolatility}_${detection.criteriaVolume}`
       
-      if (!this.processedIds.has(detectionId)) {
-        const newDetection = {
-          id: detectionId,
-          detectedAt: new Date(detection.detectedAt),
-          exchangeName: detection.exchangeName,
-          exchangeType: detection.exchangeType,
-          timeframeLabel: detection.timeframeLabel,
-          criteriaVolatility: detection.criteriaVolatility,
-          criteriaVolume: detection.criteriaVolume,
-          detectedCoins: detection.coins.map(item => ({
-            id: item.detectedCoinId,
-            symbol: item.coinTicker,
-            change: item.volatility,
-            volume: item.volume,
-            detectedAt: new Date(item.detectedAt)
-          }))
-        }
-        
-        this.detections.unshift(newDetection)
-        this.processedIds.add(detectionId)
-        
-        if (this.detections.length > 10) {
-          this.detections = this.detections.slice(0, 10)
-        }
-        
-        if (Notification.permission === 'granted') {
-          new Notification('코인 탐지 알림', {
-            body: `${detection.exchangeName} ${detection.exchangeType}: ${detection.coins.length}개 코인 탐지`,
-            icon: '/favicon.ico'
-          })
-        }
+      const newDetection = {
+        ...detection,
+        id: detectionId,
+        coins: detection.coins || []
+      }
+      
+      this.detections.unshift(newDetection)
+      
+      if (this.detections.length > 24) {
+        this.detections = this.detections.slice(0, 24)
+      }
+      
+      if (Notification.permission === 'granted') {
+        new Notification('코인 탐지 알림', {
+          body: `${detection.exchangeName} ${detection.exchangeType}: ${detection.coins.length}개 코인 탐지`,
+          icon: '/favicon.ico'
+        })
       }
     },
     
