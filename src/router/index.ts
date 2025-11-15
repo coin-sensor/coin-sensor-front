@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../components/Dashboard.vue'
-import Insight from '../views/Insight.vue'
+import Heatmap from '../views/Heatmap.vue'
 import Community from '../components/Community.vue'
 import News from '../views/News.vue'
 import Admin from '../views/Admin.vue'
 import Detection from '../views/Detection.vue'
+import Insight from "@/views/Insight.vue";
 
 const routes = [
   {
@@ -14,8 +15,13 @@ const routes = [
   },
   {
     path: '/insight',
-    name: 'Insight', 
+    name: 'Insight',
     component: Insight
+  },
+  {
+    path: '/Heatmap',
+    name: 'Heatmap',
+    component: Heatmap
   },
   {
     path: '/community',

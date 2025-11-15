@@ -4,178 +4,79 @@
       <h2>📊 김치프리미엄</h2>
       <div id="kimchi_chart"></div>
     </div>
+  </div>
 
-    <div class="card">
-      <h2>🌍 외국주식 히트맵</h2>
-      <div id="stock_heatmap"></div>
+  <div class="three-column-grid">
+    <div class="column">
+      <KimchiPremiumMiniChart />
     </div>
-
-    <div class="card">
-      <h2>💰 코인 히트맵</h2>
-      <div id="crypto_heatmap"></div>
+    
+    <div class="column">
+      <MiniChart />
     </div>
-
-    <div class="card">
-      <h2>💱 환율 히트맵</h2>
-      <div id="forex_heatmap"></div>
-    </div>
-
-    <div class="card">
-      <h2>📈 기술적 분석</h2>
-      <div id="technical_analysis"></div>
+    
+    <div class="column">
+      <div class="card">
+        <h2>📊 오른쪽 컴포넌트</h2>
+        <p>여기에 다른 컴포넌트가 들어갑니다</p>
+      </div>
     </div>
   </div>
+
 </template>
 
-<script>
-export default {
-  name: 'Insight',
-  data() {
-    return {
-      isDarkMode: localStorage.getItem('darkMode') === 'true',
-      widgets: []
-    }
-  },
+<script setup lang="ts">
+import { onMounted, onBeforeUnmount, ref } from 'vue'
+import KimchiPremiumMiniChart from '../components/KimchiPremiumMiniChart.vue'
+import MiniChart from "@/components/MiniChart.vue";
 
-  mounted() {
-    this.initWidgets()
-    window.addEventListener('theme-changed', this.handleThemeChange)
-  },
+const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
 
-  beforeUnmount() {
-    window.removeEventListener('theme-changed', this.handleThemeChange)
-  },
-
-  methods: {
-    initWidgets() {
-      const script1 = document.createElement('script')
-      script1.src = 'https://s3.tradingview.com/tv.js'
-      script1.async = true
-      script1.onload = () => this.createKimchiChart()
-      document.head.appendChild(script1)
-
-      const script2 = document.createElement('script')
-      script2.src = 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js'
-      script2.async = true
-      script2.text = JSON.stringify(this.getStockHeatmapConfig())
-      document.getElementById('stock_heatmap').appendChild(script2)
-
-      const script3 = document.createElement('script')
-      script3.src = 'https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js'
-      script3.async = true
-      script3.text = JSON.stringify(this.getCryptoHeatmapConfig())
-      document.getElementById('crypto_heatmap').appendChild(script3)
-
-      const script4 = document.createElement('script')
-      script4.src = 'https://s3.tradingview.com/external-embedding/embed-widget-forex-heat-map.js'
-      script4.async = true
-      script4.text = JSON.stringify(this.getForexHeatmapConfig())
-      document.getElementById('forex_heatmap').appendChild(script4)
-
-      const script5 = document.createElement('script')
-      script5.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js'
-      script5.async = true
-      script5.text = JSON.stringify(this.getTechnicalAnalysisConfig())
-      document.getElementById('technical_analysis').appendChild(script5)
-    },
-
-    createKimchiChart() {
-      const theme = this.isDarkMode ? 'dark' : 'light'
-      new TradingView.widget({
-        width: '100%',
-        height: 500,
-        symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100',
-        interval: '1D',
-        timezone: 'Asia/Seoul',
-        theme: theme,
-        style: '1',
-        locale: 'kr',
-        container_id: 'kimchi_chart'
-      })
-    },
-
-    getStockHeatmapConfig() {
-      return {
-        dataSource: 'SPX500',
-        blockSize: 'market_cap_basic',
-        blockColor: 'change',
-        grouping: 'sector',
-        locale: 'kr',
-        symbolUrl: '',
-        colorTheme: this.isDarkMode ? 'dark' : 'light',
-        exchanges: [],
-        hasTopBar: true,
-        isDataSetEnabled: true,
-        isZoomEnabled: true,
-        hasSymbolTooltip: true,
-        isMonoSize: false,
-        width: '100%',
-        height: 500
-      }
-    },
-
-    getCryptoHeatmapConfig() {
-      return {
-        dataSource: 'Crypto',
-        blockSize: 'market_cap_calc',
-        blockColor: '24h_close_change|5',
-        locale: 'kr',
-        symbolUrl: '',
-        colorTheme: this.isDarkMode ? 'dark' : 'light',
-        hasTopBar: true,
-        isDataSetEnabled: true,
-        isZoomEnabled: true,
-        hasSymbolTooltip: true,
-        isMonoSize: false,
-        width: '100%',
-        height: 500
-      }
-    },
-
-    getForexHeatmapConfig() {
-      return {
-        colorTheme: this.isDarkMode ? 'dark' : 'light',
-        isTransparent: false,
-        locale: 'kr',
-        currencies: ['EUR', 'USD', 'JPY', 'GBP', 'CHF', 'AUD', 'CAD', 'NZD', 'CNY', 'KRW'],
-        width: '100%',
-        height: 400
-      }
-    },
-
-    getTechnicalAnalysisConfig() {
-      return {
-        colorTheme: this.isDarkMode ? 'dark' : 'light',
-        displayMode: 'single',
-        isTransparent: false,
-        locale: 'kr',
-        interval: '5m',
-        disableInterval: false,
-        width: '100%',
-        height: 450,
-        symbol: 'BITSTAMP:BTCUSD',
-        showIntervalTabs: true
-      }
-    },
-
-    handleThemeChange(event) {
-      this.isDarkMode = event.detail.isDarkMode
-      this.reloadWidgets()
-    },
-
-    reloadWidgets() {
-      document.getElementById('kimchi_chart').innerHTML = ''
-      document.getElementById('stock_heatmap').innerHTML = ''
-      document.getElementById('crypto_heatmap').innerHTML = ''
-      document.getElementById('forex_heatmap').innerHTML = ''
-      document.getElementById('technical_analysis').innerHTML = ''
-      
-      setTimeout(() => {
-        this.initWidgets()
-      }, 100)
-    }
-  }
+const initWidgets = () => {
+  const script1 = document.createElement('script')
+  script1.src = 'https://s3.tradingview.com/tv.js'
+  script1.async = true
+  script1.onload = () => createKimchiChart()
+  document.head.appendChild(script1)
 }
+
+const createKimchiChart = () => {
+  const theme = isDarkMode.value ? 'dark' : 'light'
+  new (window as any).TradingView.widget({
+    width: '100%',
+    height: 500,
+    symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100',
+    interval: '1D',
+    timezone: 'Asia/Seoul',
+    theme: theme,
+    style: '1',
+    locale: 'kr',
+    container_id: 'kimchi_chart'
+  })
+}
+
+const handleThemeChange = (event: any) => {
+  isDarkMode.value = event.detail.isDarkMode
+  reloadWidgets()
+}
+
+const reloadWidgets = () => {
+  const kimchiChart = document.getElementById('kimchi_chart')
+  if (kimchiChart) kimchiChart.innerHTML = ''
+  
+  setTimeout(() => {
+    initWidgets()
+  }, 100)
+}
+
+onMounted(() => {
+  initWidgets()
+  window.addEventListener('theme-changed', handleThemeChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('theme-changed', handleThemeChange)
+})
 </script>
 
 <style scoped>
@@ -183,11 +84,17 @@ export default {
   margin-bottom: 2rem;
 }
 
-#kimchi_chart,
-#stock_heatmap,
-#crypto_heatmap,
-#forex_heatmap,
-#technical_analysis {
-  min-height: 400px;
+.three-column-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
+
+@media (max-width: 768px) {
+  .three-column-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>

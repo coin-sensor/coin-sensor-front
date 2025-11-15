@@ -17,8 +17,8 @@
         </button>
       </div>
 
-      <div class="channelchannel-list">
-        <div v-for="channel in channels" :key="channel.id" class="channelchannel-item">
+      <div class="channel-list">
+        <div v-for="channel in channels" :key="channel.id" class="channel-item">
           <div class="channel-info">
             <div class="channel-name">{{ channel.name }}</div>
             <div class="channel-details">
@@ -95,11 +95,6 @@ export default {
         console.error('채팅방 목록 로드 실패:', error)
         console.error('에러 상세:', error.response?.data || error.message)
         // 기본 채팅방 설정
-        this.channels = [
-          { channelId: 1, name: '메인 채팅', createdAt: new Date() },
-          { channelId: 2, name: 'BTC 채팅', createdAt: new Date() },
-          { channelId: 3, name: 'ETH 채팅', createdAt: new Date() }
-        ]
       }
     },
 
@@ -253,13 +248,13 @@ export default {
   background: #2563eb;
 }
 
-.channelchannel-list {
+.channel-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.channelchannel-item {
+.channel-item {
   display: flex;
   justify-content: space-between;
   align-items: center;

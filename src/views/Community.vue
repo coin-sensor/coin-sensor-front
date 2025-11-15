@@ -11,7 +11,7 @@
         <PopularKeywords />
       </v-col>
     </v-row>
-    
+
     <v-row class="mt-4">
       <!-- 투자 결정 돌림판 -->
       <v-col cols="12" lg="6">

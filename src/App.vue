@@ -12,6 +12,9 @@
         <router-link to="/insight" :class="{ active: $route.path === '/insight' }" class="nav-link">
           인사이트
         </router-link>
+        <router-link to="/Heatmap" :class="{ active: $route.path === '/Heatmap' }" class="nav-link">
+          히트맵
+        </router-link>
         <router-link to="/community" :class="{ active: $route.path === '/community' }" class="nav-link">
           커뮤니티
         </router-link>
