@@ -6,13 +6,9 @@
         <h2>
         <select v-model="selectedChart" @change="changeChart" class="timeframe-select" :class="{ 'dark': isDarkMode }">
           <option value="BINANCE:BTCUSDT">BTCUSDT 바이낸스 현물</option>
-          <option value="BINANCE:ETHUSDT">ETHUSDT 바이낸스 현물</option>
           <option value="BINANCE:BTCUSDT.P">BTCUSDT.P 바이낸스 선물</option>
-          <option value="BINANCE:ETHUSDT.P">ETHUSDT.P 바이낸스 선물</option>
           <option value="UPBIT:BTCKRW">BTCKRW 업비트</option>
-          <option value="UPBIT:ETHKRW">ETHKRW 업비트</option>
           <option value="BITHUMB:BTCKRW">BTCKRW 빗썸</option>
-          <option value="BITHUMB:ETHKRW">ETHKRW 빗썸</option>
         </select>
         </h2>
       </div>
