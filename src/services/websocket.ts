@@ -15,10 +15,10 @@ interface DetectionData {
 }
 
 interface DetectionParams {
-  exchanges?: string
-  exchangeTypes?: string
+  exchange?: string
+  exchangeType?: string
   coinCategory?: string
-  timeframes?: string
+  timeframe?: string
 }
 
 type CallbackEvent = 'connect' | 'detection' | 'channel' | 'error'
@@ -35,11 +35,14 @@ class WebSocketService {
   private detectionParams: DetectionParams = this.loadDetectionParams()
 
   private loadDetectionParams(): DetectionParams {
+    const selectedExchange = localStorage.getItem('selectedExchange') || 'binance-future';
+    const [exchangeName, exchangeType] = selectedExchange.split('-')
+
     return {
-      exchanges: localStorage.getItem('selectedExchange') || 'binance',
-      exchangeTypes: localStorage.getItem('selectedExchangeType') || 'future',
+      exchange: exchangeName || 'binance',
+      exchangeType: exchangeType || 'future',
       coinCategory: localStorage.getItem('selectedCoinCategory') || 'all',
-      timeframes: localStorage.getItem('selectedTimeframe') || '5m'
+      timeframe: localStorage.getItem('selectedTimeframe') || '5m'
     }
   }
 
@@ -78,8 +81,8 @@ class WebSocketService {
   }
 
   private subscribeToDetection(): void {
-    const { exchanges, exchangeTypes, coinCategory, timeframes } = this.detectionParams
-    this.subscribeToTopic(`/topic/detections?exchanges=${exchanges}&exchangeTypes=${exchangeTypes}&coinCategory=${coinCategory}&timeframes=${timeframes}`)
+    const { exchange, exchangeType, coinCategory, timeframe } = this.detectionParams
+    this.subscribeToTopic(`/topic/detections?exchange=${exchange}&exchangeType=${exchangeType}&coinCategory=${coinCategory}&timeframe=${timeframe}`)
   }
   
   subscribeToTopic(topic: string): void {

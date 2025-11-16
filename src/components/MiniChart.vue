@@ -86,11 +86,11 @@ export default {
         changeMode: 'price-and-percent',
         symbols: [
           ['김치프리미엄', '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100|12M'],
-          ['TOTAL', 'CRYPTOCAP:TOTAL|1D'],
-          ['TOTAL2', 'CRYPTOCAP:TOTAL2|1D'],
-          ['TOTAL3', 'CRYPTOCAP:TOTAL3|1D']
+          ['TOTAL', 'CRYPTOCAP:TOTAL|1M'],
+          ['TOTAL2', 'CRYPTOCAP:TOTAL2|1M'],
+          ['TOTAL3', 'CRYPTOCAP:TOTAL3|1M']
         ],
-        dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
+        dateRanges: ['1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
         fontSize: '10',
         headerFontSize: 'medium',
         autosize: true,

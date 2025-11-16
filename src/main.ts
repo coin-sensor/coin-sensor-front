@@ -10,11 +10,14 @@ import { faEye } from '@fortawesome/free-solid-svg-icons'
 if (!localStorage.getItem('darkMode')) {
   localStorage.setItem('darkMode', 'false')
 }
+if (!localStorage.getItem('selectedChart')) {
+  localStorage.setItem('selectedChart', 'BINANCE:BTCUSDT')
+}
 if (!localStorage.getItem('selectedExchange')) {
   localStorage.setItem('selectedExchange', 'binance-future')
 }
-if (!localStorage.getItem('selectedCoinRanking')) {
-  localStorage.setItem('selectedCoinRanking', 'all')
+if (!localStorage.getItem('selectedCoinCategory')) {
+  localStorage.setItem('selectedCoinCategory', 'all')
 }
 if (!localStorage.getItem('selectedTimeframe')) {
   localStorage.setItem('selectedTimeframe', '1m')

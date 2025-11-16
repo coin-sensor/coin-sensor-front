@@ -16,10 +16,7 @@
     </div>
     
     <div class="column">
-      <div class="card">
-        <h2>📊 오른쪽 컴포넌트</h2>
-        <p>여기에 다른 컴포넌트가 들어갑니다</p>
-      </div>
+      <TechnicalAnalysis />
     </div>
   </div>
 
@@ -29,6 +26,7 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import KimchiPremiumMiniChart from '../components/KimchiPremiumMiniChart.vue'
 import MiniChart from "@/components/MiniChart.vue";
+import TechnicalAnalysis from '../components/TechnicalAnalysis.vue'
 
 const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
 

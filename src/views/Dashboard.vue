@@ -2,7 +2,18 @@
   <div>
     <!-- 트레이딩뷰 차트 -->
     <div class="card chart-section">
-      <h2> BTCUSDT 바이낸스 현물</h2>
+      <div class="chart-header">
+        <h2>
+        <select v-model="selectedChart" @change="changeChart" class="timeframe-select" :class="{ 'dark': isDarkMode }">
+          <option value="BINANCE:BTCUSDT">BTCUSDT 바이낸스 현물</option>
+          <option value="BINANCE:BTCUSDT.P">BTCUSDT.P 바이낸스 선물</option>
+          <option value="BINANCE:ETHUSDT">ETHUSDT 바이낸스 현물</option>
+          <option value="BINANCE:ETHUSDT.P">ETHUSDT.P 바이낸스 선물</option>
+          <option value="UPBIT:BTCKRW">BTCKRW 업비트</option>
+          <option value="BITHUMB:BTCKRW">BTCKRW 빗썸</option>
+        </select>
+        </h2>
+      </div>
       <div class="tradingview-widget-container" ref="tradingviewContainer">
         <div id="tradingview_chart"></div>
       </div>
@@ -18,7 +29,7 @@
             <option value="binance-future">binance-future</option>
           </select>
 
-          <select v-model="selectedCoinRanking" @change="changeCoinRanking" class="timeframe-select" :class="{ 'dark': isDarkMode }">
+          <select v-model="selectedCoinCategory" @change="changeCoinCategory" class="timeframe-select" :class="{ 'dark': isDarkMode }">
             <option value="all">all</option>
             <option value="top20">top20</option>
             <option value="bottom20">bottom20</option>
@@ -120,7 +131,8 @@ export default {
       countdownText: '00:00',
       selectedExchange: localStorage.getItem('selectedExchange') || 'binance-future',
       selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m',
-      selectedCoinRanking: localStorage.getItem('selectedCoinRanking') || 'all',
+      selectedCoinCategory: localStorage.getItem('selectedCoinCategory') || 'all',
+      selectedChart: localStorage.getItem('selectedChart') || 'btc-spot',
       isDarkMode: localStorage.getItem('darkMode') === 'true'
     }
   },
@@ -157,7 +169,7 @@ export default {
       this.tradingViewWidget = new TradingView.widget({
         width: '100%',
         height: 500,
-        symbol: 'BINANCE:BTCUSDT',
+        symbol: this.selectedChart || 'BINANCE:BTCUSDT',
         interval: '1',
         timezone: 'Asia/Seoul',
         theme: theme,
@@ -171,6 +183,17 @@ export default {
         backgroundColor: backgroundColor,
         gridColor: gridColor
       })
+    },
+
+    changeChart() {
+      localStorage.setItem('selectedChart', this.selectedChart)
+      const container = document.getElementById('tradingview_chart')
+      if (container) {
+        container.innerHTML = ''
+      }
+      setTimeout(() => {
+        this.createTradingViewWidget()
+      }, 100)
     },
 
     handleThemeChange(event) {
@@ -279,7 +302,7 @@ export default {
       try {
         const { detectionApi } = await import('../services/detectionApi')
         const [exchange, exchangeType] = this.selectedExchange.split('-')
-        const response = await detectionApi.getDetections(exchange, exchangeType, this.selectedCoinRanking, this.selectedTimeframe)
+        const response = await detectionApi.getDetections(exchange, exchangeType, this.selectedCoinCategory, this.selectedTimeframe)
         
         this.detections = response.data || []
       } catch (error) {
@@ -322,7 +345,7 @@ export default {
     subscribeToExchangeAndTimeframe() {
       const [exchangeName, exchangeType] = this.selectedExchange.split('-')
       import('../services/websocket').then(({ websocketService }) => {
-        websocketService.subscribeToTopic(`/topic/detections?exchanges=${exchangeName}&exchangeTypes=${exchangeType}&coinRanking=${this.selectedCoinRanking}&timeframes=${this.selectedTimeframe}`)
+        websocketService.subscribeToTopic(`/topic/detections?exchange=${exchangeName}&exchangeType=${exchangeType}&coinCategory=${this.selectedCoinCategory}&timeframe=${this.selectedTimeframe}`)
       })
     },
 
@@ -333,8 +356,8 @@ export default {
       this.subscribeToExchangeAndTimeframe()
     },
 
-    changeCoinRanking() {
-      localStorage.setItem('selectedCoinRanking', this.selectedCoinRanking)
+    changeCoinCategory() {
+      localStorage.setItem('selectedCoinCategory', this.selectedCoinCategory)
       this.detections = []
       this.loadInitialData()
       this.subscribeToExchangeAndTimeframe()
@@ -432,46 +455,6 @@ export default {
       return labelMap[interval] || '1분'
     },
     
-    addCustomCountdown() {
-      // 기존 카운트다운 제거
-      const existingCountdown = document.getElementById('custom-countdown')
-      if (existingCountdown) {
-        existingCountdown.remove()
-      }
-      
-      const chartContainer = document.getElementById('popup_tradingview_chart')
-      if (chartContainer) {
-        // 컨테이너에 relative position 설정
-        chartContainer.style.position = 'relative'
-        
-        const countdownDiv = document.createElement('div')
-        countdownDiv.id = 'custom-countdown'
-        countdownDiv.style.cssText = `
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          background: ${this.isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
-          color: ${this.isDarkMode ? '#f1f5f9' : '#1f2937'};
-          border: 1px solid ${this.isDarkMode ? '#475569' : '#d1d5db'};
-          padding: 6px 10px;
-          border-radius: 4px;
-          font-size: 12px;
-          font-weight: 600;
-          font-family: monospace;
-          z-index: 9999;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          pointer-events: none;
-        `
-        countdownDiv.textContent = '로딩 중...'
-        chartContainer.appendChild(countdownDiv)
-        
-        // 짧은 지연 후 카운트다운 시작
-        setTimeout(() => {
-          this.startCustomCountdown()
-        }, 500)
-      }
-    },
-    
     startCustomCountdown() {
       const updateCountdown = () => {
         const now = new Date()
@@ -479,10 +462,17 @@ export default {
         const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
         const remaining = nextCandle - now
         
-        const minutes = Math.floor(remaining / 60000)
+        const hours = Math.floor(remaining / 3600000)
+        const minutes = Math.floor((remaining % 3600000) / 60000)
         const seconds = Math.floor((remaining % 60000) / 1000)
         
-        const timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        let timeText
+        if (hours > 0) {
+          timeText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        } else {
+          timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        }
+        
         this.countdownText = timeText
         
         const countdownElement = document.getElementById('custom-countdown')
@@ -521,10 +511,15 @@ export default {
         const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
         const remaining = nextCandle - now
         
-        const minutes = Math.floor(remaining / 60000)
+        const hours = Math.floor(remaining / 3600000)
+        const minutes = Math.floor((remaining % 3600000) / 60000)
         const seconds = Math.floor((remaining % 60000) / 1000)
         
-        this.countdownText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        if (hours > 0) {
+          this.countdownText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        } else {
+          this.countdownText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        }
       }
       
       updateHeaderCountdown()
@@ -585,6 +580,7 @@ export default {
   background: white;
   color: #374151;
   font-size: 0.875rem;
+  font-weight: 700;
   cursor: pointer;
 }
 

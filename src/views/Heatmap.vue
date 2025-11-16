@@ -15,10 +15,7 @@
       <div id="forex_heatmap"></div>
     </div>
 
-    <div class="card">
-      <h2>📈 기술적 분석</h2>
-      <div id="technical_analysis"></div>
-    </div>
+
   </div>
 </template>
 
@@ -61,11 +58,7 @@ export default {
       script4.text = JSON.stringify(this.getForexHeatmapConfig())
       document.getElementById('forex_heatmap').appendChild(script4)
 
-      const script5 = document.createElement('script')
-      script5.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js'
-      script5.async = true
-      script5.text = JSON.stringify(this.getTechnicalAnalysisConfig())
-      document.getElementById('technical_analysis').appendChild(script5)
+
     },
 
     getStockHeatmapConfig() {
@@ -117,20 +110,7 @@ export default {
       }
     },
 
-    getTechnicalAnalysisConfig() {
-      return {
-        colorTheme: this.isDarkMode ? 'dark' : 'light',
-        displayMode: 'single',
-        isTransparent: false,
-        locale: 'kr',
-        interval: '5m',
-        disableInterval: false,
-        width: '100%',
-        height: 450,
-        symbol: 'BITSTAMP:BTCUSD',
-        showIntervalTabs: true
-      }
-    },
+
 
     handleThemeChange(event) {
       this.isDarkMode = event.detail.isDarkMode
@@ -138,11 +118,11 @@ export default {
     },
 
     reloadWidgets() {
-      document.getElementById('kimchi_chart').innerHTML = ''
+
       document.getElementById('stock_heatmap').innerHTML = ''
       document.getElementById('crypto_heatmap').innerHTML = ''
       document.getElementById('forex_heatmap').innerHTML = ''
-      document.getElementById('technical_analysis').innerHTML = ''
+
       
       setTimeout(() => {
         this.initWidgets()
@@ -160,8 +140,7 @@ export default {
 #kimchi_chart,
 #stock_heatmap,
 #crypto_heatmap,
-#forex_heatmap,
-#technical_analysis {
+#forex_heatmap {
   min-height: 400px;
 }
 </style>
