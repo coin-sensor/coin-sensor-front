@@ -14,6 +14,13 @@ interface DetectionData {
   [key: string]: any
 }
 
+interface DetectionParams {
+  exchanges?: string
+  exchangeTypes?: string
+  coinCategory?: string
+  timeframes?: string
+}
+
 type CallbackEvent = 'connect' | 'detection' | 'channel' | 'error'
 type CallbackFunction = (data?: any) => void
 
@@ -25,6 +32,16 @@ class WebSocketService {
   private callbacks: Map<CallbackEvent, CallbackFunction[]> = new Map()
   private currentSubscription: StompSubscription | null = null
   private channelSubscription: StompSubscription | null = null
+  private detectionParams: DetectionParams = this.loadDetectionParams()
+
+  private loadDetectionParams(): DetectionParams {
+    return {
+      exchanges: localStorage.getItem('selectedExchange') || 'binance',
+      exchangeTypes: localStorage.getItem('selectedExchangeType') || 'future',
+      coinCategory: localStorage.getItem('selectedCoinCategory') || 'all',
+      timeframes: localStorage.getItem('selectedTimeframe') || '5m'
+    }
+  }
 
   connect(): void {
     try {
@@ -61,10 +78,11 @@ class WebSocketService {
   }
 
   private subscribeToDetection(): void {
-    this.subscribeToTopic('/topic/detection/exchanges/binance/exchangeTypes/future/timeframes/5m')
+    const { exchanges, exchangeTypes, coinCategory, timeframes } = this.detectionParams
+    this.subscribeToTopic(`/topic/detections?exchanges=${exchanges}&exchangeTypes=${exchangeTypes}&coinCategory=${coinCategory}&timeframes=${timeframes}`)
   }
   
-  private subscribeToTopic(topic: string): void {
+  subscribeToTopic(topic: string): void {
     if (this.stompClient && this.connected) {
       // 기존 구독 해제
       if (this.currentSubscription) {

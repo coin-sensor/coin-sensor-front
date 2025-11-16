@@ -18,6 +18,12 @@
             <option value="binance-future">binance-future</option>
           </select>
 
+          <select v-model="selectedCoinRanking" @change="changeCoinRanking" class="timeframe-select" :class="{ 'dark': isDarkMode }">
+            <option value="all">all</option>
+            <option value="top20">top20</option>
+            <option value="bottom20">bottom20</option>
+          </select>
+
           <select v-model="selectedTimeframe" @change="changeTimeframe" class="timeframe-select" :class="{ 'dark': isDarkMode }">
             <option value="1m">1분</option>
             <option value="5m">5분</option>
@@ -112,8 +118,9 @@ export default {
       popupWidget: null,
       countdownInterval: null,
       countdownText: '00:00',
-      selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m',
       selectedExchange: localStorage.getItem('selectedExchange') || 'binance-future',
+      selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m',
+      selectedCoinRanking: localStorage.getItem('selectedCoinRanking') || 'all',
       isDarkMode: localStorage.getItem('darkMode') === 'true'
     }
   },
@@ -272,7 +279,7 @@ export default {
       try {
         const { detectionApi } = await import('../services/detectionApi')
         const [exchange, exchangeType] = this.selectedExchange.split('-')
-        const response = await detectionApi.getDetections(exchange, exchangeType, this.selectedTimeframe)
+        const response = await detectionApi.getDetections(exchange, exchangeType, this.selectedCoinRanking, this.selectedTimeframe)
         
         this.detections = response.data || []
       } catch (error) {
@@ -289,7 +296,6 @@ export default {
         websocketService.onConnect(() => {
           this.isConnected = true
           console.log('WebSocket 연결 성공')
-          this.subscribeToExchangeAndTimeframe()
         })
         
         websocketService.onDetection((detection) => {
@@ -301,11 +307,10 @@ export default {
           console.error('WebSocket 오류:', error)
         })
         
-        // 연결 상태 확인 후 연결 또는 구독
+        // 연결 상태 확인 후 연결
         if (websocketService.isConnected()) {
           console.log('WebSocket 이미 연결됨')
           this.isConnected = true
-          this.subscribeToExchangeAndTimeframe()
         } else {
           console.log('WebSocket 연결 시도 중...')
           this.isConnected = false
@@ -317,7 +322,7 @@ export default {
     subscribeToExchangeAndTimeframe() {
       const [exchangeName, exchangeType] = this.selectedExchange.split('-')
       import('../services/websocket').then(({ websocketService }) => {
-        websocketService.subscribeToTopic(`/topic/detection/exchanges/${exchangeName}/exchangeTypes/${exchangeType}/timeframes/${this.selectedTimeframe}`)
+        websocketService.subscribeToTopic(`/topic/detections?exchanges=${exchangeName}&exchangeTypes=${exchangeType}&coinRanking=${this.selectedCoinRanking}&timeframes=${this.selectedTimeframe}`)
       })
     },
 
@@ -327,7 +332,14 @@ export default {
       this.loadInitialData()
       this.subscribeToExchangeAndTimeframe()
     },
-    
+
+    changeCoinRanking() {
+      localStorage.setItem('selectedCoinRanking', this.selectedCoinRanking)
+      this.detections = []
+      this.loadInitialData()
+      this.subscribeToExchangeAndTimeframe()
+    },
+
     changeTimeframe() {
       localStorage.setItem('selectedTimeframe', this.selectedTimeframe)
       this.detections = []

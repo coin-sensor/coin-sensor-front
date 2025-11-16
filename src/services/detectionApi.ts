@@ -1,9 +1,9 @@
 import { api } from './api'
 
 export const detectionApi = {
-  getDetections(exchange: string, exchangeType: string, timeframe: string) {
+  getDetections(exchange: string, exchangeType: string, coinCategory: string, timeframe: string) {
     return api.get('/detections', {
-      params: { exchange, exchangeType, timeframe }
+      params: { exchange, exchangeType, coinCategory, timeframe }
     })
   }
 }

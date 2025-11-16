@@ -13,6 +13,9 @@ if (!localStorage.getItem('darkMode')) {
 if (!localStorage.getItem('selectedExchange')) {
   localStorage.setItem('selectedExchange', 'binance-future')
 }
+if (!localStorage.getItem('selectedCoinRanking')) {
+  localStorage.setItem('selectedCoinRanking', 'all')
+}
 if (!localStorage.getItem('selectedTimeframe')) {
   localStorage.setItem('selectedTimeframe', '1m')
 }
