@@ -53,24 +53,24 @@
           <div class="detection-header">
             <div class="detection-info">
               <span class="detection-time">탐지 시간: {{ formatTime(detection.detectedAt) }}</span>
-              <span class="detection-criteria">{{ detection.exchangeName }} {{ detection.exchangeType }} | {{ detection.timeframeLabel }} | 변동성 {{ detection.criteriaVolatility }}% | 거래량 {{ detection.criteriaVolume }}배</span>
+              <span class="condition">{{ detection.exchangeName }} {{ detection.exchangeType }} | {{ detection.timeframeName }} | 변동성 {{ detection.conditionChangeX }}% | 거래량 {{ detection.conditionVolumeX }}배</span>
             </div>
             <span class="detection-count">{{ detection.coins.length}}개 코인</span>
           </div>
           <div class="detection-coins">
             <div v-for="coin in detection.coins" :key="coin.detectedCoinId" class="coin-item">
               <div class="coin-info">
-                <div class="coin-symbol clickable" @click="openChartModal(coin.coinTicker, detection.timeframeLabel, detection.exchangeType, coin.detectedCoinId)">{{ coin.coinTicker }}</div>
+                <div class="coin-symbol clickable" @click="openChartModal(coin.coinTicker, detection.timeframeName, detection.exchangeType, coin.detectedCoinId)">{{ coin.coinTicker }}</div>
                 <div class="coin-metrics">
-                  <span class="metric-item">📈 변동성: <strong>{{ Number(coin.volatility || 0).toFixed(2) }}%</strong></span>
+                  <span class="metric-item">📈 변동성: <strong>{{ Number(coin.changeX || 0).toFixed(2) }}%</strong></span>
                   <span class="metric-separator">|</span>
-                  <span class="metric-item">📊 거래량: <strong>{{ Number(coin.volume || 0).toFixed(2) }}배</strong></span>
+                  <span class="metric-item">📊 거래량: <strong>{{ Number(coin.volumeX || 0).toFixed(2) }}배</strong></span>
                   <span class="metric-separator">|</span>
                   <span class="metric-item"><FontAwesomeIcon icon="eye" /> <strong>{{ coin.viewCount || 0 }}</strong></span>
                 </div>
               </div>
-              <div class="coin-change" :class="Number(coin.volatility) > 0 ? 'positive' : 'negative'">
-                {{ Number(coin.volatility) > 0 ? '+' : '' }}{{ Number(coin.volatility).toFixed(2) }}%
+              <div class="coin-change" :class="Number(coin.changeX) > 0 ? 'positive' : 'negative'">
+                {{ Number(coin.changeX) > 0 ? '+' : '' }}{{ Number(coin.changeX).toFixed(2) }}%
               </div>
             </div>
           </div>
@@ -232,9 +232,9 @@ export default {
       return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
     },
 
-    async openChartModal(symbol, timeframeLabel, exchangeType, detectedCoinId) {
+    async openChartModal(symbol, timeframeName, exchangeType, detectedCoinId) {
       this.selectedSymbol = symbol
-      this.chartTimeframe = this.convertTimeframeToInterval(timeframeLabel)
+      this.chartTimeframe = this.convertTimeframeToInterval(timeframeName)
       this.selectedExchangeType = exchangeType
       this.showChartModal = true
       this.countdownText = '00:00'
@@ -371,7 +371,7 @@ export default {
     handleNotification(detection) {
       console.log('실시간 알림:', detection)
 
-      const detectionId = `${detection.detectedAt}_${detection.criteriaVolatility}_${detection.criteriaVolume}`
+      const detectionId = `${detection.detectedAt}_${detection.conditionChangeX}_${detection.conditionVolumeX}`
       
       const newDetection = {
         ...detection,
@@ -411,7 +411,7 @@ export default {
       }
     },
     
-    convertTimeframeToInterval(timeframeLabel) {
+    convertTimeframeToInterval(timeframeName) {
       const timeframeMap = {
         '1m': '1',
         '3m': '3', 
@@ -429,7 +429,7 @@ export default {
         '1w': '1W',
         '1M': '1M'
       }
-      return timeframeMap[timeframeLabel] || '1'
+      return timeframeMap[timeframeName] || '1'
     },
     
     getTimeframeLabel(interval) {
@@ -672,7 +672,7 @@ export default {
   color: #ffffff;
 }
 
-.detection-list.dark .detection-criteria {
+.detection-list.dark .condition {
   color: rgba(255,255,255,0.85);
 }
 
@@ -740,7 +740,7 @@ export default {
   font-size: 0.875rem;
 }
 
-.detection-criteria {
+.condition {
   font-size: 0.75rem;
   color: rgba(255,255,255,0.9);
   font-weight: 500;
@@ -986,7 +986,7 @@ export default {
   color: #f9fafb;
 }
 
-:global(#app.dark-mode) .detection-criteria {
+:global(#app.dark-mode) .condition {
   color: #94a3b8;
 }
 
