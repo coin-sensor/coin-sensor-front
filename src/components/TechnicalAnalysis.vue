@@ -40,7 +40,7 @@ export default {
         interval: '5m',
         disableInterval: false,
         width: '100%',
-        height: 450,
+        height: 400,
         symbol: 'BITSTAMP:BTCUSD',
         showIntervalTabs: true
       }
@@ -67,6 +67,6 @@ export default {
 }
 
 #technical_analysis {
-  min-height: 400px;
+  height: 400px !important;
 }
 </style>

@@ -25,10 +25,6 @@
 
   <div class="three-column-grid">
     <div class="column">
-      <KimchiPremiumMiniChart />
-    </div>
-    
-    <div class="column">
       <MiniChart />
     </div>
     
@@ -303,7 +299,7 @@ onBeforeUnmount(() => {
 
 .three-column-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
   margin-top: 2rem;
 }

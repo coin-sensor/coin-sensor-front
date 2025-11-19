@@ -85,12 +85,14 @@ export default {
         valuesTracking: '1',
         changeMode: 'price-and-percent',
         symbols: [
-          ['김치프리미엄', '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100|12M'],
-          ['TOTAL', 'CRYPTOCAP:TOTAL|1M'],
-          ['TOTAL2', 'CRYPTOCAP:TOTAL2|1M'],
-          ['TOTAL3', 'CRYPTOCAP:TOTAL3|1M']
+          ['김프', '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100|12M'],
+          ['BTC.D', 'CRYPTOCAP:BTC.D|1D'],
+          ['USDT.D', 'CRYPTOCAP:USDT.D|1D'],
+          ['TOTAL', 'CRYPTOCAP:TOTAL|1D'],
+          ['Gold', 'OANDA:XAUUSD|1D'],
+          ['NASDAQ', 'NASDAQ:NDX|1D']
         ],
-        dateRanges: ['1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
+        dateRanges: ['1d|1', '1w|15', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
         fontSize: '10',
         headerFontSize: 'medium',
         autosize: true,
@@ -143,11 +145,6 @@ export default {
   gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 600;
-}
-
-.tradingview-widget-container {
-  width: 100%;
-  height: 400px;
 }
 
 #mini_chart {
