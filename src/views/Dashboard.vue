@@ -1,5 +1,8 @@
 <template>
   <div>
+    <!-- 즐겨찾기 코인 -->
+    <FavoriteCoins @favorite-removed="handleFavoriteRemoved" />
+    
     <!-- 트레이딩뷰 차트 -->
     <div class="card chart-section">
       <div class="chart-header">
@@ -69,6 +72,14 @@
                   <span class="metric-item"><FontAwesomeIcon icon="eye" /> <strong>{{ coin.viewCount || 0 }}</strong></span>
                 </div>
               </div>
+              <button 
+                @click="toggleFavorite(coin.exchangeCoinId)" 
+                class="favorite-btn"
+                :class="{ 'active': favoriteCoins.has(coin.exchangeCoinId) }"
+                :title="favoriteCoins.has(coin.exchangeCoinId) ? '즐겨찾기 해제' : '즐겨찾기 추가'"
+              >
+                <FontAwesomeIcon :icon="favoriteCoins.has(coin.exchangeCoinId) ? 'star' : ['far', 'star']" />
+              </button>
               <div class="coin-change" :class="Number(coin.changeX) > 0 ? 'positive' : 'negative'">
                 {{ Number(coin.changeX) > 0 ? '+' : '' }}{{ Number(coin.changeX).toFixed(2) }}%
               </div>
@@ -108,9 +119,15 @@
 <script>
 import { api } from '../services/api'
 import { DetectionInfoResponse } from '../types'
+import { favoriteApi } from '../services/favoriteApi'
+import FavoriteCoins from '../components/FavoriteCoins.vue'
 
 export default {
   name: 'Dashboard',
+  
+  components: {
+    FavoriteCoins
+  },
 
   data() {
     return {
@@ -131,13 +148,15 @@ export default {
       selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m',
       selectedCoinCategory: localStorage.getItem('selectedCoinCategory') || 'all',
       selectedChart: localStorage.getItem('selectedChart') || 'btc-spot',
-      isDarkMode: localStorage.getItem('darkMode') === 'true'
+      isDarkMode: localStorage.getItem('darkMode') === 'true',
+      favoriteCoins: new Set()
     }
   },
 
   mounted() {
     this.initTradingView()
     this.loadInitialData()
+    this.loadFavoriteCoins()
     this.initWebSocket()
     this.requestNotificationPermission()
     window.addEventListener('theme-changed', this.handleThemeChange)
@@ -527,6 +546,33 @@ export default {
       }
       
       this.countdownInterval = setInterval(updateHeaderCountdown, 1000)
+    },
+    
+    async loadFavoriteCoins() {
+      try {
+        const response = await favoriteApi.getFavoriteCoins()
+        this.favoriteCoins = new Set((response.data || []).map(coin => coin.exchangeCoinId))
+      } catch (error) {
+        console.error('즐겨찾기 로드 실패:', error)
+        this.favoriteCoins = new Set()
+      }
+    },
+    
+    async toggleFavorite(exchangeCoinId) {
+      try {
+        await favoriteApi.toggleFavoriteCoin(exchangeCoinId)
+        if (this.favoriteCoins.has(exchangeCoinId)) {
+          this.favoriteCoins.delete(exchangeCoinId)
+        } else {
+          this.favoriteCoins.add(exchangeCoinId)
+        }
+      } catch (error) {
+        console.error('즐겨찾기 토글 실패:', error)
+      }
+    },
+    
+    handleFavoriteRemoved(exchangeCoinId) {
+      this.favoriteCoins.delete(exchangeCoinId)
     }
   }
 }
@@ -937,6 +983,49 @@ export default {
 
 .coin-change.negative {
   color: #dc2626;
+}
+
+.favorite-btn {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-size: 1.125rem;
+}
+
+.favorite-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.favorite-btn.active {
+  color: #fbbf24;
+}
+
+.favorite-btn.active:hover {
+  color: #f59e0b;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+:global(#app.dark-mode) .favorite-btn {
+  color: #6b7280;
+}
+
+:global(#app.dark-mode) .favorite-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+:global(#app.dark-mode) .favorite-btn.active {
+  color: #fbbf24;
+}
+
+:global(#app.dark-mode) .favorite-btn.active:hover {
+  color: #f59e0b;
+  background: rgba(251, 191, 36, 0.2);
 }
 
 .no-detection {
