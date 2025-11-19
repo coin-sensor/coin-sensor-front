@@ -222,7 +222,7 @@ const createSymbolWidget = () => {
     "isTransparent": false,
     "locale": "en",
     "width": "100%",
-    "height": 550
+    "height": 500
   })
 }
 
