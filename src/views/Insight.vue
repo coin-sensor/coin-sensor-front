@@ -21,10 +21,6 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2>📊 김치프리미엄</h2>
-      <div id="kimchi_chart"></div>
-    </div>
   </div>
 
   <div class="three-column-grid">
@@ -58,29 +54,6 @@ const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
 const detectionChart = ref<HTMLCanvasElement | null>(null)
 const chartInstance = ref<Chart | null>(null)
 const selectedTimeframe = ref('1h')
-
-const initWidgets = () => {
-  const script1 = document.createElement('script')
-  script1.src = 'https://s3.tradingview.com/tv.js'
-  script1.async = true
-  script1.onload = () => createKimchiChart()
-  document.head.appendChild(script1)
-}
-
-const createKimchiChart = () => {
-  const theme = isDarkMode.value ? 'dark' : 'light'
-  new (window as any).TradingView.widget({
-    width: '100%',
-    height: 500,
-    symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100',
-    interval: '1D',
-    timezone: 'Asia/Seoul',
-    theme: theme,
-    style: '1',
-    locale: 'kr',
-    container_id: 'kimchi_chart'
-  })
-}
 
 const loadChartData = async () => {
   try {
@@ -248,36 +221,19 @@ const createChart = (data: any) => {
           hoverBackgroundColor: isDarkMode.value ? '#93c5fd' : '#2563eb'
         }
       },
-      onHover: (event: any, elements: any, chart: any) => {
-        if (elements.length > 0) {
-          ctx.canvas.style.cursor = 'crosshair'
-        } else {
-          ctx.canvas.style.cursor = 'default'
-        }
-      }
     }
   })
 }
 
 const handleThemeChange = (event: any) => {
   isDarkMode.value = event.detail.isDarkMode
-  reloadWidgets()
   if (chartInstance.value) {
     loadChartData()
   }
 }
 
-const reloadWidgets = () => {
-  const kimchiChart = document.getElementById('kimchi_chart')
-  if (kimchiChart) kimchiChart.innerHTML = ''
-  
-  setTimeout(() => {
-    initWidgets()
-  }, 100)
-}
 
 onMounted(() => {
-  initWidgets()
   loadChartData()
   window.addEventListener('theme-changed', handleThemeChange)
 })
