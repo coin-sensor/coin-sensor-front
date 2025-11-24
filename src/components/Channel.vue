@@ -27,6 +27,14 @@
           <span class="timestamp">{{ formatTime(message.createdAt) }}</span>
         </div>
         <div class="message-content">{{ message.content }}</div>
+        <ReactionButtons 
+          target-type="messages"
+          :target-id="message.id"
+          :like-count="message.likeCount || 0"
+          :dislike-count="message.dislikeCount || 0"
+          :user-reaction="message.userReaction"
+          @reaction-changed="handleReactionChanged(message.id, $event)"
+        />
       </div>
     </div>
     
@@ -45,8 +53,13 @@
 </template>
 
 <script>
+import ReactionButtons from './ReactionButtons.vue'
+
 export default {
   name: 'Channel',
+  components: {
+    ReactionButtons
+  },
   data() {
     return {
       messages: [],
@@ -121,6 +134,11 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       })
+    },
+    
+    handleReactionChanged(messageId, reaction) {
+      // 리액션 변경 시 메시지 목록 새로고침 또는 실시간 업데이트
+      console.log(`메시지 ${messageId}에 ${reaction} 리액션`)
     }
   }
 }

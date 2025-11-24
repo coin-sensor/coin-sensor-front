@@ -56,7 +56,24 @@
               데이터가 없습니다.
             </div>
             <div v-else>
-              {{ detections.length }}개의 그룹이 탐지되었습니다.
+              <div v-for="detection in detections" :key="detection.id" class="detection-item">
+                <div class="detection-header">
+                  <h4>{{ detection.coinSymbol }} - {{ detection.exchange }}</h4>
+                  <span class="detection-time">{{ formatTime(detection.detectedAt) }}</span>
+                </div>
+                <div class="detection-content">
+                  <p>변동률: {{ detection.changePercent }}%</p>
+                  <p>거래량: {{ detection.volume }}</p>
+                </div>
+                <ReactionButtons 
+                  target-type="detected_coins"
+                  :target-id="detection.id"
+                  :like-count="detection.likeCount || 0"
+                  :dislike-count="detection.dislikeCount || 0"
+                  :user-reaction="detection.userReaction"
+                  @reaction-changed="handleReactionChanged(detection.id, $event)"
+                />
+              </div>
             </div>
           </v-card-text>
         </v-card>
@@ -68,9 +85,13 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { detectionApi } from '@/services/detectionApi'
+import ReactionButtons from '@/components/ReactionButtons.vue'
 
 export default {
   name: 'Detection',
+  components: {
+    ReactionButtons
+  },
   setup() {
     const detections = ref([])
     const loading = ref(false)
@@ -104,6 +125,14 @@ export default {
       }
     }
 
+    const formatTime = (timestamp) => {
+      return new Date(timestamp).toLocaleString('ko-KR')
+    }
+    
+    const handleReactionChanged = (detectionId, reaction) => {
+      console.log(`탐지 ${detectionId}에 ${reaction} 리액션`)
+    }
+
     onMounted(() => {
       loadDetectionData()
     })
@@ -119,8 +148,45 @@ export default {
       exchangeTypes,
       coinCategories,
       timeframes,
-      loadDetectionData
+      loadDetectionData,
+      formatTime,
+      handleReactionChanged
     }
   }
 }
 </script>
+
+<style scoped>
+.detection-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.detection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.detection-header h4 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.detection-time {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.detection-content {
+  margin-bottom: 1rem;
+}
+
+.detection-content p {
+  margin: 0.25rem 0;
+  color: #374151;
+}
+</style>

@@ -5,7 +5,7 @@ import { setupGlobalFetch } from './utils/api'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faEye, faStar, faSyncAlt, faSpinner, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { faStar as farStar } from '@fortawesome/free-regular-svg-icons'
+import { faStar as farStar, faThumbsUp, faThumbsDown } from '@fortawesome/free-regular-svg-icons'
 
 // localStorage 초기값 설정 (앱 시작 전)
 if (!localStorage.getItem('darkMode')) {
@@ -30,7 +30,7 @@ if (!localStorage.getItem('uuid')) {
 // 앱 시작 전에 전역 fetch 설정
 setupGlobalFetch()
 
-library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes)
+library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes, faThumbsUp, faThumbsDown)
 
 const app = createApp(App)
 app.component('FontAwesomeIcon', FontAwesomeIcon)

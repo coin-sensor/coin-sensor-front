@@ -80,6 +80,14 @@
               >
                 <FontAwesomeIcon :icon="favoriteCoins.has(coin.exchangeCoinId) ? 'star' : ['far', 'star']" />
               </button>
+              <ReactionButtons 
+                target-type="detected_coins"
+                :target-id="coin.detectedCoinId"
+                :like-count="coin.likeCount || 0"
+                :dislike-count="coin.dislikeCount || 0"
+                :user-reaction="coin.userReaction"
+                @reaction-changed="handleReactionChanged(coin.detectedCoinId, $event)"
+              />
               <div class="coin-change" :class="Number(coin.changeX) > 0 ? 'positive' : 'negative'">
                 {{ Number(coin.changeX) > 0 ? '+' : '' }}{{ Number(coin.changeX).toFixed(2) }}%
               </div>
@@ -121,12 +129,14 @@ import { api } from '../services/api'
 import { DetectionInfoResponse } from '../types'
 import { favoriteApi } from '../services/favoriteApi'
 import FavoriteCoins from '../components/FavoriteCoins.vue'
+import ReactionButtons from '../components/ReactionButtons.vue'
 
 export default {
   name: 'Dashboard',
   
   components: {
-    FavoriteCoins
+    FavoriteCoins,
+    ReactionButtons
   },
 
   data() {
@@ -573,6 +583,10 @@ export default {
     
     handleFavoriteRemoved(exchangeCoinId) {
       this.favoriteCoins.delete(exchangeCoinId)
+    },
+    
+    handleReactionChanged(detectedCoinId, reaction) {
+      console.log(`탐지된 코인 ${detectedCoinId}에 ${reaction} 리액션`)
     }
   }
 }
