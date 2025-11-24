@@ -72,6 +72,15 @@
                   <span class="metric-item"><FontAwesomeIcon icon="eye" /> <strong>{{ coin.viewCount || 0 }}</strong></span>
                 </div>
               </div>
+              <ReactionButtons 
+                target-type="detected_coins"
+                :target-id="coin.detectedCoinId"
+                :like-count="coin.likeCount || 0"
+                :dislike-count="coin.dislikeCount || 0"
+                :user-reaction="coin.userReaction"
+                @reaction-changed="handleReactionChanged(coin.detectedCoinId, $event)"
+                @refresh-data="loadInitialData"
+              />
               <button 
                 @click="toggleFavorite(coin.exchangeCoinId)" 
                 class="favorite-btn"
@@ -80,14 +89,6 @@
               >
                 <FontAwesomeIcon :icon="favoriteCoins.has(coin.exchangeCoinId) ? 'star' : ['far', 'star']" />
               </button>
-              <ReactionButtons 
-                target-type="detected_coins"
-                :target-id="coin.detectedCoinId"
-                :like-count="coin.likeCount || 0"
-                :dislike-count="coin.dislikeCount || 0"
-                :user-reaction="coin.userReaction"
-                @reaction-changed="handleReactionChanged(coin.detectedCoinId, $event)"
-              />
               <div class="coin-change" :class="Number(coin.changeX) > 0 ? 'positive' : 'negative'">
                 {{ Number(coin.changeX) > 0 ? '+' : '' }}{{ Number(coin.changeX).toFixed(2) }}%
               </div>

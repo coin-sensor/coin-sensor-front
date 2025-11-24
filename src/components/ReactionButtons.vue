@@ -37,6 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   reactionChanged: [reaction: 'like' | 'dislike']
+  refreshData: []
 }>()
 
 const isLoading = ref(false)
@@ -55,6 +56,7 @@ const handleReaction = async (reaction: 'like' | 'dislike') => {
     
     await reactionService.toggleReaction(request)
     emit('reactionChanged', reaction)
+    emit('refreshData')
   } catch (error) {
     console.error('리액션 처리 실패:', error)
   } finally {
