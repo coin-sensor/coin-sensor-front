@@ -272,7 +272,17 @@ export default {
       // API 호출
       if (detectedCoinId) {
         try {
-          await api.post(`/coins/detected/${detectedCoinId}/view`)
+          const response = await api.post(`/coins/detected/${detectedCoinId}/view`)
+          const newViewCount = response.data
+          
+          // 해당 코인의 조회수 업데이트
+          this.detections.forEach(detection => {
+            const coin = detection.coins.find(c => c.detectedCoinId === detectedCoinId)
+            if (coin) {
+              coin.viewCount = newViewCount
+            }
+          })
+          
           console.info('탐지된 코인 조회')
         } catch (error) {
           console.error('탐지된 코인 조회 API 호출 실패:', error)
