@@ -126,7 +126,7 @@ export const apiService = {
   // 사용자 관련 API
   async getUserInfo(): Promise<UserInfo> {
     try {
-      const response: AxiosResponse = await api.get('/user/info')
+      const response: AxiosResponse = await api.get('/users/info')
       return response.data
     } catch (error) {
       console.error('Failed to fetch user info:', error)
@@ -136,11 +136,21 @@ export const apiService = {
 
   async updateNickname(nickname: string): Promise<UserInfo> {
     try {
-      const response: AxiosResponse = await api.put('/user/nickname', { nickname })
+      const response: AxiosResponse = await api.put('/users/nickname', { nickname })
       return response.data
     } catch (error) {
       console.error('Failed to update nickname:', error)
       throw error
+    }
+  },
+
+  async isAdmin(): Promise<boolean> {
+    try {
+      const response: AxiosResponse = await api.get('/users/admin')
+      return response.data
+    } catch (error) {
+      console.error('Failed to check admin status:', error)
+      return false
     }
   }
 }

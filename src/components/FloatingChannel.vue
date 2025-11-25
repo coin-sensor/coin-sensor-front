@@ -37,27 +37,43 @@
         <div v-if="loading" class="loading-indicator">
           로딩 중...
         </div>
-        <div v-for="message in groupedMessages" :key="message.messageId" class="message" :class="{ 'my-message': message.uuid === uuid, 'no-nickname': !message.showNickname }">
-          <div v-if="message.showNickname" class="nickname">{{ message.nickname || '익명' }}</div>
-          <div class="message-row">
-            <div class="message-bubble">
-              {{ message.content }}
+        <div v-for="message in groupedMessages" :key="message.messageId">
+          <div v-if="message.showDateSeparator" class="date-separator">
+            {{ formatDate(message.createdAt) }}
+          </div>
+          <div class="message" :class="{ 'my-message': message.uuid === uuid, 'no-nickname': !message.showNickname }">
+            <div v-if="message.showNickname" class="nickname-row">
+              <span class="nickname">{{ message.nickname || '익명' }}</span>
+              <button v-if="isAdmin && message.uuid !== uuid" @click="showBanModal(message)" class="ban-btn" title="사용자 금지">
+                🚫
+              </button>
             </div>
-            <span class="timestamp">{{ formatTime(message.createdAt) }}</span>
+            <div class="message-row">
+              <div class="message-bubble">
+                {{ message.content }}
+              </div>
+              <span class="timestamp">{{ formatTime(message.createdAt) }}</span>
+            </div>
           </div>
         </div>
       </div>
       
       <div class="channel-input">
-        <input 
-          v-model="newMessage"
-          @keyup.enter="sendMessage"
-          placeholder="메시지를 입력하세요..."
-          class="message-input"
-        />
-        <button @click="sendMessage" :disabled="!newMessage.trim()" class="send-btn">
-          전송
-        </button>
+        <div v-if="isBanned" class="ban-notice">
+          <div>채팅이 금지되었습니다.</div>
+          <div>해제: {{ formatTime(banInfo?.endTime) }}</div>
+        </div>
+        <div v-else class="input-row">
+          <input 
+            v-model="newMessage"
+            @keyup.enter="sendMessage"
+            placeholder="메시지를 입력하세요..."
+            class="message-input"
+          />
+          <button @click="sendMessage" :disabled="!newMessage.trim()" class="send-btn">
+            전송
+          </button>
+        </div>
       </div>
     </div>
 
@@ -79,6 +95,25 @@
           <button @click="showNicknameModal = false" class="cancel-btn">
             취소
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 사용자 금지 모달 -->
+    <div v-if="showBanUserModal" class="modal-overlay" @click="closeBanModal">
+      <div class="modal-content" @click.stop>
+        <h3>사용자 금지</h3>
+        <p>사용자: {{ selectedMessage?.nickname }}</p>
+        <select v-model="banForm.banTypeId" class="ban-select">
+          <option value="">금지 유형 선택</option>
+          <option v-for="banType in banTypes" :key="banType.banTypeId" :value="banType.banTypeId">
+            {{ banType.reason }} ({{ formatDuration(banType.period) }})
+          </option>
+        </select>
+
+        <div class="modal-buttons">
+          <button @click="banUser" class="ban-confirm-btn">금지</button>
+          <button @click="closeBanModal" class="cancel-btn">취소</button>
         </div>
       </div>
     </div>
@@ -108,12 +143,21 @@ export default {
       newMessage: '',
       nickname: null,
       uuid: localStorage.getItem('uuid'),
+      isBanned: false,
+      banInfo: null,
       channels: [],
       loading: false,
       hasMoreMessages: true,
       isConnected: false,
       showNicknameModal: false,
-      newNickname: ''
+      newNickname: '',
+      isAdmin: false,
+      showBanUserModal: false,
+      selectedMessage: null,
+      banTypes: [],
+      banForm: {
+        banTypeId: ''
+      }
     }
   },
   
@@ -121,20 +165,26 @@ export default {
     groupedMessages() {
       return this.messages.map((msg, index) => {
         const prevMsg = this.messages[index - 1]
-        const showNickname = !prevMsg || prevMsg.uuid !== msg.uuid
-        return { ...msg, showNickname }
+        const showNickname = !prevMsg || prevMsg.userId !== msg.userId
+        const showDateSeparator = !prevMsg || !this.isSameDay(prevMsg.createdAt, msg.createdAt)
+        return { ...msg, showNickname, showDateSeparator }
       })
     }
   },
   
   async mounted() {
     await this.loadUserInfo()
+    this.checkAdminStatus()
+    this.loadBanTypes()
   },
   
   methods: {
     async toggleChat() {
       this.showChannel = !this.showChannel
       if (this.showChannel) {
+        // 금지 상태 확인
+        await this.checkUserBanStatus()
+        
         // 처음 열 때 WebSocket 연결 및 채팅방 목록 로드
         if (!this.isConnected) {
           await this.initWebSocket()
@@ -183,6 +233,7 @@ export default {
             this.messages.push({
               messageId: message.messageId,
               channelId: message.channelId,
+              userId: message.userId,
               uuid: message.uuid,
               nickname: message.nickname,
               content: message.content,
@@ -232,6 +283,11 @@ export default {
     async sendMessage() {
       if (!this.newMessage.trim()) return
       
+      if (this.isBanned) {
+        alert(`채팅이 금지되었습니다. 해제: ${this.formatTime(this.banInfo.endTime)}`)
+        return
+      }
+      
       const messageText = this.newMessage
       this.newMessage = ''
       
@@ -272,6 +328,7 @@ export default {
         this.messages = recentMessages.map(msg => ({
           messageId: msg.messageId,
           channelId: msg.channelId,
+          userId: msg.userId,
           uuid: msg.uuid,
           nickname: msg.nickname,
           content: msg.content,
@@ -313,6 +370,7 @@ export default {
           const formattedMessages = olderMessages.map(msg => ({
             messageId: msg.messageId,
             channelId: msg.channelId,
+            userId: msg.userId,
             uuid: msg.uuid,
             nickname: msg.nickname,
             content: msg.content,
@@ -382,6 +440,34 @@ export default {
       })
     },
     
+    formatDate(timestamp) {
+      const date = new Date(timestamp)
+      const today = new Date()
+      const yesterday = new Date(today)
+      yesterday.setDate(today.getDate() - 1)
+      
+      if (this.isSameDay(date, today)) {
+        return '오늘'
+      } else if (this.isSameDay(date, yesterday)) {
+        return '어제'
+      } else {
+        const year = date.getFullYear()
+        const month = date.getMonth() + 1
+        const day = date.getDate()
+        const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+        const weekday = weekdays[date.getDay()]
+        return `${year}년 ${month}월 ${day}일(${weekday})`
+      }
+    },
+    
+    isSameDay(date1, date2) {
+      const d1 = new Date(date1)
+      const d2 = new Date(date2)
+      return d1.getFullYear() === d2.getFullYear() &&
+             d1.getMonth() === d2.getMonth() &&
+             d1.getDate() === d2.getDate()
+    },
+    
     async loadUserInfo() {
       try {
         const { apiService } = await import('../services/api')
@@ -407,7 +493,90 @@ export default {
         console.error('닉네임 변경 실패:', error)
         alert('닉네임 변경에 실패했습니다.')
       }
-    }
+    },
+
+    async checkAdminStatus() {
+      try {
+        const { apiService } = await import('../services/api')
+        this.isAdmin = await apiService.isAdmin()
+        console.log('관리자 상태:', this.isAdmin)
+      } catch (error) {
+        console.error('관리자 권한 체크 실패:', error)
+        this.isAdmin = false
+      }
+    },
+
+    async loadBanTypes() {
+      try {
+        const { banApi } = await import('../services/banApi')
+        this.banTypes = await banApi.getAllBanTypes()
+      } catch (error) {
+        console.error('금지 유형 로드 실패:', error)
+      }
+    },
+
+    showBanModal(message) {
+      this.selectedMessage = message
+      this.showBanUserModal = true
+    },
+
+    closeBanModal() {
+      this.showBanUserModal = false
+      this.selectedMessage = null
+      this.banForm = { banTypeId: '' }
+    },
+
+    async banUser() {
+      if (!this.banForm.banTypeId) {
+        alert('금지 유형을 선택해주세요.')
+        return
+      }
+
+      try {
+        const { banApi } = await import('../services/banApi')
+        // UUID로 userId를 찾아야 함 (임시로 1로 설정)
+        await banApi.banUser({
+          userId: 1, // 실제로는 message.uuid로 userId를 찾아야 함
+          banTypeId: this.banForm.banTypeId
+        })
+
+        alert('사용자가 금지되었습니다.')
+        this.closeBanModal()
+      } catch (error) {
+        console.error('사용자 금지 실패:', error)
+        alert('사용자 금지에 실패했습니다.')
+      }
+    },
+
+    formatDuration(days) {
+      return `${days}일`
+    },
+
+    async checkUserBanStatus() {
+      try {
+        const { banApi } = await import('../services/banApi')
+        const banInfo = await banApi.getActiveBan()
+        
+        if (banInfo && this.isActiveBan(banInfo)) {
+          this.isBanned = true
+          this.banInfo = banInfo
+        } else {
+          this.isBanned = false
+          this.banInfo = null
+        }
+      } catch (error) {
+        console.error('금지 상태 확인 실패:', error)
+      }
+    },
+
+    isActiveBan(banInfo) {
+      if (!banInfo) return false
+      const now = new Date()
+      const endTime = new Date(banInfo.endTime)
+      return now < endTime
+    },
+
+
   }
 }
 </script>
@@ -557,6 +726,10 @@ export default {
   text-align: right;
 }
 
+.message.my-message .nickname-row {
+  justify-content: flex-end;
+}
+
 .message.my-message .message-row {
   flex-direction: row-reverse;
 }
@@ -566,11 +739,33 @@ export default {
   color: white;
 }
 
+.nickname-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
 .nickname {
   font-weight: 600;
   color: #374151;
   font-size: 0.75rem;
-  margin-bottom: 0.25rem;
+}
+
+.ban-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0.1rem;
+  border-radius: 2px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.ban-btn:hover {
+  opacity: 1;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .message-row {
@@ -599,6 +794,17 @@ export default {
   flex-shrink: 0;
 }
 
+.date-separator {
+  text-align: center;
+  padding: 0.5rem;
+  margin: 1rem 0;
+  color: #6b7280;
+  font-size: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
 .loading-indicator {
   text-align: center;
   padding: 1rem;
@@ -610,7 +816,6 @@ export default {
 }
 
 .channel-input {
-  display: flex;
   padding: 0.75rem;
   border-top: 1px solid #e5e7eb;
   background: white;
@@ -643,6 +848,22 @@ export default {
 .send-btn:disabled {
   background: #9ca3af;
   cursor: not-allowed;
+}
+
+.ban-notice {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.875rem;
+  border: 1px solid #fecaca;
+}
+
+.input-row {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 @keyframes fadeIn {
@@ -722,6 +943,33 @@ export default {
   padding: 0.5rem 1rem;
   background: #f3f4f6;
   color: #374151;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.ban-select,
+.ban-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.ban-select:focus,
+.ban-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.ban-confirm-btn {
+  padding: 0.5rem 1rem;
+  background: #dc2626;
+  color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;

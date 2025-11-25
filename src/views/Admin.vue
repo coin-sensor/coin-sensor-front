@@ -8,6 +8,11 @@
       </div>
     </div>
 
+    <!-- 사용자 금지 관리 섹션 -->
+    <div class="card admin-section">
+      <BanManagement />
+    </div>
+
     <!-- 채팅방 관리 섹션 -->
     <div class="card admin-section">
       <div class="section-header">
@@ -64,9 +69,13 @@
 
 <script>
 import { apiService } from '@/services/api'
+import BanManagement from '../components/BanManagement.vue'
 
 export default {
   name: 'Admin',
+  components: {
+    BanManagement
+  },
   data() {
     return {
       isConnected: false,
@@ -81,6 +90,7 @@ export default {
   },
 
   mounted() {
+    this.checkAdminAccess()
     this.loadChannels()
     this.initWebSocket()
   },
@@ -176,6 +186,19 @@ export default {
 
     formatDate(date) {
       return new Date(date).toLocaleDateString('ko-KR')
+    },
+
+    async checkAdminAccess() {
+      try {
+        const isAdmin = await apiService.isAdmin()
+        if (!isAdmin) {
+          alert('관리자 권한이 필요합니다.')
+          this.$router.push('/')
+        }
+      } catch (error) {
+        console.error('관리자 권한 체크 실패:', error)
+        this.$router.push('/')
+      }
     }
   }
 }
