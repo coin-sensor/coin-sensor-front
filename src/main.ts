@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { setupGlobalFetch } from './utils/api'
@@ -32,6 +33,8 @@ setupGlobalFetch()
 
 library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes, faThumbsUp, faThumbsDown)
 
+const pinia = createPinia()
 const app = createApp(App)
 app.component('FontAwesomeIcon', FontAwesomeIcon)
+app.use(pinia)
 app.use(router).mount('#app')

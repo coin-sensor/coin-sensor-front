@@ -121,17 +121,13 @@
     </div>
 
     <!-- 플로팅 채팅 -->
-    <FloatingChannel 
-      :show-channel="showChannel"
-      @toggle-chat="toggleChat"
-    />
+    <FloatingChannel />
     
     <!-- 플로팅 즐겨찾기 -->
     <FloatingFavorites 
       :favorite-coins="favoriteCoinsList" 
-      :show-favorites="showFavorites"
-      @favorite-removed="handleFavoriteRemoved" 
-      @toggle-favorites="toggleFavorites"
+      @favorite-removed="handleFavoriteRemoved"
+      @open-chart="openChartModal"
     />
 
   </div>
@@ -176,9 +172,7 @@ export default {
       selectedChart: localStorage.getItem('selectedChart') || 'btc-spot',
       isDarkMode: localStorage.getItem('darkMode') === 'true',
       favoriteCoins: new Set(),
-      favoriteCoinsList: [],
-      showFavorites: false,
-      showChannel: false
+      favoriteCoinsList: []
     }
   },
 
@@ -624,24 +618,6 @@ export default {
     
     handleReactionChanged(detectedCoinId, reaction) {
       console.log(`탐지된 코인 ${detectedCoinId}에 ${reaction} 리액션`)
-    },
-
-    toggleFavorites() {
-      if (this.showFavorites) {
-        this.showFavorites = false
-      } else {
-        this.showChannel = false
-        this.showFavorites = true
-      }
-    },
-
-    toggleChat() {
-      if (this.showChannel) {
-        this.showChannel = false
-      } else {
-        this.showFavorites = false
-        this.showChannel = true
-      }
     }
   }
 }

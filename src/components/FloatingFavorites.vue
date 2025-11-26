@@ -21,7 +21,7 @@
         </div>
         <div v-else class="favorites-list">
           <div v-for="coin in favoriteCoins" :key="coin.exchangeCoinId" class="favorite-item">
-            <div class="coin-info">
+            <div class="coin-info" @click="openChart(coin)" style="cursor: pointer;">
               <div class="coin-symbol">{{ coin.coinTicker }}</div>
               <div class="coin-exchange">{{ coin.exchangeName }}</div>
             </div>
@@ -36,6 +36,8 @@
 <script>
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faStar } from '@fortawesome/free-regular-svg-icons'
+import { useFloatingPanelsStore } from '../stores/floatingPanels'
+import { mapState } from 'pinia'
 
 export default {
   name: 'FloatingFavorites',
@@ -46,10 +48,6 @@ export default {
     favoriteCoins: {
       type: Array,
       default: () => []
-    },
-    showFavorites: {
-      type: Boolean,
-      default: false
     }
   },
   setup() {
@@ -57,13 +55,26 @@ export default {
       faStar
     }
   },
-  data() {
-    return {}
+  computed: {
+    ...mapState(useFloatingPanelsStore, ['activePanel']),
+    showFavorites() {
+      return this.activePanel === 'favorites'
+    }
   },
   
   methods: {
     toggleFavorites() {
-      this.$emit('toggle-favorites')
+      const store = useFloatingPanelsStore()
+      if (this.showFavorites) {
+        store.closeAll()
+      } else {
+        store.openFavorites()
+      }
+    },
+
+    openChart(coin) {
+      const exchangeType = coin.exchangeName.toLowerCase().includes('future') ? 'future' : 'spot'
+      this.$emit('open-chart', coin.coinTicker, '5m', exchangeType)
     },
 
     async removeFavorite(exchangeCoinId) {

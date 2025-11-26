@@ -123,6 +123,8 @@
 <script>
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faMessage, faUser } from '@fortawesome/free-regular-svg-icons'
+import { useFloatingPanelsStore } from '../stores/floatingPanels'
+import { mapState } from 'pinia'
 
 export default {
   name: 'FloatingChannel',
@@ -137,7 +139,6 @@ export default {
   },
   data() {
     return {
-      showChannel: false,
       messages: [],
       selectedChannel: null,
       newMessage: '',
@@ -162,6 +163,10 @@ export default {
   },
   
   computed: {
+    ...mapState(useFloatingPanelsStore, ['activePanel']),
+    showChannel() {
+      return this.activePanel === 'chat'
+    },
     groupedMessages() {
       return this.messages.map((msg, index) => {
         const prevMsg = this.messages[index - 1]
@@ -180,7 +185,13 @@ export default {
   
   methods: {
     async toggleChat() {
-      this.showChannel = !this.showChannel
+      const store = useFloatingPanelsStore()
+      if (this.showChannel) {
+        store.closeAll()
+      } else {
+        store.openChat()
+      }
+      
       if (this.showChannel) {
         // 금지 상태 확인
         await this.checkUserBanStatus()
