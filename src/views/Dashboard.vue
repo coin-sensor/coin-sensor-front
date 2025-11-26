@@ -1,7 +1,6 @@
 <template>
   <div>
-    <!-- 즐겨찾기 코인 -->
-    <FavoriteCoins @favorite-removed="handleFavoriteRemoved" />
+
     
     <!-- 트레이딩뷰 차트 -->
     <div class="card chart-section">
@@ -121,6 +120,19 @@
       </div>
     </div>
 
+    <!-- 플로팅 채팅 -->
+    <FloatingChannel 
+      :show-channel="showChannel"
+      @toggle-chat="toggleChat"
+    />
+    
+    <!-- 플로팅 즐겨찾기 -->
+    <FloatingFavorites 
+      :favorite-coins="favoriteCoinsList" 
+      :show-favorites="showFavorites"
+      @favorite-removed="handleFavoriteRemoved" 
+      @toggle-favorites="toggleFavorites"
+    />
 
   </div>
 </template>
@@ -129,15 +141,18 @@
 import { api } from '../services/api'
 import { DetectionInfoResponse } from '../types'
 import { favoriteApi } from '../services/favoriteApi'
-import FavoriteCoins from '../components/FavoriteCoins.vue'
+
 import ReactionButtons from '../components/ReactionButtons.vue'
+import FloatingChannel from '../components/FloatingChannel.vue'
+import FloatingFavorites from '../components/FloatingFavorites.vue'
 
 export default {
   name: 'Dashboard',
   
   components: {
-    FavoriteCoins,
-    ReactionButtons
+    ReactionButtons,
+    FloatingChannel,
+    FloatingFavorites
   },
 
   data() {
@@ -160,9 +175,14 @@ export default {
       selectedCoinCategory: localStorage.getItem('selectedCoinCategory') || 'all',
       selectedChart: localStorage.getItem('selectedChart') || 'btc-spot',
       isDarkMode: localStorage.getItem('darkMode') === 'true',
-      favoriteCoins: new Set()
+      favoriteCoins: new Set(),
+      favoriteCoinsList: [],
+      showFavorites: false,
+      showChannel: false
     }
   },
+
+
 
   mounted() {
     this.initTradingView()
@@ -572,10 +592,13 @@ export default {
     async loadFavoriteCoins() {
       try {
         const response = await favoriteApi.getFavoriteCoins()
-        this.favoriteCoins = new Set((response.data || []).map(coin => coin.exchangeCoinId))
+        const coins = response.data || []
+        this.favoriteCoins = new Set(coins.map(coin => coin.exchangeCoinId))
+        this.favoriteCoinsList = coins
       } catch (error) {
         console.error('즐겨찾기 로드 실패:', error)
         this.favoriteCoins = new Set()
+        this.favoriteCoinsList = []
       }
     },
     
@@ -584,8 +607,10 @@ export default {
         await favoriteApi.toggleFavoriteCoin(exchangeCoinId)
         if (this.favoriteCoins.has(exchangeCoinId)) {
           this.favoriteCoins.delete(exchangeCoinId)
+          this.favoriteCoinsList = this.favoriteCoinsList.filter(coin => coin.exchangeCoinId !== exchangeCoinId)
         } else {
           this.favoriteCoins.add(exchangeCoinId)
+          this.loadFavoriteCoins()
         }
       } catch (error) {
         console.error('즐겨찾기 토글 실패:', error)
@@ -594,10 +619,29 @@ export default {
     
     handleFavoriteRemoved(exchangeCoinId) {
       this.favoriteCoins.delete(exchangeCoinId)
+      this.favoriteCoinsList = this.favoriteCoinsList.filter(coin => coin.exchangeCoinId !== exchangeCoinId)
     },
     
     handleReactionChanged(detectedCoinId, reaction) {
       console.log(`탐지된 코인 ${detectedCoinId}에 ${reaction} 리액션`)
+    },
+
+    toggleFavorites() {
+      if (this.showFavorites) {
+        this.showFavorites = false
+      } else {
+        this.showChannel = false
+        this.showFavorites = true
+      }
+    },
+
+    toggleChat() {
+      if (this.showChannel) {
+        this.showChannel = false
+      } else {
+        this.showFavorites = false
+        this.showChannel = true
+      }
     }
   }
 }
