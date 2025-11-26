@@ -20,12 +20,12 @@
           즐겨찾기한 코인이 없습니다
         </div>
         <div v-else class="favorites-list">
-          <div v-for="coin in favoriteCoins" :key="coin.exchangeCoinId" class="favorite-item">
-            <div class="coin-info" @click="openChart(coin)" style="cursor: pointer;">
+          <div v-for="coin in favoriteCoins" :key="coin.exchangeCoinId" class="favorite-item" @click="openChart(coin)">
+            <div class="coin-info">
               <div class="coin-symbol">{{ coin.coinTicker }}</div>
-              <div class="coin-exchange">{{ coin.exchangeName }}</div>
+              <div class="coin-exchange">{{ coin.exchangeName }}-{{ coin.exchangeType }}</div>
             </div>
-            <button @click="removeFavorite(coin.exchangeCoinId)" class="remove-btn">×</button>
+            <button @click.stop="removeFavorite(coin.exchangeCoinId)" class="remove-btn">×</button>
           </div>
         </div>
       </div>
@@ -73,8 +73,7 @@ export default {
     },
 
     openChart(coin) {
-      const exchangeType = coin.exchangeName.toLowerCase().includes('future') ? 'future' : 'spot'
-      this.$emit('open-chart', coin.coinTicker, '5m', exchangeType)
+      this.$emit('open-chart', coin.coinTicker, '5m', coin.exchangeType)
     },
 
     async removeFavorite(exchangeCoinId) {
@@ -185,6 +184,7 @@ export default {
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   transition: all 0.2s;
+  cursor: pointer;
 }
 
 .favorite-item:hover {

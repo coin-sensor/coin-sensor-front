@@ -11,7 +11,7 @@
       <div v-for="coin in favoriteCoins" :key="coin.exchangeCoinId" class="favorite-item">
         <div class="coin-info">
           <span class="coin-symbol">{{ coin.coinTicker }}</span>
-          <span class="exchange-name">{{ coin.exchangeName }}</span>
+          <span class="exchange-name">{{ coin.exchangeName }}-{{ coin.exchangeType }}</span>
         </div>
         <button @click="removeFavorite(coin.exchangeCoinId)" class="remove-btn">
           <FontAwesomeIcon icon="times" />
