@@ -6,6 +6,9 @@ import News from '../views/News.vue'
 import Admin from '../views/Admin.vue'
 import Detection from '../views/Detection.vue'
 import Insight from "@/views/Insight.vue";
+import PopularCoinsDetail from '../views/PopularCoinsDetail.vue'
+import DetectionStatsDetail from '../views/DetectionStatsDetail.vue'
+import MarketAnalysisDetail from '../views/MarketAnalysisDetail.vue'
 
 const routes = [
   {
@@ -42,6 +45,21 @@ const routes = [
     path: '/detection',
     name: 'Detection',
     component: Detection
+  },
+  {
+    path: '/insight/popularCoins',
+    name: 'PopularCoinsDetail',
+    component: PopularCoinsDetail
+  },
+  {
+    path: '/insight/detectionStats',
+    name: 'DetectionStatsDetail',
+    component: DetectionStatsDetail
+  },
+  {
+    path: '/insight/marketAnalysis',
+    name: 'MarketAnalysisDetail',
+    component: MarketAnalysisDetail
   }
 ]
 

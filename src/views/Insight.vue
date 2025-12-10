@@ -1,7 +1,18 @@
 <template>
-  <div>
-    <!-- 탐지 통계 차트 -->
-    <div class="card">
+  <div class="insight-container">
+    <InsightSidebar />
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+      <!-- 인사이트 요약 섹션 -->
+      <section id="overview" class="content-section">
+        <h2 class="section-title">📊 인사이트 요약</h2>
+        <p class="section-description">데이터랩이 분석한 내용을 바탕으로 주요 인사이트를 쉽게 확인할 수 있습니다.</p>
+      </section>
+
+      <!-- 탐지 통계 차트 -->
+      <section id="detection-stats" class="content-section">
+        <div class="card">
       <div class="chart-header">
         <h2>📈 탐지 통계</h2>
         <div class="controls">
@@ -18,21 +29,26 @@
       </div>
       <div class="chart-container">
         <canvas ref="detectionChart"></canvas>
+        </div>
       </div>
-    </div>
+      </section>
 
+
+
+      <!-- 시장 분석 섹션 -->
+      <section id="market-analysis" class="content-section">
+        <div class="three-column-grid">
+      <div class="column">
+        <MiniChart />
+      </div>
+      
+      <div class="column">
+        <TechnicalAnalysis />
+      </div>
+        </div>
+      </section>
+    </main>
   </div>
-
-  <div class="three-column-grid">
-    <div class="column">
-      <MiniChart />
-    </div>
-    
-    <div class="column">
-      <TechnicalAnalysis />
-    </div>
-  </div>
-
 </template>
 
 <script setup lang="ts">
@@ -44,12 +60,16 @@ import KimchiPremiumMiniChart from '../components/KimchiPremiumMiniChart.vue'
 import MiniChart from "@/components/MiniChart.vue";
 import TechnicalAnalysis from '../components/TechnicalAnalysis.vue'
 
+
+
+import InsightSidebar from '../components/InsightSidebar.vue'
+
 Chart.register(...registerables)
 
 const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
 const detectionChart = ref<HTMLCanvasElement | null>(null)
 const chartInstance = ref<Chart | null>(null)
-const selectedTimeframe = ref('1h')
+const selectedTimeframe = ref('5m')
 
 const loadChartData = async () => {
   try {
@@ -128,7 +148,7 @@ const createChart = (data: any) => {
         borderColor: isDarkMode.value ? '#60a5fa' : '#3b82f6',
         borderWidth: 3,
         fill: true,
-        tension: 0.4,
+        tension: 0.2,
         pointBackgroundColor: isDarkMode.value ? '#60a5fa' : '#3b82f6',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
@@ -228,6 +248,19 @@ const handleThemeChange = (event: any) => {
   }
 }
 
+const scrollToSection = (sectionId: string) => {
+  const element = document.getElementById(sectionId)
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    
+    // 네비게이션 활성화 상태 업데이트
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active')
+    })
+    document.querySelector(`a[href="#${sectionId}"]`)?.classList.add('active')
+  }
+}
+
 
 onMounted(() => {
   loadChartData()
@@ -243,9 +276,43 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.insight-container {
+  display: flex;
+  gap: 1rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.content-section {
+  margin-bottom: 1.5rem;
+}
+
+.content-section:first-of-type {
+  margin-top: 0;
+}
+
+.content-section:first-of-type .section-title {
+  margin-top: 0;
+}
+
+.section-description {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+}
+
 .card {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
+  margin-bottom: 0;
+  padding: 1.25rem;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -297,11 +364,54 @@ onBeforeUnmount(() => {
   position: relative;
 }
 
-.three-column-grid {
+.section-title {
+  margin: 0 0 0.75rem 0;
+}
+
+.section-title h2 {
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.insights-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.insight-components {
+  margin-bottom: 2rem;
+}
+
+.insight-row {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+/* 2개 컴포넌트 행 */
+.insight-row.cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* 3개 컴포넌트 행 */
+.insight-row.cols-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* 1개 컴포넌트 행 (기본) */
+.insight-row {
+  grid-template-columns: 1fr;
+}
+
+.three-column-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0;
 }
 
 :global(body.dark-mode) .card {
@@ -328,8 +438,23 @@ onBeforeUnmount(() => {
   color: #94a3b8;
 }
 
+:global(body.dark-mode) .section-title h2 {
+  color: #f1f5f9;
+}
+
+:global(body.dark-mode) .section-description {
+  color: #94a3b8;
+}
+
 @media (max-width: 768px) {
-  .three-column-grid {
+  .insight-container {
+    flex-direction: column;
+  }
+  
+  .insights-grid,
+  .three-column-grid,
+  .insight-row.cols-2,
+  .insight-row.cols-3 {
     grid-template-columns: 1fr;
   }
   
@@ -342,6 +467,10 @@ onBeforeUnmount(() => {
   .controls {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .section-title {
+    margin: 2rem 0 1rem 0;
   }
 }
 
