@@ -9,6 +9,7 @@ import Insight from "@/views/Insight.vue";
 import PopularCoinsDetail from '../views/PopularCoinsDetail.vue'
 import DetectionStatsDetail from '../views/DetectionStatsDetail.vue'
 import MarketAnalysisDetail from '../views/MarketAnalysisDetail.vue'
+import RecommendedCoinsDetail from '../views/RecommendedCoinsDetail.vue'
 
 const routes = [
   {
@@ -50,6 +51,11 @@ const routes = [
     path: '/insight/popularCoins',
     name: 'PopularCoinsDetail',
     component: PopularCoinsDetail
+  },
+  {
+    path: '/insight/recommendedCoins',
+    name: 'RecommendedCoinsDetail',
+    component: RecommendedCoinsDetail
   },
   {
     path: '/insight/detectionStats',

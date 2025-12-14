@@ -13,6 +13,9 @@
       <router-link to="/insight/popularCoins" class="nav-item" :class="{ active: $route.path === '/insight/popularCoins' }">
         인기 코인
       </router-link>
+      <router-link to="/insight/recommendedCoins" class="nav-item" :class="{ active: $route.path === '/insight/recommendedCoins' }">
+        추천 코인
+      </router-link>
       <router-link to="/insight/marketAnalysis" class="nav-item" :class="{ active: $route.path === '/insight/marketAnalysis' }">
         시장 분석
       </router-link>

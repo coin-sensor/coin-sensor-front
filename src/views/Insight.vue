@@ -35,6 +35,18 @@
 
 
 
+      <!-- 인기 코인 & 추천 코인 섹션 -->
+      <section id="popular-coins" class="content-section">
+        <div class="three-column-grid">
+          <div class="column">
+          <ClickInsightBars />
+          </div>
+          <div class="column">
+          <RecommendedCoinsBars />
+          </div>
+        </div>
+      </section>
+
       <!-- 시장 분석 섹션 -->
       <section id="market-analysis" class="content-section">
         <div class="three-column-grid">
@@ -56,12 +68,10 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 import { api } from '../services/api'
-import KimchiPremiumMiniChart from '../components/KimchiPremiumMiniChart.vue'
 import MiniChart from "@/components/MiniChart.vue";
 import TechnicalAnalysis from '../components/TechnicalAnalysis.vue'
-
-
-
+import ClickInsightBars from '../components/ClickInsightBars.vue'
+import RecommendedCoinsBars from '../components/RecommendedCoinsBars.vue'
 import InsightSidebar from '../components/InsightSidebar.vue'
 
 Chart.register(...registerables)
