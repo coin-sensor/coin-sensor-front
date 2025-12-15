@@ -93,7 +93,7 @@ body {
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   padding-left: 2rem;
   padding-right: 2rem;
@@ -161,7 +161,7 @@ body {
 
 .main-content {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   background: #f9fafb;
   min-height: calc(100vh - 80px);
