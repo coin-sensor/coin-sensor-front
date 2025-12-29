@@ -6,7 +6,7 @@
     <main class="main-content">
       <div class="header-section">
         <h1>🔥 인기 코인 TOP 10</h1>
-        <p class="description">사용자들이 가장 많이 조회한 코인의 상세 데이터입니다.</p>
+        <p class="description">사용자들이 가장 많이 조회한 코인의 리스트 입니다.</p>
       </div>
 
     <div class="period-selector">
