@@ -367,7 +367,7 @@ onBeforeUnmount(() => {
 
 .coins-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 1.5rem;
   margin-bottom: 3rem;
 }
@@ -526,11 +526,23 @@ onBeforeUnmount(() => {
   }
   
   .coins-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .period-selector {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 1200px) {
+  .coins-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .coins-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 </style>

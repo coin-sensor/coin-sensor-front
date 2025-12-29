@@ -5,7 +5,7 @@
     <main class="main-content">
       <div class="header-section">
         <h1>👍 추천 코인 분석</h1>
-        <p class="description">사용자 반응을 기반으로 한 추천/비추천 코인 데이터입니다.</p>
+        <p class="description">사용자가 추천/비추천한 코인 데이터입니다.</p>
       </div>
 
       <div class="period-selector">
@@ -472,7 +472,7 @@ onBeforeUnmount(() => {
 
 .coins-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 1.5rem;
 }
 
@@ -615,11 +615,23 @@ onBeforeUnmount(() => {
   }
   
   .coins-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .period-selector {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 1200px) {
+  .coins-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .coins-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 </style>
