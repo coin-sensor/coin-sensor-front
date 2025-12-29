@@ -21,9 +21,9 @@
         <router-link to="/news" :class="{ active: $route.path === '/news' }" class="nav-link">
           뉴스
         </router-link>
-        <router-link to="/admin" :class="{ active: $route.path === '/admin' }" class="nav-link">
-          관리자
-        </router-link>
+<!--        <router-link to="/admin" :class="{ active: $route.path === '/admin' }" class="nav-link">-->
+<!--          관리자-->
+<!--        </router-link>-->
       </div>
       <div class="nav-actions">
         <button @click="toggleDarkMode" class="theme-toggle">
