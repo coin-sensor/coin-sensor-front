@@ -389,7 +389,7 @@ onBeforeUnmount(() => {
 .rank-badge {
   position: absolute;
   top: 1rem;
-  right: 1rem;
+  left: 1rem;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   color: white;
@@ -399,6 +399,7 @@ onBeforeUnmount(() => {
 
 .coin-header {
   margin-bottom: 1rem;
+  margin-top: 2.5rem;
 }
 
 .coin-header h3 {

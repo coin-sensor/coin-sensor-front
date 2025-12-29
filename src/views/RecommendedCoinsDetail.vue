@@ -21,7 +21,7 @@
 
       <div class="coins-section">
         <div class="section-header">
-          <h2>👍 TOP 10 추천 코인</h2>
+          <h2>👍 TOP 5 추천 코인</h2>
         </div>
         <div class="coins-grid">
           <div 
@@ -61,7 +61,7 @@
 
       <div class="coins-section">
         <div class="section-header">
-          <h2>👎 TOP 10 비추천 코인</h2>
+          <h2>👎 TOP 5 비추천 코인</h2>
         </div>
         <div class="coins-grid">
           <div 
@@ -160,8 +160,8 @@ const dislikedColors = [
 const loadData = async () => {
   try {
     const [likedResponse, dislikedResponse] = await Promise.all([
-      reactionApi.getTopLikedCoins(parseInt(selectedPeriod.value), 10),
-      reactionApi.getTopDislikedCoins(parseInt(selectedPeriod.value), 10)
+      reactionApi.getTopLikedCoins(parseInt(selectedPeriod.value), 5),
+      reactionApi.getTopDislikedCoins(parseInt(selectedPeriod.value), 5)
     ])
     
     topLikedCoins.value = likedResponse.data
@@ -501,7 +501,7 @@ onBeforeUnmount(() => {
 .rank-badge {
   position: absolute;
   top: 1rem;
-  right: 1rem;
+  left: 1rem;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   color: white;
@@ -511,6 +511,7 @@ onBeforeUnmount(() => {
 
 .coin-header {
   margin-bottom: 1rem;
+  margin-top: 2.5rem;
 }
 
 .coin-header h3 {
