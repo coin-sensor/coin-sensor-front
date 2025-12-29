@@ -51,7 +51,7 @@
       <section id="market-analysis" class="content-section">
         <div class="three-column-grid">
       <div class="column">
-        <MiniChart />
+        <MiniChartSummary />
       </div>
       
       <div class="column">
@@ -68,7 +68,7 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 import { api } from '../services/api'
-import MiniChart from "@/components/MiniChart.vue";
+import MiniChartSummary from "@/components/MiniChartSummary.vue";
 import TechnicalAnalysis from '../components/TechnicalAnalysis.vue'
 import ClickInsightBars from '../components/ClickInsightBars.vue'
 import RecommendedCoinsBars from '../components/RecommendedCoinsBars.vue'

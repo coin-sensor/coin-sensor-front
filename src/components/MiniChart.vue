@@ -1,6 +1,16 @@
 <template>
-  <div class="card">
-    <div id="mini_chart" style="height: 400px;"></div>
+  <div class="charts-container">
+    <h2>📊 주요 시장 지표</h2>
+    <div class="charts-grid">
+      <div 
+        v-for="(symbol, index) in symbols" 
+        :key="index"
+        class="chart-card"
+      >
+        <h3>{{ symbol.name }}</h3>
+        <div :id="`chart_${index}`" class="chart-widget"></div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -9,7 +19,17 @@ export default {
   name: 'MiniChart',
   data() {
     return {
-      isDarkMode: localStorage.getItem('darkMode') === 'true'
+      isDarkMode: localStorage.getItem('darkMode') === 'true',
+      symbols: [
+        { name: '김치프리미엄', symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100' },
+        { name: '전체 시가총액', symbol: 'CRYPTOCAP:TOTAL' },
+        { name: 'BTC 도미넌스', symbol: 'CRYPTOCAP:BTC.D' },
+        { name: 'USDT 도미넌스', symbol: 'CRYPTOCAP:USDT.D' },
+        { name: '나스닥', symbol: 'NASDAQ:NDX' },
+        { name: '금 가격', symbol: 'OANDA:XAUUSD' },
+        { name: '바이낸스 BTCUSDT', symbol: 'BINANCE:BTCUSDT' },
+        { name: '바이낸스 ETHUSDT', symbol: 'BINANCE:ETHUSDT' }
+      ]
     }
   },
 
@@ -25,23 +45,37 @@ export default {
   methods: {
     initWidgets() {
       setTimeout(() => {
-        this.createMiniChart()
+        this.symbols.forEach((symbol, index) => {
+          this.createChart(symbol, index)
+        })
       }, 100)
     },
 
-    createMiniChart() {
+    createChart(symbolData, index) {
       const theme = this.isDarkMode ? 'dark' : 'light'
+      const backgroundColor = this.isDarkMode ? '#1e293b' : '#ffffff'
 
-      const container = document.getElementById('mini_chart')
+      const container = document.getElementById(`chart_${index}`)
       if (!container) return
       
       container.innerHTML = ''
       
+      // Technical Analysis 위젯인 경우
+      if (symbolData.type === 'technical') {
+        this.createTechnicalAnalysisWidget(container, theme)
+        return
+      }
+      
+      // 일반 차트 위젯
       const widgetContainer = document.createElement('div')
       widgetContainer.className = 'tradingview-widget-container'
+      widgetContainer.style.height = '100%'
+      widgetContainer.style.width = '100%'
       
       const widgetDiv = document.createElement('div')
       widgetDiv.className = 'tradingview-widget-container__widget'
+      widgetDiv.style.height = 'calc(100% - 32px)'
+      widgetDiv.style.width = '100%'
       
       const copyrightDiv = document.createElement('div')
       copyrightDiv.className = 'tradingview-widget-copyright'
@@ -49,59 +83,34 @@ export default {
       
       const script = document.createElement('script')
       script.type = 'text/javascript'
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js'
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
       script.async = true
-      const config = {
-        lineWidth: 2,
-        lineType: 0,
-        chartType: 'area',
-        showVolume: false,
-        upColor: '#22ab94',
-        downColor: '#f7525f',
-        borderUpColor: '#22ab94',
-        borderDownColor: '#f7525f',
-        wickUpColor: '#22ab94',
-        wickDownColor: '#f7525f',
-        colorTheme: theme,
-        volumeUpColor: 'rgba(34, 171, 148, 0.5)',
-        volumeDownColor: 'rgba(247, 82, 95, 0.5)'
-      }
       
-      if (theme === 'dark') {
-        config.fontColor = 'rgb(106, 109, 120)'
-        config.gridLineColor = 'rgba(242, 242, 242, 0.06)'
-        config.backgroundColor = '#0F0F0F'
-        config.widgetFontColor = '#DBDBDB'
-      }
+      const isKimchiPremium = symbolData.name === '김치프리미엄'
       
       script.innerHTML = JSON.stringify({
-        ...config,
-        isTransparent: false,
-        locale: 'kr',
-        chartOnly: false,
-        scalePosition: 'right',
-        scaleMode: 'Normal',
-        fontFamily: '-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif',
-        valuesTracking: '1',
-        changeMode: 'price-and-percent',
-        symbols: [
-          ['김프', '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100|12M'],
-          ['BTC.D', 'CRYPTOCAP:BTC.D|1D'],
-          ['USDT.D', 'CRYPTOCAP:USDT.D|1D'],
-          ['TOTAL', 'CRYPTOCAP:TOTAL|1D'],
-          ['Gold', 'OANDA:XAUUSD|1D'],
-          ['NASDAQ', 'NASDAQ:NDX|1D']
-        ],
-        dateRanges: ['1d|1', '1w|15', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
-        fontSize: '10',
-        headerFontSize: 'medium',
-        autosize: true,
-        width: '100%',
-        height: '400',
-        noTimeScale: false,
-        hideDateRanges: false,
-        hideMarketStatus: false,
-        hideSymbolLogo: false
+        allow_symbol_change: true,
+        calendar: false,
+        details: false,
+        hide_side_toolbar: true,
+        hide_top_toolbar: true,
+        hide_legend: false,
+        hide_volume: true,
+        hotlist: false,
+        interval: 'D',
+        locale: 'en',
+        style: '3',
+        symbol: symbolData.symbol,
+        theme: theme,
+        timezone: 'Asia/Seoul',
+        backgroundColor: backgroundColor,
+        gridColor: 'rgba(242, 242, 242, 0.06)',
+        watchlist: [],
+        withdateranges: true,
+        range: isKimchiPremium ? '12M' : '1D',
+        compareSymbols: [],
+        studies: [],
+        autosize: true
       })
       
       widgetContainer.appendChild(widgetDiv)
@@ -110,14 +119,35 @@ export default {
       container.appendChild(widgetContainer)
     },
 
+    createTechnicalAnalysisWidget(container, theme) {
+      const script = document.createElement('script')
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js'
+      script.async = true
+      script.innerHTML = JSON.stringify({
+        colorTheme: theme,
+        displayMode: 'single',
+        isTransparent: false,
+        locale: 'en',
+        interval: '5m',
+        disableInterval: false,
+        width: '100%',
+        height: 250,
+        symbol: 'BITSTAMP:BTCUSD',
+        showIntervalTabs: true
+      })
+      container.appendChild(script)
+    },
+
     handleThemeChange(event) {
       this.isDarkMode = event.detail.isDarkMode
       this.reloadWidgets()
     },
 
     reloadWidgets() {
-      const container = document.getElementById('mini_chart')
-      if (container) container.innerHTML = ''
+      this.symbols.forEach((symbol, index) => {
+        const container = document.getElementById(`chart_${index}`)
+        if (container) container.innerHTML = ''
+      })
       
       setTimeout(() => {
         this.initWidgets()
@@ -128,7 +158,7 @@ export default {
 </script>
 
 <style scoped>
-.card {
+.charts-container {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -137,9 +167,9 @@ export default {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.card h2 {
+.charts-container h2 {
   color: #1f2937;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -147,7 +177,67 @@ export default {
   font-weight: 600;
 }
 
-#mini_chart {
-  height: 400px !important;
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.chart-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 300px;
+}
+
+.chart-card h3 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.chart-widget {
+  height: 250px;
+  width: 100%;
+}
+
+:global(body.dark-mode) .charts-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(body.dark-mode) .charts-container h2 {
+  color: #f1f5f9;
+}
+
+:global(body.dark-mode) .chart-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(body.dark-mode) .chart-card h3 {
+  color: #f1f5f9;
+}
+
+@media (max-width: 1200px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  
+  .chart-widget {
+    height: 200px;
+  }
 }
 </style>
