@@ -217,6 +217,7 @@ export default {
         theme: theme,
         style: '1',
         locale: 'kr',
+        hide_side_toolbar: false,
         hide_top_toolbar: false,
         hide_legend: false,
         save_image: false,
