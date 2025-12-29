@@ -64,11 +64,11 @@
               <div class="coin-info">
                 <div class="coin-symbol clickable" @click="openChartModal(coin.coinTicker, detection.timeframeName, detection.exchangeType, coin.detectedCoinId)">{{ coin.coinTicker }}</div>
                 <div class="coin-metrics">
-                  <span class="metric-item">📈 변동성: <strong>{{ Number(coin.changeX || 0).toFixed(2) }}%</strong></span>
+                  <span class="metric-item" :style="isDarkMode ? 'color: #94a3b8 !important;' : ''">📈 변동성: <strong :style="isDarkMode ? 'color: #ffffff !important;' : ''">{{ Number(coin.changeX || 0).toFixed(2) }}%</strong></span>
                   <span class="metric-separator">|</span>
-                  <span class="metric-item">📊 거래량: <strong>{{ Number(coin.volumeX || 0).toFixed(2) }}배</strong></span>
+                  <span class="metric-item" :style="isDarkMode ? 'color: #94a3b8 !important;' : ''">📊 거래량: <strong :style="isDarkMode ? 'color: #ffffff !important;' : ''">{{ Number(coin.volumeX || 0).toFixed(2) }}배</strong></span>
                   <span class="metric-separator">|</span>
-                  <span class="metric-item"><FontAwesomeIcon icon="eye" /> <strong>{{ coin.viewCount || 0 }}</strong></span>
+                  <span class="metric-item" :style="isDarkMode ? 'color: #94a3b8 !important;' : ''"><FontAwesomeIcon icon="eye" /> <strong :style="isDarkMode ? 'color: #ffffff !important;' : ''">{{ coin.viewCount || 0 }}</strong></span>
                 </div>
               </div>
               <ReactionButtons 
@@ -1142,12 +1142,24 @@ export default {
   background: #1e40af;
 }
 
+:global(#app.dark-mode) .coin-metrics * {
+  color: #ffffff !important;
+}
+
+:global(#app.dark-mode) .metric-item * {
+  color: #ffffff !important;
+}
+
 :global(#app.dark-mode) .coin-metrics {
-  color: #94a3b8;
+  color: #ffffff !important;
+}
+
+:global(#app.dark-mode) .metric-item {
+  color: #ffffff !important;
 }
 
 :global(#app.dark-mode) .metric-item strong {
-  color: #f1f5f9;
+  color: #ffffff !important;
 }
 
 :global(#app.dark-mode) .metric-separator {
