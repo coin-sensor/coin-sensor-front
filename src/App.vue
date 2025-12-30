@@ -26,6 +26,10 @@
 <!--        </router-link>-->
       </div>
       <div class="nav-actions">
+        <div class="active-users">
+          <FontAwesomeIcon :icon="faUsers" class="user-icon" />
+          <span class="user-count">{{ activeUserCount }}</span>
+        </div>
         <button @click="toggleDarkMode" class="theme-toggle">
           {{ isDarkMode ? '☀️' : '🌙' }}
         </button>
@@ -42,15 +46,20 @@
 
 <script>
 import FloatingChannel from './components/FloatingChannel.vue'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faUsers } from '@fortawesome/free-solid-svg-icons'
 
 export default {
   name: 'App',
   components: {
-    FloatingChannel: FloatingChannel
+    FloatingChannel: FloatingChannel,
+    FontAwesomeIcon
   },
   data() {
     return {
-      isDarkMode: localStorage.getItem('darkMode') === 'true'
+      isDarkMode: localStorage.getItem('darkMode') === 'true',
+      activeUserCount: 0,
+      faUsers
     }
   },
   
@@ -71,6 +80,15 @@ export default {
     
     initWebSocket() {
       import('./services/websocket').then(({ websocketService }) => {
+        websocketService.onConnect(() => {
+          // 소켓 연결 완료 후 활성 사용자 수 로드
+          this.loadActiveUserCount()
+        })
+        
+        websocketService.onActiveUsers((count) => {
+          this.activeUserCount = count
+        })
+        
         websocketService.connect()
         console.log('전역 WebSocket 연결 초기화')
       })
@@ -81,6 +99,18 @@ export default {
         websocketService.disconnect()
         console.log('전역 WebSocket 연결 해제')
       })
+    },
+    
+    async loadActiveUserCount() {
+      try {
+        const response = await fetch('/api/websocket/activeUsers')
+        const count = await response.json()
+        console.log('현재 활성 사용자 수:', count)
+        this.activeUserCount = count
+      } catch (error) {
+        console.error('활성 사용자 수 로드 실패:', error)
+        this.activeUserCount = 0
+      }
     }
   },
 
@@ -166,6 +196,32 @@ body {
   color: white;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.active-users {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.user-icon {
+  color: #6b7280;
+}
+
+.user-count {
+  font-weight: 600;
+  color: #1f2937;
+}
+
 .theme-toggle {
   background: #f3f4f6;
   border: 1px solid #d1d5db;
@@ -240,6 +296,19 @@ body {
 #app.dark-mode .nav-link.active {
   background: #3b82f6;
   color: white;
+}
+
+#app.dark-mode .active-users {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+#app.dark-mode .user-icon {
+  color: #94a3b8;
+}
+
+#app.dark-mode .user-count {
+  color: #f1f5f9;
 }
 
 #app.dark-mode .theme-toggle {

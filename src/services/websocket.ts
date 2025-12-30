@@ -21,7 +21,7 @@ interface DetectionParams {
   timeframe?: string
 }
 
-type CallbackEvent = 'connect' | 'detection' | 'channel' | 'error'
+type CallbackEvent = 'connect' | 'detection' | 'channel' | 'error' | 'activeUsers'
 type CallbackFunction = (data?: any) => void
 
 class WebSocketService {
@@ -51,6 +51,9 @@ class WebSocketService {
           
           // 탐지 알림 구독
           this.subscribeToDetection()
+          
+          // 실시간 활성 사용자 수 구독
+          this.subscribeToActiveUsers()
           
           // 연결 성공 콜백 실행
           this.executeCallbacks('connect')
@@ -142,6 +145,23 @@ class WebSocketService {
     // 기존 채팅 콜백 모두 제거 후 새로 등록
     this.callbacks.delete('channel')
     this.addCallback('channel', callback)
+  }
+  
+  onActiveUsers(callback: CallbackFunction): void {
+    this.addCallback('activeUsers', callback)
+  }
+  
+  subscribeToActiveUsers(): void {
+    const topic = '/topic/activeUsers'
+    this.subscribe('activeUsers', topic, (message) => {
+      try {
+        const activeCount = JSON.parse(message.body)
+        console.log('활성 사용자 수 수신:', activeCount)
+        this.executeCallbacks('activeUsers', activeCount)
+      } catch (error) {
+        console.error('활성 사용자 메시지 파싱 실패:', error)
+      }
+    })
   }
   
   subscribeToChat(channelId: number): void {
