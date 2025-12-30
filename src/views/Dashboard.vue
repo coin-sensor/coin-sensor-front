@@ -182,13 +182,13 @@ export default {
     this.initTradingView()
     this.loadInitialData()
     this.loadFavoriteCoins()
-    this.initWebSocket()
+    this.initWebSocketSubscriptions()
     this.requestNotificationPermission()
     window.addEventListener('theme-changed', this.handleThemeChange)
   },
   
   beforeUnmount() {
-    this.disconnectWebSocket()
+    this.unsubscribeWebSocket()
     window.removeEventListener('theme-changed', this.handleThemeChange)
   },
   
@@ -364,14 +364,13 @@ export default {
       }
     },
 
-    initWebSocket() {
+    initWebSocketSubscriptions() {
       import('../services/websocket').then(({ websocketService }) => {
-        // 연결 상태 초기화
         this.isConnected = websocketService.isConnected()
         
         websocketService.onConnect(() => {
           this.isConnected = true
-          console.log('WebSocket 연결 성공')
+          websocketService.subscribeToDetection()
         })
         
         websocketService.onDetection((detection) => {
@@ -380,25 +379,18 @@ export default {
         
         websocketService.onError((error) => {
           this.isConnected = false
-          console.error('WebSocket 오류:', error)
         })
         
-        // 연결 상태 확인 후 연결
         if (websocketService.isConnected()) {
-          console.log('WebSocket 이미 연결됨')
+          websocketService.subscribeToDetection()
           this.isConnected = true
-        } else {
-          console.log('WebSocket 연결 시도 중...')
-          this.isConnected = false
-          websocketService.connect()
         }
       })
     },
 
-    subscribeToExchangeAndTimeframe() {
-      const [exchangeName, exchangeType] = this.selectedExchange.split('-')
+    unsubscribeWebSocket() {
       import('../services/websocket').then(({ websocketService }) => {
-        websocketService.subscribeToTopic(`/topic/detections?exchange=${exchangeName}&exchangeType=${exchangeType}&coinCategory=${this.selectedCoinCategory}&timeframe=${this.selectedTimeframe}`)
+        websocketService.unsubscribe('detection')
       })
     },
 
@@ -406,21 +398,27 @@ export default {
       localStorage.setItem('selectedExchange', this.selectedExchange)
       this.detections = []
       this.loadInitialData()
-      this.subscribeToExchangeAndTimeframe()
+      this.resubscribeDetection()
     },
 
     changeCoinCategory() {
       localStorage.setItem('selectedCoinCategory', this.selectedCoinCategory)
       this.detections = []
       this.loadInitialData()
-      this.subscribeToExchangeAndTimeframe()
+      this.resubscribeDetection()
     },
 
     changeTimeframe() {
       localStorage.setItem('selectedTimeframe', this.selectedTimeframe)
       this.detections = []
       this.loadInitialData()
-      this.subscribeToExchangeAndTimeframe()
+      this.resubscribeDetection()
+    },
+    
+    resubscribeDetection() {
+      import('../services/websocket').then(({ websocketService }) => {
+        websocketService.subscribeToDetection()
+      })
     },
     
     handleNotification(detection) {
@@ -450,7 +448,7 @@ export default {
     
     disconnectWebSocket() {
       import('../services/websocket').then(({ websocketService }) => {
-        websocketService.disconnect()
+        websocketService.unsubscribe('detection')
       })
     },
     

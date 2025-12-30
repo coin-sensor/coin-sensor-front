@@ -188,26 +188,23 @@ export default {
       const store = useFloatingPanelsStore()
       if (this.showChannel) {
         store.closeAll()
+        this.unsubscribeFromChat()
       } else {
         store.openChat()
-      }
-      
-      if (this.showChannel) {
-        // 금지 상태 확인
+        
+        // 채팅창 열 때 필요한 데이터 먼저 로드
         await this.checkUserBanStatus()
         
-        // 처음 열 때 WebSocket 연결 및 채팅방 목록 로드
-        if (!this.isConnected) {
-          await this.initWebSocket()
-        }
-        if (this.channels.length === 0) { // 채팅방이 비어있으면
+        if (this.channels.length === 0) {
           await this.loadChannels()
         }
-        // 메시지가 비어있을 때만 로드
+        
+        // 채널이 선택된 후 구독
+        await this.subscribeToChat()
+        
         if (this.messages.length === 0) {
           this.loadRecentMessages()
         } else {
-          // 이미 메시지가 있으면 스크롤을 맨 아래로
           this.$nextTick(() => {
             this.scrollToBottom()
           })
@@ -215,118 +212,67 @@ export default {
       }
     },
     
-    async initWebSocket() {
-      return new Promise(async (resolve) => {
-        try {
-          const { websocketService } = await import('../services/websocket')
-          
-          console.log('WebSocket 서비스 초기화 시작')
-          console.log('현재 연결 상태:', websocketService.isConnected())
-          
-          websocketService.onConnect(() => {
-            console.log('채팅 WebSocket 연결 성공')
-            console.log('선택된 방 ID:', this.selectedChannel)
-            this.isConnected = true
-            if (this.selectedChannel) {
-              console.log(`방 ${this.selectedChannel}에 구독 시도`)
-              websocketService.subscribeToChat(this.selectedChannel)
-            }
-            resolve() // 연결 완료 신호
+    async subscribeToChat() {
+      try {
+        const { websocketService } = await import('../services/websocket')
+        
+        // 콜백을 한 번만 등록하기 위해 기존 콜백 제거
+        websocketService.callbacks?.delete('channel')
+        
+        websocketService.onChat((message) => {
+          this.messages.push({
+            messageId: message.messageId,
+            channelId: message.channelId,
+            userId: message.userId,
+            uuid: message.uuid,
+            nickname: message.nickname,
+            content: message.content,
+            createdAt: new Date(message.createdAt)
           })
           
-          websocketService.onError(() => {
-            console.log('채팅 WebSocket 연결 실패')
-            this.isConnected = false
-            resolve() // 실패해도 계속 진행
+          this.$nextTick(() => {
+            this.scrollToBottom()
           })
-          
-          websocketService.onChat((message) => {
-            this.messages.push({
-              messageId: message.messageId,
-              channelId: message.channelId,
-              userId: message.userId,
-              uuid: message.uuid,
-              nickname: message.nickname,
-              content: message.content,
-              createdAt: new Date(message.createdAt)
-            })
-            
-            this.$nextTick(() => {
-              this.scrollToBottom()
-            })
-          })
-          
-          // WebSocket 연결이 안되어 있으면 연결 시도
-          if (!websocketService.isConnected()) {
-            console.log('WebSocket 연결 시도 중...')
-            websocketService.connect()
-          } else {
-            console.log('WebSocket 이미 연결됨')
-            this.isConnected = true
-            // 이미 연결된 경우 즉시 채팅방 구독
-            if (this.selectedChannel) {
-              console.log(`이미 연결된 상태에서 방 ${this.selectedChannel}에 구독`)
-              websocketService.subscribeToChat(this.selectedChannel)
-            }
-            resolve() // 이미 연결된 경우
-          }
-        } catch (error) {
-          console.error('WebSocket 초기화 실패:', error)
-          resolve() // 에러가 나도 계속 진행
+        })
+        
+        if (this.selectedChannel) {
+          websocketService.subscribeToChat(this.selectedChannel)
         }
-      })
+      } catch (error) {
+        console.error('채팅 구독 실패:', error)
+      }
     },
     
+    unsubscribeFromChat() {
+      import('../services/websocket').then(({ websocketService }) => {
+        websocketService.unsubscribeFromChat()
+      })
+    },
+
+    
     changeChannel(channelId) {
-      console.log(`방 변경: ${this.selectedChannel} -> ${channelId}`)
       this.selectedChannel = channelId
       this.messages = []
       this.hasMoreMessages = true
       this.loadRecentMessages()
       
       import('../services/websocket').then(({ websocketService }) => {
-        console.log(`새 방 ${channelId}에 구독 시도`)
-        console.log('WebSocket 연결 상태:', websocketService.isConnected())
         websocketService.subscribeToChat(channelId)
       })
     },
     
     async sendMessage() {
-      if (!this.newMessage.trim()) return
-      
-      if (this.isBanned) {
-        alert(`채팅이 금지되었습니다. 해제: ${this.formatTime(this.banInfo.endTime)}`)
-        return
-      }
+      if (!this.newMessage.trim() || this.isBanned) return
       
       const messageText = this.newMessage
       this.newMessage = ''
       
       try {
         const { websocketService } = await import('../services/websocket')
-        
-        if (!websocketService.isConnected()) {
-          alert('채팅 서버에 연결되지 않았습니다.')
-          this.newMessage = messageText // 메시지 복원
-          return
-        }
-        
-        // 메시지 전송 전에 채팅방 구독 상태 확인
-        console.log('메시지 전송 전 채팅방 구독 재확인')
-        websocketService.subscribeToChat(this.selectedChannel)
-        
-        console.log('메시지 전송 시도:', {
-          channelId: this.selectedChannel,
-          nickname: this.nickname,
-          message: messageText
-        })
-        
         await websocketService.sendMessage(this.selectedChannel, this.nickname, messageText)
-        console.log('메시지 전송 성공')
       } catch (error) {
         console.error('메시지 전송 실패:', error)
-        alert('메시지 전송에 실패했습니다.')
-        this.newMessage = messageText // 메시지 복원
+        this.newMessage = messageText
       }
     },
     

@@ -54,11 +54,33 @@ export default {
     }
   },
   
+  mounted() {
+    this.initWebSocket()
+  },
+  
+  beforeUnmount() {
+    this.disconnectWebSocket()
+  },
+  
   methods: {
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode
       localStorage.setItem('darkMode', this.isDarkMode)
       window.dispatchEvent(new CustomEvent('theme-changed', { detail: { isDarkMode: this.isDarkMode } }))
+    },
+    
+    initWebSocket() {
+      import('./services/websocket').then(({ websocketService }) => {
+        websocketService.connect()
+        console.log('전역 WebSocket 연결 초기화')
+      })
+    },
+    
+    disconnectWebSocket() {
+      import('./services/websocket').then(({ websocketService }) => {
+        websocketService.disconnect()
+        console.log('전역 WebSocket 연결 해제')
+      })
     }
   },
 

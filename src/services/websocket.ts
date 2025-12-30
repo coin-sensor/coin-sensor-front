@@ -30,21 +30,9 @@ class WebSocketService {
   private reconnectAttempts: number = 0
   private maxReconnectAttempts: number = 5
   private callbacks: Map<CallbackEvent, CallbackFunction[]> = new Map()
-  private currentSubscription: StompSubscription | null = null
-  private channelSubscription: StompSubscription | null = null
-  private detectionParams: DetectionParams = this.loadDetectionParams()
+  private subscriptions: Map<string, StompSubscription> = new Map()
 
-  private loadDetectionParams(): DetectionParams {
-    const selectedExchange = localStorage.getItem('selectedExchange') || 'binance-future';
-    const [exchangeName, exchangeType] = selectedExchange.split('-')
 
-    return {
-      exchange: exchangeName || 'binance',
-      exchangeType: exchangeType || 'future',
-      coinCategory: localStorage.getItem('selectedCoinCategory') || 'all',
-      timeframe: localStorage.getItem('selectedTimeframe') || '5m'
-    }
-  }
 
   connect(): void {
     try {
@@ -80,32 +68,46 @@ class WebSocketService {
     }
   }
 
-  private subscribeToDetection(): void {
-    const { exchange, exchangeType, coinCategory, timeframe } = this.detectionParams
-    this.subscribeToTopic(`/topic/detections?exchange=${exchange}&exchangeType=${exchangeType}&coinCategory=${coinCategory}&timeframe=${timeframe}`)
+  subscribeToDetection(): void {
+    // 실시간으로 localStorage에서 값 읽기
+    const selectedExchange = localStorage.getItem('selectedExchange') || 'binance-future'
+    const [exchangeName, exchangeType] = selectedExchange.split('-')
+    const coinCategory = localStorage.getItem('selectedCoinCategory') || 'all'
+    const timeframe = localStorage.getItem('selectedTimeframe') || '5m'
+    
+    const topic = `/topic/detections?exchange=${exchangeName}&exchangeType=${exchangeType}&coinCategory=${coinCategory}&timeframe=${timeframe}`
+    this.subscribe('detection', topic, (message) => {
+      try {
+        const detection: DetectionData = JSON.parse(message.body)
+        console.log('탐지 알림 수신:', detection)
+        this.executeCallbacks('detection', detection)
+      } catch (error) {
+        console.error('탐지 메시지 파싱 실패:', error)
+      }
+    })
   }
   
-  subscribeToTopic(topic: string): void {
-    if (this.stompClient && this.connected) {
-      // 기존 구독 해제
-      if (this.currentSubscription) {
-        this.currentSubscription.unsubscribe()
-      }
-      
-      // 새 토픽 구독
-      this.currentSubscription = this.stompClient.subscribe(topic, (message) => {
-        try {
-          const detection: DetectionData = JSON.parse(message.body)
-          console.log('탐지 알림 수신:', detection)
-          
-          // 탐지 데이터 콜백 실행
-          this.executeCallbacks('detection', detection)
-        } catch (error) {
-          console.error('탐지 메시지 파싱 실패:', error)
-        }
-      })
-      
-      console.log(`구독 전환: ${topic}`)
+  subscribe(key: string, topic: string, callback: (message: any) => void): void {
+    if (!this.stompClient || !this.connected) {
+      console.error('WebSocket이 연결되지 않음')
+      return
+    }
+    
+    // 기존 구독 해제
+    this.unsubscribe(key)
+    
+    // 새 구독 생성
+    const subscription = this.stompClient.subscribe(topic, callback)
+    this.subscriptions.set(key, subscription)
+    console.log(`구독 생성: ${key} -> ${topic}`)
+  }
+  
+  unsubscribe(key: string): void {
+    const subscription = this.subscriptions.get(key)
+    if (subscription) {
+      subscription.unsubscribe()
+      this.subscriptions.delete(key)
+      console.log(`구독 해제: ${key}`)
     }
   }
 
@@ -137,40 +139,26 @@ class WebSocketService {
   }
   
   onChat(callback: CallbackFunction): void {
+    // 기존 채팅 콜백 모두 제거 후 새로 등록
+    this.callbacks.delete('channel')
     this.addCallback('channel', callback)
   }
   
   subscribeToChat(channelId: number): void {
-    console.log('=== 채팅 구독 시도 ===')
-    console.log('STOMP Client 존재:', !!this.stompClient)
-    console.log('연결 상태:', this.connected)
-    console.log('방 ID:', channelId)
-    
-    if (this.stompClient && this.connected) {
-      // 기존 채팅 구독 해제
-      if (this.channelSubscription) {
-        console.log('기존 채팅 구독 해제')
-        this.channelSubscription.unsubscribe()
+    const topic = `/topic/channels/${channelId}`
+    this.subscribe('chat', topic, (message) => {
+      try {
+        const channelMessage: Message = JSON.parse(message.body)
+        console.log('채팅 메시지 수신:', channelMessage)
+        this.executeCallbacks('channel', channelMessage)
+      } catch (error) {
+        console.error('채팅 메시지 파싱 실패:', error)
       }
-      
-      const topic = `/topic/channels/${channelId}`
-      console.log(`채팅 구독 경로: ${topic}`)
-      
-      this.channelSubscription = this.stompClient.subscribe(topic, (message) => {
-        try {
-          console.log('채팅 메시지 수신:', message.body)
-          const channelMessage: Message = JSON.parse(message.body)
-          console.log('파싱된 채팅 메시지:', channelMessage)
-          this.executeCallbacks('channel', channelMessage)
-        } catch (error) {
-          console.error('채팅 메시지 파싱 실패:', error)
-        }
-      })
-      
-      console.log('채팅 구독 완료')
-    } else {
-      console.error('채팅 구독 실패: WebSocket 연결되지 않음')
-    }
+    })
+  }
+  
+  unsubscribeFromChat(): void {
+    this.unsubscribe('chat')
   }
   
   sendMessage(channelId: number, nickname: string, content: string): Promise<void> {
