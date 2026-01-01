@@ -15,9 +15,7 @@
         <router-link to="/Heatmap" :class="{ active: $route.path === '/Heatmap' }" class="nav-link">
           히트맵
         </router-link>
-        <router-link to="/community" :class="{ active: $route.path === '/community' }" class="nav-link">
-          커뮤니티
-        </router-link>
+
         <router-link to="/news" :class="{ active: $route.path === '/news' }" class="nav-link">
           뉴스
         </router-link>

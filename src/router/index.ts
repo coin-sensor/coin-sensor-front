@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 import Heatmap from '../views/Heatmap.vue'
-import Community from '../components/Community.vue'
+
 import News from '../views/News.vue'
 import Admin from '../views/Admin.vue'
 import Detection from '../views/Detection.vue'
@@ -27,11 +27,7 @@ const routes = [
     name: 'Heatmap',
     component: Heatmap
   },
-  {
-    path: '/community',
-    name: 'Community',
-    component: Community
-  },
+
   {
     path: '/news',
     name: 'News',
