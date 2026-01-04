@@ -4,22 +4,24 @@
       @click="handleReaction('like')"
       :class="{ active: userReaction === 'like' }"
       class="reaction-btn like-btn"
+      :disabled="isLoading"
     >
-      <font-awesome-icon icon="fa-regular fa-thumbs-up" /> {{ likeCount }}
+      <font-awesome-icon icon="fa-regular fa-thumbs-up" /> {{ localLikeCount }}
     </button>
     <button 
       @click="handleReaction('dislike')"
       :class="{ active: userReaction === 'dislike' }"
       class="reaction-btn dislike-btn"
+      :disabled="isLoading"
     >
-      <font-awesome-icon icon="fa-regular fa-thumbs-down" /> {{ dislikeCount }}
+      <font-awesome-icon icon="fa-regular fa-thumbs-down" /> {{ localDislikeCount }}
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { reactionService, type ReactionRequest } from '@/services/reactionService'
+import { ref, watch } from 'vue'
+import { reactionService, type ReactionRequest, type ReactionCountResponse } from '@/services/reactionService'
 
 interface Props {
   targetType: 'detected_coins' | 'messages'
@@ -37,10 +39,20 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   reactionChanged: [reaction: 'like' | 'dislike']
-  refreshData: []
 }>()
 
 const isLoading = ref(false)
+const localLikeCount = ref(props.likeCount)
+const localDislikeCount = ref(props.dislikeCount)
+
+// props 변경 시 로컬 상태 동기화
+watch(() => props.likeCount, (newVal) => {
+  localLikeCount.value = newVal
+})
+
+watch(() => props.dislikeCount, (newVal) => {
+  localDislikeCount.value = newVal
+})
 
 const handleReaction = async (reaction: 'like' | 'dislike') => {
   if (isLoading.value) return
@@ -54,9 +66,25 @@ const handleReaction = async (reaction: 'like' | 'dislike') => {
       targetId: props.targetId
     }
     
-    await reactionService.toggleReaction(request)
+    // 리액션 토글 후 업데이트된 수치 받기
+    const response = await reactionService.toggleReaction(request)
+    console.log('리액션 응답 전체:', response) // 디버깅용
+    console.log('응답 타입:', typeof response, Array.isArray(response)) // 디버깅용
+    
+    // 응답이 배열인지 확인
+    const updatedCounts = Array.isArray(response) ? response : response.data || []
+    console.log('처리된 updatedCounts:', updatedCounts) // 디버깅용
+    
+    // 로컬 상태 즉시 업데이트
+    updatedCounts.forEach((count: ReactionCountResponse) => {
+      if (count.reactionName.toLowerCase() === 'like') {
+        localLikeCount.value = count.count
+      } else if (count.reactionName.toLowerCase() === 'dislike') {
+        localDislikeCount.value = count.count
+      }
+    })
+    
     emit('reactionChanged', reaction)
-    emit('refreshData')
   } catch (error) {
     console.error('리액션 처리 실패:', error)
   } finally {
