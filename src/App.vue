@@ -29,7 +29,7 @@
           <span class="user-count">{{ activeUserCount }}</span>
         </div>
         <button @click="toggleDarkMode" class="theme-toggle">
-          {{ isDarkMode ? '☀️' : '🌙' }}
+          <font-awesome-icon :icon="isDarkMode ? 'fa-regular fa-sun' : 'fa-regular fa-moon'" />
         </button>
       </div>
     </nav>
@@ -46,6 +46,7 @@
 import FloatingChannel from './components/FloatingChannel.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faUsers } from '@fortawesome/free-solid-svg-icons'
+import { faSun, faMoon } from '@fortawesome/free-regular-svg-icons'
 
 export default {
   name: 'App',
@@ -57,7 +58,9 @@ export default {
     return {
       isDarkMode: localStorage.getItem('darkMode') === 'true',
       activeUserCount: 0,
-      faUsers
+      faUsers,
+      faSun,
+      faMoon
     }
   },
   
