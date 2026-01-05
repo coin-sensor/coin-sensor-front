@@ -9,7 +9,7 @@
         <router-link to="/" :class="{ active: $route.path === '/' }" class="nav-link">
           메인
         </router-link>
-        <router-link to="/insight" :class="{ active: $route.path === '/insight' }" class="nav-link">
+        <router-link to="/insight" :class="{ active: $route.path.startsWith('/insight') }" class="nav-link">
           인사이트
         </router-link>
         <router-link to="/Heatmap" :class="{ active: $route.path === '/Heatmap' }" class="nav-link">
