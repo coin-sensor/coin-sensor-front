@@ -152,7 +152,7 @@ const loadChartData = async () => {
           endTime: endTime.toISOString().slice(0, -1)
         }
       }),
-      api.get('/detections/top10', {
+      api.get('/detectedCoins/top10', {
         params: {
           timeframe: selectedTimeframe.value,
           startTime: startTime.toISOString().slice(0, -1),

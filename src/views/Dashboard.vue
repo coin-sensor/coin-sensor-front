@@ -287,7 +287,7 @@ export default {
       // API 호출
       if (detectedCoinId) {
         try {
-          const response = await api.post(`/coins/detected/${detectedCoinId}/view`)
+          const response = await api.post(`/detectedCoins/${detectedCoinId}/view`)
           const newViewCount = response.data
           
           // 해당 코인의 조회수 업데이트
