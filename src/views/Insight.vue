@@ -7,7 +7,7 @@
       <!-- 인사이트 요약 섹션 -->
       <section id="overview" class="content-section">
         <h2 class="section-title">📊 인사이트 요약</h2>
-        <p class="section-description">데이터랩이 분석한 내용을 바탕으로 주요 인사이트를 쉽게 확인할 수 있습니다.</p>
+        <p class="section-description">코인센서가 분석한 내용을 바탕으로 주요 인사이트를 쉽게 확인할 수 있습니다.</p>
       </section>
 
       <!-- 탐지 통계 차트 -->
@@ -16,15 +16,17 @@
       <div class="chart-header">
         <h2>📈 탐지 통계</h2>
         <div class="controls">
-          <select v-model="selectedTimeframe" @change="loadChartData" class="select-input">
-            <option value="1m">1분</option>
-            <option value="5m">5분</option>
-            <option value="15m">15분</option>
-            <option value="1h">1시간</option>
-            <option value="4h">4시간</option>
-            <option value="1d">1일</option>
-          </select>
-          <span class="period-info">최근 120개 데이터</span>
+          <div class="period-selector">
+            <button 
+              v-for="tf in timeframes" 
+              :key="tf.value"
+              :class="['period-btn', { active: selectedTimeframe === tf.value }]"
+              @click="selectedTimeframe = tf.value; loadChartData()"
+            >
+              {{ tf.label }}
+            </button>
+          </div>
+          <span class="period-info">최근 {{ dataCount }}개 데이터</span>
         </div>
       </div>
       <div class="chart-container">
@@ -80,6 +82,16 @@ const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
 const detectionChart = ref<HTMLCanvasElement | null>(null)
 const chartInstance = ref<Chart | null>(null)
 const selectedTimeframe = ref('5m')
+const dataCount = ref(30)
+
+const timeframes = [
+  { label: '1m', value: '1m' },
+  { label: '5m', value: '5m' },
+  { label: '15m', value: '15m' },
+  { label: '1h', value: '1h' },
+  { label: '4h', value: '4h' },
+  { label: '1d', value: '1d' }
+]
 
 const loadChartData = async () => {
   try {
@@ -87,15 +99,15 @@ const loadChartData = async () => {
     
     // 로컬 시간으로 변환
     const endTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-    
-    // 각 분봉별 120개 데이터를 위한 시간 계산
+    const dataCount = 30;
+    // 각 분봉별 30개 데이터를 위한 시간 계산
     const timeframeMinutes = {
-      '1m': 120,    // 1분 * 120 = 120분 전
-      '5m': 600,    // 5분 * 120 = 600분 전
-      '15m': 1800,  // 15분 * 120 = 1800분 전
-      '1h': 7200,   // 60분 * 120 = 7200분 전
-      '4h': 28800,  // 240분 * 120 = 28800분 전
-      '1d': 172800  // 1440분 * 120 = 172800분 전
+      '1m': dataCount,
+      '5m': dataCount * 5,
+      '15m': dataCount * 15,
+      '1h': dataCount * 60,
+      '4h': dataCount * 240,
+      '1d': dataCount * 1440
     }
     
     const minutesToSubtract = timeframeMinutes[selectedTimeframe.value as keyof typeof timeframeMinutes] || 7200
@@ -154,16 +166,16 @@ const createChart = (data: any) => {
       datasets: [{
         label: '탐지 수',
         data: timeData,
-        backgroundColor: isDarkMode.value ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+        backgroundColor: isDarkMode.value ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
         borderColor: isDarkMode.value ? '#60a5fa' : '#3b82f6',
-        borderWidth: 3,
+        borderWidth: 2,
         fill: true,
-        tension: 0.2,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 4,
         pointBackgroundColor: isDarkMode.value ? '#60a5fa' : '#3b82f6',
         pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
+        pointBorderWidth: 2
       }]
     },
     options: {
@@ -211,20 +223,27 @@ const createChart = (data: any) => {
           time: {
             displayFormats: {
               minute: 'HH:mm',
-              hour: 'MM/dd HH:mm',
+              hour: 'HH:mm',
               day: 'MM/dd'
-            }
+            },
+            tooltipFormat: 'MM/dd HH:mm'
           },
           min: timeData[0]?.x,
           max: new Date(),
           ticks: {
             color: isDarkMode.value ? '#94a3b8' : '#6b7280',
-            maxTicksLimit: 8,
-            source: 'auto'
+            maxTicksLimit: 6,
+            autoSkip: true,
+            maxRotation: 0,
+            minRotation: 0,
+            font: {
+              size: 11
+            }
           },
           grid: {
             color: isDarkMode.value ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
-            drawOnChartArea: true
+            drawOnChartArea: true,
+            drawTicks: false
           }
         },
         y: {
@@ -232,13 +251,18 @@ const createChart = (data: any) => {
           beginAtZero: true,
           ticks: {
             color: isDarkMode.value ? '#94a3b8' : '#6b7280',
+            maxTicksLimit: 6,
+            font: {
+              size: 11
+            },
             callback: function(value: any) {
               return value + '개'
             }
           },
           grid: {
             color: isDarkMode.value ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
-            drawOnChartArea: true
+            drawOnChartArea: true,
+            drawTicks: false
           }
         }
       },
@@ -342,7 +366,41 @@ onBeforeUnmount(() => {
 
 .controls {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
+  align-items: center;
+}
+
+.period-selector {
+  display: flex;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.period-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  min-width: 36px;
+  text-align: center;
+}
+
+.period-btn:hover {
+  color: #334155;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.period-btn.active {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .select-input {
@@ -422,6 +480,25 @@ onBeforeUnmount(() => {
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-top: 0;
+}
+
+:global(body.dark-mode) .period-selector {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(body.dark-mode) .period-btn {
+  color: #94a3b8;
+}
+
+:global(body.dark-mode) .period-btn:hover {
+  color: #e2e8f0;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+:global(body.dark-mode) .period-btn.active {
+  background: #3b82f6;
+  color: white;
 }
 
 :global(body.dark-mode) .card {
