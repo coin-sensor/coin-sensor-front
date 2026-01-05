@@ -69,7 +69,7 @@ const colors = [
 
 const loadData = async () => {
   try {
-    const response = await api.get('/clickCoins/top', {
+    const response = await api.get('/coinClicks/top', {
       params: { 
         days: parseInt(selectedPeriod),
         limit: 3 

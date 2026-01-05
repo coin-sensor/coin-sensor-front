@@ -102,7 +102,7 @@ const colors = [
 
 const loadData = async () => {
   try {
-    const topResponse = await api.get('/clickCoins/top', {
+    const topResponse = await api.get('/coinClicks/top', {
       params: { 
         days: parseInt(selectedPeriod.value),
         limit: 10
@@ -113,7 +113,7 @@ const loadData = async () => {
     totalViews.value = coinsData.value.reduce((sum, coin) => sum + coin.totalViewCount, 0)
     
     try {
-      const trendResponse = await api.get('/clickCoins/trend', {
+      const trendResponse = await api.get('/coinClicks/trend', {
         params: { 
           days: parseInt(selectedPeriod.value),
           limit: 10

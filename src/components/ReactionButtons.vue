@@ -72,7 +72,7 @@ const handleReaction = async (reaction: 'like' | 'dislike') => {
     console.log('응답 타입:', typeof response, Array.isArray(response)) // 디버깅용
     
     // 응답이 배열인지 확인
-    const updatedCounts = Array.isArray(response) ? response : response.data || []
+    const updatedCounts = Array.isArray(response) ? response : []
     console.log('처리된 updatedCounts:', updatedCounts) // 디버깅용
     
     // 로컬 상태 즉시 업데이트
