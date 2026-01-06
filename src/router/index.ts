@@ -10,6 +10,11 @@ import PopularCoinsDetail from '../views/PopularCoinsDetail.vue'
 import DetectionStatsDetail from '../views/DetectionStatsDetail.vue'
 import MarketAnalysisDetail from '../views/MarketAnalysisDetail.vue'
 import RecommendedCoinsDetail from '../views/RecommendedCoinsDetail.vue'
+import ChannelManagement from '../views/ChannelManagement.vue'
+import UserManagement from '../views/UserManagement.vue'
+import SystemManagement from '../views/SystemManagement.vue'
+import LogManagement from '../views/LogManagement.vue'
+import ExchangeCoinManagement from '../views/ExchangeCoinManagement.vue'
 
 const routes = [
     {
@@ -62,6 +67,31 @@ const routes = [
         path: '/insight/marketAnalysis',
         name: 'MarketAnalysisDetail',
         component: MarketAnalysisDetail
+    },
+    {
+        path: '/admin/channels',
+        name: 'ChannelManagement',
+        component: ChannelManagement
+    },
+    {
+        path: '/admin/users',
+        name: 'UserManagement',
+        component: UserManagement
+    },
+    {
+        path: '/admin/coins',
+        name: 'ExchangeCoinManagement',
+        component: ExchangeCoinManagement
+    },
+    {
+        path: '/admin/system',
+        name: 'SystemManagement',
+        component: SystemManagement
+    },
+    {
+        path: '/admin/logs',
+        name: 'LogManagement',
+        component: LogManagement
     }
 ]
 

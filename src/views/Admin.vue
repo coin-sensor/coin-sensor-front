@@ -1,113 +1,44 @@
 <template>
   <div class="admin-container">
-    <div class="admin-header">
-      <h1>🔧 관리자 페이지</h1>
-      <div class="admin-status">
-        <span class="status-dot" :class="{ active: isConnected }"></span>
-        <span>{{ isConnected ? '연결됨' : '연결 끊김' }}</span>
-      </div>
-    </div>
+    <AdminSidebar />
 
-    <!-- 사용자 금지 관리 섹션 -->
-    <div class="card admin-section">
-      <BanManagement />
-    </div>
-
-    <!-- 채팅방 관리 섹션 -->
-    <div class="card admin-section">
-      <div class="section-header">
-        <h2>💬 채팅방 관리</h2>
-        <button @click="showCreateModal = true" class="create-btn">
-          새 채팅방 생성
-        </button>
-      </div>
-
-      <div class="channel-list">
-        <div v-for="channel in channels" :key="channel.id" class="channel-item">
-          <div class="channel-info">
-            <div class="channel-name">{{ channel.name }}</div>
-            <div class="channel-details">
-              <span>ID: {{ channel.channelId }}</span>
-              <span>생성일: {{ formatDate(channel.createdAt) }}</span>
-            </div>
-          </div>
-          <div class="channel-actions">
-            <button @click="editChannel(channel)" class="edit-btn">수정</button>
-            <button @click="deleteChannel(channel.channelId)" class="delete-btn">삭제</button>
+    <!-- 메인 콘텐츠 -->
+    <main class="main-content">
+      <!-- 관리자 메인 섹션 -->
+      <section id="overview" class="content-section">
+        <div class="admin-header">
+          <h2 class="section-title">🔧 관리자 메인</h2>
+          <div class="admin-status">
+            <span class="status-dot" :class="{ active: isConnected }"></span>
+            <span>{{ isConnected ? '연결됨' : '연결 끊김' }}</span>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 채팅방 생성/수정 모달 -->
-    <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ showEditModal ? '채팅방 수정' : '새 채팅방 생성' }}</h3>
-          <button class="close-btn" @click="closeModal">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>채팅방 이름</label>
-            <input 
-              v-model="channelForm.name"
-              placeholder="채팅방 이름을 입력하세요"
-              class="form-input"
-            />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button @click="closeModal" class="cancel-btn">취소</button>
-          <button @click="saveChannel" class="save-btn">
-            {{ showEditModal ? '수정' : '생성' }}
-          </button>
-        </div>
-      </div>
-    </div>
+        <p class="section-description">시스템 전반의 관리 기능을 제공합니다.</p>
+      </section>
+    </main>
   </div>
 </template>
 
 <script>
-import { apiService } from '@/services/api'
-import BanManagement from '../components/BanManagement.vue'
+import AdminSidebar from '../components/AdminSidebar.vue'
 
 export default {
   name: 'Admin',
   components: {
-    BanManagement
+    AdminSidebar
   },
   data() {
     return {
-      isConnected: false,
-      channels: [],
-      showCreateModal: false,
-      showEditModal: false,
-      channelForm: {
-        name: ''
-      },
-      editingChannel: null
+      isConnected: false
     }
   },
 
   mounted() {
     this.checkAdminAccess()
-    this.loadChannels()
     this.initWebSocket()
   },
 
   methods: {
-    async loadChannels() {
-      try {
-        console.log('채팅방 목록 로드 시도...')
-        this.channels = await apiService.getChannels()
-        console.log('채팅방 목록 로드 성공:', this.channels)
-      } catch (error) {
-        console.error('채팅방 목록 로드 실패:', error)
-        console.error('에러 상세:', error.response?.data || error.message)
-        // 기본 채팅방 설정
-      }
-    },
-
     initWebSocket() {
       import('../services/websocket').then(({ websocketService }) => {
         websocketService.onConnect(() => {
@@ -120,76 +51,9 @@ export default {
       })
     },
 
-    editChannel(channel) {
-      this.editingChannel = channel
-      this.channelForm = { name: channel.name }
-      this.showEditModal = true
-    },
-
-    async deleteChannel(channelId) {
-      if (!confirm('정말로 이 채팅방을 삭제하시겠습니까?')) return
-
-      try {
-        await apiService.deleteChannel(channelId)
-        this.channels = this.channels.filter(channel => channel.channelId !== channelId)
-        alert('채팅방이 삭제되었습니다.')
-      } catch (error) {
-        console.error('채팅방 삭제 실패:', error)
-        alert(`${error.response?.data?.message || error.message}`)
-      }
-    },
-
-    async saveChannel() {
-      if (!this.channelForm.name) {
-        alert('채팅방 이름을 입력해주세요.')
-        return
-      }
-
-      console.log('채팅방 저장 시도:', this.channelForm)
-
-      try {
-        if (this.showEditModal) {
-          // 수정
-          console.log('채팅방 수정:', this.editingChannel.channelId, this.channelForm)
-          const updatedChannel = await apiService.updateChannel(this.editingChannel.channelId, this.channelForm)
-          console.log('수정 결과:', updatedChannel)
-          
-          const index = this.channels.findIndex(channel => channel.channelId === this.editingChannel.channelId)
-          if (index !== -1) {
-            this.channels[index].name = this.channelForm.name
-          }
-          alert('채팅방이 수정되었습니다.')
-        } else {
-          // 생성
-          console.log('채팅방 생성 요청:', this.channelForm)
-          const newChannel = await apiService.createChannel(this.channelForm)
-          console.log('생성 결과:', newChannel)
-          
-          this.channels.push(newChannel)
-          alert('채팅방이 생성되었습니다.')
-        }
-        
-        this.closeModal()
-      } catch (error) {
-        console.error('채팅방 저장 실패:', error)
-        console.error('에러 상세:', error.response?.data || error.message)
-        alert(`${error.response?.data?.message || error.message}`)
-      }
-    },
-
-    closeModal() {
-      this.showCreateModal = false
-      this.showEditModal = false
-      this.channelForm = { name: '' }
-      this.editingChannel = null
-    },
-
-    formatDate(date) {
-      return new Date(date).toLocaleDateString('ko-KR')
-    },
-
     async checkAdminAccess() {
       try {
+        const { apiService } = await import('@/services/api')
         const isAdmin = await apiService.isAdmin()
         if (!isAdmin) {
           alert('관리자 권한이 필요합니다.')
@@ -206,21 +70,49 @@ export default {
 
 <style scoped>
 .admin-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  display: flex;
+  gap: 1rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.content-section {
+  margin-bottom: 1.5rem;
+}
+
+.content-section:first-of-type {
+  margin-top: 0;
+}
+
+.content-section:first-of-type .section-title {
+  margin-top: 0;
+}
+
+.section-description {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
 }
 
 .admin-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
-.admin-header h1 {
+.section-title {
   margin: 0;
   color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .admin-status {
@@ -432,7 +324,27 @@ export default {
 .card {
   background: white;
   border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 0;
+}
+
+:global(body.dark-mode) .card {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+:global(body.dark-mode) .section-title {
+  color: #f1f5f9;
+}
+
+:global(body.dark-mode) .section-description {
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    flex-direction: column;
+  }
 }
 </style>
