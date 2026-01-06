@@ -51,7 +51,7 @@
         <div class="ranking-container">
           <div class="ranking-column">
             <div class="ranking-header">
-              <span class="rank-label">순위</span>
+              <span class="rank-label"></span>
               <span class="coin-label">코인</span>
               <span class="count-label">탐지수</span>
               <span class="change-label">최대변동률</span>
@@ -74,7 +74,7 @@
 
           <div class="ranking-column">
             <div class="ranking-header">
-              <span class="rank-label">순위</span>
+              <span class="rank-label"></span>
               <span class="coin-label">코인</span>
               <span class="count-label">탐지수</span>
               <span class="change-label">최대변동률</span>
@@ -481,7 +481,7 @@ onBeforeUnmount(() => {
 
 .coin-label,
 .coin-symbol {
-  width: 60px;
+  width: 120px;
   text-align: left;
   font-weight: 500;
   flex-shrink: 0;
