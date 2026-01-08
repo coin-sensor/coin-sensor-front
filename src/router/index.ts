@@ -15,6 +15,7 @@ import UserManagement from '../views/UserManagement.vue'
 import SystemManagement from '../views/SystemManagement.vue'
 import LogManagement from '../views/LogManagement.vue'
 import ExchangeCoinManagement from '../views/ExchangeCoinManagement.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const routes = [
     {
@@ -41,7 +42,8 @@ const routes = [
     {
         path: '/admin',
         name: 'Admin',
-        component: Admin
+        component: Admin,
+        meta: { requiresAdmin: true }
     },
     {
         path: '/detection',
@@ -71,33 +73,61 @@ const routes = [
     {
         path: '/admin/channels',
         name: 'ChannelManagement',
-        component: ChannelManagement
+        component: ChannelManagement,
+        meta: { requiresAdmin: true }
     },
     {
         path: '/admin/users',
         name: 'UserManagement',
-        component: UserManagement
+        component: UserManagement,
+        meta: { requiresAdmin: true }
     },
     {
         path: '/admin/coins',
         name: 'ExchangeCoinManagement',
-        component: ExchangeCoinManagement
+        component: ExchangeCoinManagement,
+        meta: { requiresAdmin: true }
     },
     {
         path: '/admin/system',
         name: 'SystemManagement',
-        component: SystemManagement
+        component: SystemManagement,
+        meta: { requiresAdmin: true }
     },
     {
         path: '/admin/logs',
         name: 'LogManagement',
-        component: LogManagement
+        component: LogManagement,
+        meta: { requiresAdmin: true }
     }
 ]
 
 const router = createRouter({
     history: createWebHistory(),
     routes
+})
+
+// 라우터 가드
+router.beforeEach(async (to, from, next) => {
+  if (to.meta.requiresAdmin) {
+    try {
+      const authStore = useAuthStore()
+      const isAdmin = await authStore.verifyAdminAccess()
+      
+      if (!isAdmin) {
+        alert('관리자 권한이 필요합니다.')
+        return next('/')
+      }
+      
+      next()
+    } catch (error) {
+      console.error('권한 확인 실패:', error)
+      alert('권한 확인에 실패했습니다.')
+      next('/')
+    }
+  } else {
+    next()
+  }
 })
 
 export default router

@@ -21,6 +21,7 @@
 
 <script>
 import AdminSidebar from '../components/AdminSidebar.vue'
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'Admin',
@@ -33,8 +34,7 @@ export default {
     }
   },
 
-  mounted() {
-    this.checkAdminAccess()
+  async mounted() {
     this.initWebSocket()
   },
 
@@ -49,20 +49,6 @@ export default {
           this.isConnected = false
         })
       })
-    },
-
-    async checkAdminAccess() {
-      try {
-        const { apiService } = await import('@/services/api')
-        const isAdmin = await apiService.isAdmin()
-        if (!isAdmin) {
-          alert('관리자 권한이 필요합니다.')
-          this.$router.push('/')
-        }
-      } catch (error) {
-        console.error('관리자 권한 체크 실패:', error)
-        this.$router.push('/')
-      }
     }
   }
 }

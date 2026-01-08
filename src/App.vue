@@ -19,9 +19,11 @@
         <router-link to="/news" :class="{ active: $route.path === '/news' }" class="nav-link">
           뉴스
         </router-link>
-<!--        <router-link to="/admin" :class="{ active: $route.path === '/admin' }" class="nav-link">-->
-<!--          관리자-->
-<!--        </router-link>-->
+        <AdminOnly>
+          <router-link to="/admin" :class="{ active: $route.path.startsWith('/admin') }" class="nav-link">
+            관리자
+          </router-link>
+        </AdminOnly>
       </div>
       <div class="nav-actions">
         <div class="active-users">
@@ -44,6 +46,7 @@
 
 <script>
 import FloatingChannel from './components/FloatingChannel.vue'
+import AdminOnly from './components/AdminOnly.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faUsers } from '@fortawesome/free-solid-svg-icons'
 import { faSun, faMoon } from '@fortawesome/free-regular-svg-icons'
@@ -52,6 +55,7 @@ export default {
   name: 'App',
   components: {
     FloatingChannel: FloatingChannel,
+    AdminOnly,
     FontAwesomeIcon
   },
   data() {
