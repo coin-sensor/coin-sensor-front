@@ -186,7 +186,7 @@ const createTrendChart = (trendData: any[]) => {
     backgroundColor: colors[index % colors.length],
     borderWidth: 2,
     tension: 0,
-    pointRadius: 3,
+    pointRadius: 0,
     pointHoverRadius: 6,
     pointBackgroundColor: colors[index % colors.length],
     pointBorderColor: '#fff',
