@@ -4,7 +4,7 @@
 
     <main class="main-content">
       <div class="header-section">
-        <h1>📊 시장 분석</h1>
+        <h1>시장 분석</h1>
         <p class="description">시장의 주요 지표와 분석 데이터를 제공합니다.</p>
       </div>
 

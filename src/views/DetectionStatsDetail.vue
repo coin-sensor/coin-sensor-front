@@ -4,13 +4,13 @@
 
     <main class="main-content">
       <div class="header-section">
-        <h1>📈 탐지 통계</h1>
+        <h1>탐지 통계</h1>
         <p class="description">시간대별 암호화폐 급등급락 탐지 현황을 실시간으로 모니터링합니다.</p>
       </div>
 
       <div class="chart-section">
         <div class="chart-header">
-          <h2>📈 탐지 통계</h2>
+          <h2>탐지 통계</h2>
           <div class="controls">
             <div class="period-selector">
               <button

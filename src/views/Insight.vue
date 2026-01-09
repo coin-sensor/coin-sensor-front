@@ -6,7 +6,7 @@
     <main class="main-content">
       <!-- 인사이트 요약 섹션 -->
       <section id="overview" class="content-section">
-        <h2 class="section-title">📊 인사이트 요약</h2>
+        <h2 class="section-title">인사이트 요약</h2>
         <p class="section-description">코인센서가 분석한 내용을 바탕으로 주요 인사이트를 쉽게 확인할 수 있습니다.</p>
       </section>
 

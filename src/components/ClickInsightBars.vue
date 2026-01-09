@@ -1,7 +1,7 @@
 <template>
   <div class="insight-bars" @click="goToPopularCoins">
     <div class="header">
-      <h3>🔥 인기 TOP 3 코인 (24h)</h3>
+      <h3>인기 TOP 3 코인 (24h)</h3>
     </div>
     
     <div class="total-stats">

@@ -1,7 +1,7 @@
 <template>
   <div class="recommended-bars" @click="goToRecommendedCoins">
     <div class="header">
-      <h3>👍 추천 TOP 3 코인 (24h)</h3>
+      <h3>추천 TOP 3 코인 (24h)</h3>
     </div>
     
     <div class="total-stats">

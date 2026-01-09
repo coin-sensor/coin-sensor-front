@@ -1,6 +1,6 @@
 <template>
   <div class="charts-container">
-    <h2>📊 주요 시장 지표</h2>
+    <h2>주요 시장 지표</h2>
     <div class="charts-grid">
       <div 
         v-for="(symbol, index) in symbols" 
