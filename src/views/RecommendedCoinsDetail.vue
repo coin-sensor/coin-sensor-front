@@ -4,7 +4,7 @@
 
     <main class="main-content">
       <div class="header-section">
-        <h1>👍 추천 코인 분석</h1>
+        <h1>추천 코인 분석</h1>
         <p class="description">사용자가 추천/비추천한 코인 데이터입니다.</p>
       </div>
 
@@ -21,7 +21,7 @@
 
       <div class="coins-section">
         <div class="section-header">
-          <h2>👍 TOP 5 추천 코인</h2>
+          <h2><span class="section-icon liked-icon"></span> TOP 5 추천 코인</h2>
         </div>
         <div class="coins-grid">
           <div 
@@ -61,7 +61,7 @@
 
       <div class="coins-section">
         <div class="section-header">
-          <h2>👎 TOP 5 비추천 코인</h2>
+          <h2><span class="section-icon disliked-icon"></span> TOP 5 비추천 코인</h2>
         </div>
         <div class="coins-grid">
           <div 
@@ -106,12 +106,19 @@
         </div>
       </div>
 
-      <!-- <div class="chart-section">
-        <h2>📊 시간별 반응 추이</h2>
+      <div class="chart-section">
+        <h2>📊 시간별 추천 추이</h2>
         <div class="chart-container">
-          <canvas ref="trendChart"></canvas>
+          <canvas ref="likedTrendChart"></canvas>
         </div>
-      </div> -->
+      </div>
+
+      <div class="chart-section">
+        <h2>📊 시간별 비추천 추이</h2>
+        <div class="chart-container">
+          <canvas ref="dislikedTrendChart"></canvas>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -138,8 +145,10 @@ const totalLiked = ref(0)
 const totalDisliked = ref(0)
 const reactionChart = ref<HTMLCanvasElement | null>(null)
 const reactionChartInstance = ref<Chart | null>(null)
-// const trendChart = ref<HTMLCanvasElement | null>(null)
-// const trendChartInstance = ref<Chart | null>(null)
+const likedTrendChart = ref<HTMLCanvasElement | null>(null)
+const likedTrendChartInstance = ref<Chart | null>(null)
+const dislikedTrendChart = ref<HTMLCanvasElement | null>(null)
+const dislikedTrendChartInstance = ref<Chart | null>(null)
 
 const periods = [
   { label: '1일', value: '1' },
@@ -172,15 +181,16 @@ const loadData = async () => {
     
     createReactionChart()
     
-    // try {
-    //   const trendResponse = await reactionApi.getReactionsTrendData()
-    //   console.log('Trend API Response:', trendResponse.data)
-    //   createTrendChart(trendResponse.data)
-    // } catch (trendError) {
-    //   console.error('추이 데이터 로드 실패:', trendError)
-    //   console.log('API가 없어 모크 데이터를 사용합니다.')
-    //   createMockTrendChart()
-    // }
+    try {
+      const [likedTrendResponse, dislikedTrendResponse] = await Promise.all([
+        reactionApi.getLikeTrendData(parseInt(selectedPeriod.value), 5),
+        reactionApi.getDislikeTrendData(parseInt(selectedPeriod.value), 5)
+      ])
+      createLikedTrendChart(likedTrendResponse.data)
+      createDislikedTrendChart(dislikedTrendResponse.data)
+    } catch (trendError) {
+      console.error('추이 데이터 로드 실패:', trendError)
+    }
   } catch (error) {
     console.error('데이터 로드 실패:', error)
   }
@@ -198,13 +208,31 @@ const createReactionChart = () => {
   
   const isDarkMode = localStorage.getItem('darkMode') === 'true'
   
+  const labels = []
+  const data = []
+  const backgroundColor = []
+  
+  // 추천 코인들 추가
+  topLikedCoins.value.forEach((coin, index) => {
+    labels.push(coin.baseAsset)
+    data.push(coin.reactionCount)
+    backgroundColor.push(likedColors[index % likedColors.length])
+  })
+  
+  // 비추천 코인들 추가
+  topDislikedCoins.value.forEach((coin, index) => {
+    labels.push(coin.baseAsset)
+    data.push(coin.reactionCount)
+    backgroundColor.push(dislikedColors[index % dislikedColors.length])
+  })
+  
   reactionChartInstance.value = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['추천', '비추천'],
+      labels,
       datasets: [{
-        data: [totalLiked.value, totalDisliked.value],
-        backgroundColor: ['#10b981', '#ef4444'],
+        data,
+        backgroundColor,
         borderColor: isDarkMode ? '#1e293b' : '#ffffff',
         borderWidth: 2
       }]
@@ -212,22 +240,77 @@ const createReactionChart = () => {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: {
-        duration: 0
-      },
-      transitions: {
-        active: {
-          animation: {
-            duration: 0
-          }
-        }
-      },
+      animation: { duration: 0 },
+      transitions: { active: { animation: { duration: 0 } } },
       plugins: {
         legend: {
-          position: 'bottom',
+          position: 'right',
           labels: {
             color: isDarkMode ? '#f1f5f9' : '#374151',
-            padding: 20
+            padding: 15,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            generateLabels: function(chart) {
+              const labels = []
+              const total = totalLiked.value + totalDisliked.value
+              
+              // 좋아요 헤더
+              labels.push({
+                text: `좋아요 (${((totalLiked.value / total) * 100).toFixed(1)}%)`,
+                fillStyle: '#10b981',
+                strokeStyle: '#10b981',
+                lineWidth: 0,
+                fontColor: isDarkMode ? '#f1f5f9' : '#374151',
+                fontStyle: 'bold'
+              })
+              
+              // 좋아요 코인들
+              topLikedCoins.value.forEach((coin, index) => {
+                const percentage = ((coin.reactionCount / total) * 100).toFixed(1)
+                labels.push({
+                  text: `${coin.baseAsset} (${percentage}%)`,
+                  fillStyle: likedColors[index % likedColors.length],
+                  strokeStyle: likedColors[index % likedColors.length],
+                  lineWidth: 0,
+                  datasetIndex: 0,
+                  index: index
+                })
+              })
+              
+              // 여백 추가
+              labels.push({
+                text: '',
+                fillStyle: 'transparent',
+                strokeStyle: 'transparent',
+                lineWidth: 0,
+                hidden: true
+              })
+              
+              // 싫어요 헤더
+              labels.push({
+                text: `싫어요 (${((totalDisliked.value / total) * 100).toFixed(1)}%)`,
+                fillStyle: '#ef4444',
+                strokeStyle: '#ef4444',
+                lineWidth: 0,
+                fontColor: isDarkMode ? '#f1f5f9' : '#374151',
+                fontStyle: 'bold'
+              })
+              
+              // 싫어요 코인들
+              topDislikedCoins.value.forEach((coin, index) => {
+                const percentage = ((coin.reactionCount / total) * 100).toFixed(1)
+                labels.push({
+                  text: `${coin.baseAsset} (${percentage}%)`,
+                  fillStyle: dislikedColors[index % dislikedColors.length],
+                  strokeStyle: dislikedColors[index % dislikedColors.length],
+                  lineWidth: 0,
+                  datasetIndex: 0,
+                  index: topLikedCoins.value.length + index
+                })
+              })
+              
+              return labels
+            }
           }
         },
         tooltip: {
@@ -235,7 +318,14 @@ const createReactionChart = () => {
           titleColor: isDarkMode ? '#f1f5f9' : '#374151',
           bodyColor: isDarkMode ? '#f1f5f9' : '#374151',
           borderColor: isDarkMode ? '#334155' : '#e5e7eb',
-          borderWidth: 1
+          borderWidth: 1,
+          callbacks: {
+            label: (context) => {
+              const total = totalLiked.value + totalDisliked.value
+              const percentage = ((context.parsed / total) * 100).toFixed(1)
+              return `${context.label}: ${context.parsed} (${percentage}%)`
+            }
+          }
         }
       }
     }
@@ -263,81 +353,181 @@ onMounted(() => {
   loadData()
 })
 
-// const createMockTrendChart = () => {
-//   const now = new Date()
-//   const days = parseInt(selectedPeriod.value)
-//   const hours = days * 24
-//   const mockData = topLikedCoins.value.slice(0, 5).map(coin => {
-//     const data = []
-//     for (let i = hours; i >= 0; i--) {
-//       const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000)
-//       const baseValue = coin.reactionCount / hours
-//       const randomVariation = baseValue * (0.7 + Math.random() * 0.6)
-//       data.push({
-//         timestamp: timestamp.toISOString(),
-//         reactionCount: Math.round(randomVariation)
-//       })
-//     }
-//     return {
-//       coinTicker: coin.coinTicker,
-//       baseAsset: coin.baseAsset,
-//       data
-//     }
-//   })
-//   createTrendChart(mockData)
-// }
+const createLikedTrendChart = (trendData: any[]) => {
+  if (likedTrendChartInstance.value) {
+    likedTrendChartInstance.value.destroy()
+  }
+  
+  if (!likedTrendChart.value) return
+  
+  const ctx = likedTrendChart.value.getContext('2d')
+  if (!ctx) return
+  
+  const isDarkMode = localStorage.getItem('darkMode') === 'true'
+  
+  const datasets = trendData.map((coin, index) => ({
+    label: coin.baseAsset,
+    data: coin.data.map((d: any) => ({
+      x: new Date(d.timestamp),
+      y: d.reactionCount
+    })),
+    borderColor: likedColors[index % likedColors.length],
+    backgroundColor: likedColors[index % likedColors.length],
+    borderWidth: 2,
+    tension: 0,
+    pointRadius: 0,
+    pointHoverRadius: 6,
+    pointBackgroundColor: likedColors[index % likedColors.length],
+    pointBorderColor: '#fff',
+    pointBorderWidth: 1,
+    pointHoverBorderWidth: 2
+  }))
+  
+  likedTrendChartInstance.value = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 },
+      transitions: { active: { animation: { duration: 0 } } },
+      interaction: { mode: 'nearest', intersect: false, axis: 'xy' },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            color: isDarkMode ? '#f1f5f9' : '#374151',
+            usePointStyle: true,
+            padding: 15
+          }
+        },
+        tooltip: {
+          backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          titleColor: isDarkMode ? '#f1f5f9' : '#374151',
+          bodyColor: isDarkMode ? '#f1f5f9' : '#374151',
+          borderColor: isDarkMode ? '#334155' : '#e5e7eb',
+          borderWidth: 1
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: parseInt(selectedPeriod.value) === 1 ? 'hour' : 'day',
+            displayFormats: { hour: 'HH:mm', day: 'MM/dd' },
+            tooltipFormat: 'yyyy-MM-dd HH:mm'
+          },
+          ticks: {
+            color: isDarkMode ? '#94a3b8' : '#6b7280',
+            maxTicksLimit: 12
+          },
+          grid: {
+            color: isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)'
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: isDarkMode ? '#94a3b8' : '#6b7280',
+            precision: 0
+          },
+          grid: {
+            color: isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)'
+          }
+        }
+      }
+    }
+  })
+}
 
-// const createTrendChart = (trendData: any[]) => {
-//   if (trendChartInstance.value) {
-//     trendChartInstance.value.destroy()
-//   }
+const createDislikedTrendChart = (trendData: any[]) => {
+  if (dislikedTrendChartInstance.value) {
+    dislikedTrendChartInstance.value.destroy()
+  }
   
-//   if (!trendChart.value) {
-//     console.error('Chart canvas not found')
-//     return
-//   }
+  if (!dislikedTrendChart.value) return
   
-//   if (!trendData || trendData.length === 0) {
-//     console.error('No trend data available')
-//     return
-//   }
+  const ctx = dislikedTrendChart.value.getContext('2d')
+  if (!ctx) return
   
-//   const ctx = trendChart.value.getContext('2d')
-//   if (!ctx) return
+  const isDarkMode = localStorage.getItem('darkMode') === 'true'
   
-//   const isDarkMode = localStorage.getItem('darkMode') === 'true'
+  const datasets = trendData.map((coin, index) => ({
+    label: coin.baseAsset,
+    data: coin.data.map((d: any) => ({
+      x: new Date(d.timestamp),
+      y: d.reactionCount
+    })),
+    borderColor: dislikedColors[index % dislikedColors.length],
+    backgroundColor: dislikedColors[index % dislikedColors.length],
+    borderWidth: 2,
+    tension: 0,
+    pointRadius: 0,
+    pointHoverRadius: 6,
+    pointBackgroundColor: dislikedColors[index % dislikedColors.length],
+    pointBorderColor: '#fff',
+    pointBorderWidth: 1,
+    pointHoverBorderWidth: 2
+  }))
   
-//   const datasets = trendData.map((coin, index) => ({
-//     label: coin.baseAsset,
-//     data: coin.data.map((d: any) => ({
-//       x: new Date(d.timestamp),
-//       y: d.reactionCount
-//     })),
-//     borderColor: likedColors[index % likedColors.length],
-//     backgroundColor: likedColors[index % likedColors.length],
-//     borderWidth: 2,
-//     tension: 0,
-//     pointRadius: 3,
-//     pointHoverRadius: 6,
-//     pointBackgroundColor: likedColors[index % likedColors.length],
-//     pointBorderColor: '#fff',
-//     pointBorderWidth: 1,
-//     pointHoverBorderWidth: 2
-//   }))
-  
-//   console.log('Creating chart with datasets:', datasets.length)
-  
-//   trendChartInstance.value = new Chart(ctx, {
-//     type: 'line',
-//     data: { datasets },
-//     options: {
-//       responsive: true,
-//       maintainAspectRatio: false,
-//       interaction: {
-//         mode: 'nearest',
-//         intersect: false,
-//         axis: 'xy'
-//       },
+  dislikedTrendChartInstance.value = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 },
+      transitions: { active: { animation: { duration: 0 } } },
+      interaction: { mode: 'nearest', intersect: false, axis: 'xy' },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            color: isDarkMode ? '#f1f5f9' : '#374151',
+            usePointStyle: true,
+            padding: 15
+          }
+        },
+        tooltip: {
+          backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          titleColor: isDarkMode ? '#f1f5f9' : '#374151',
+          bodyColor: isDarkMode ? '#f1f5f9' : '#374151',
+          borderColor: isDarkMode ? '#334155' : '#e5e7eb',
+          borderWidth: 1
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: parseInt(selectedPeriod.value) === 1 ? 'hour' : 'day',
+            displayFormats: { hour: 'HH:mm', day: 'MM/dd' },
+            tooltipFormat: 'yyyy-MM-dd HH:mm'
+          },
+          ticks: {
+            color: isDarkMode ? '#94a3b8' : '#6b7280',
+            maxTicksLimit: 12
+          },
+          grid: {
+            color: isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)'
+          }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: isDarkMode ? '#94a3b8' : '#6b7280',
+            precision: 0
+          },
+          grid: {
+            color: isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)'
+          }
+        }
+      }
+    }
+  })
+}
 //       plugins: {
 //         legend: {
 //           display: true,
@@ -400,9 +590,12 @@ onBeforeUnmount(() => {
   if (reactionChartInstance.value) {
     reactionChartInstance.value.destroy()
   }
-  // if (trendChartInstance.value) {
-  //   trendChartInstance.value.destroy()
-  // }
+  if (likedTrendChartInstance.value) {
+    likedTrendChartInstance.value.destroy()
+  }
+  if (dislikedTrendChartInstance.value) {
+    dislikedTrendChartInstance.value.destroy()
+  }
 })
 </script>
 
@@ -474,6 +667,48 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1.5rem;
+}
+
+.section-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-right: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.liked-icon {
+  background: radial-gradient(circle, #10b981 0%, #059669 50%, #047857 100%);
+  animation: pulse-liked 2s ease-in-out infinite;
+}
+
+.disliked-icon {
+  background: radial-gradient(circle, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+  animation: pulse-disliked 2s ease-in-out infinite;
+}
+
+@keyframes pulse-liked {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    transform: scale(1.1);
+  }
+}
+
+@keyframes pulse-disliked {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    transform: scale(1.1);
+  }
 }
 
 .coin-card {
@@ -565,6 +800,7 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
 }
 
 .chart-section h2 {

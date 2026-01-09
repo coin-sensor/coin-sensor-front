@@ -1,14 +1,6 @@
 import { api } from './api'
 
 export const reactionApi = {
-  async toggleReaction(request: { targetType: string; targetId: number; reactionType: string }) {
-    return api.post('/reactions', request)
-  },
-
-  async getReactionCounts(targetType: string, targetId: number) {
-    return api.get('/reactions/counts', { params: { targetType, targetId } })
-  },
-
   async getTopLikedCoins(days: number = 1, limit: number = 10) {
     return api.get('/reactions/topLiked', { params: { days, limit } })
   },
@@ -17,7 +9,11 @@ export const reactionApi = {
     return api.get('/reactions/topDisliked', { params: { days, limit } })
   },
 
-  async getReactionsTrendData(days: number = 1, limit: number = 10) {
-    return api.get('/reactions/trend', { params: { days, limit } })
+  async getLikeTrendData(days: number = 1, limit: number = 5) {
+    return api.get('/reactions/trend/like', { params: { days, limit } })
+  },
+
+  async getDislikeTrendData(days: number = 1, limit: number = 5) {
+    return api.get('/reactions/trend/dislike', { params: { days, limit } })
   }
 }
