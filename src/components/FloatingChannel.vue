@@ -933,6 +933,101 @@ export default {
   font-size: 0.875rem;
 }
 
+#app.dark-mode .floating-channel {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+#app.dark-mode .channels {
+  background: #374151;
+  border-bottom-color: #4b5563;
+}
+
+#app.dark-mode .channel-btn {
+  background: #1e293b;
+  border-color: #4b5563;
+  color: #e2e8f0;
+}
+
+#app.dark-mode .channel-btn.active {
+  background: #3b82f6;
+  color: white;
+}
+
+#app.dark-mode .channel-messages {
+  background: #0f172a;
+}
+
+#app.dark-mode .message-bubble {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e2e8f0;
+}
+
+#app.dark-mode .message.my-message .message-bubble {
+  background: #3b82f6;
+  color: white;
+}
+
+#app.dark-mode .nickname {
+  color: #94a3b8;
+}
+
+#app.dark-mode .timestamp {
+  color: #6b7280;
+}
+
+#app.dark-mode .date-separator {
+  background: #374151;
+  color: #94a3b8;
+}
+
+#app.dark-mode .loading-indicator {
+  background: #374151;
+  color: #94a3b8;
+}
+
+#app.dark-mode .channel-input {
+  background: #1e293b;
+  border-top-color: #4b5563;
+}
+
+#app.dark-mode .message-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e2e8f0;
+}
+
+#app.dark-mode .message-input:focus {
+  border-color: #3b82f6;
+}
+
+#app.dark-mode .modal-content {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+#app.dark-mode .modal-content h3 {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .modal-content p {
+  color: #94a3b8;
+}
+
+#app.dark-mode .nickname-input,
+#app.dark-mode .ban-select,
+#app.dark-mode .ban-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e2e8f0;
+}
+
+#app.dark-mode .cancel-btn {
+  background: #374151;
+  color: #e2e8f0;
+}
+
 @media (max-width: 768px) {
   .floating-channel {
     width: calc(100vw - 40px);

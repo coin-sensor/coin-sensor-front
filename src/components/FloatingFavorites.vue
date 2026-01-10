@@ -224,6 +224,36 @@ export default {
   background: rgba(239, 68, 68, 0.1);
 }
 
+#app.dark-mode .floating-favorites {
+  background: #1e293b;
+  border: 1px solid #334155;
+}
+
+#app.dark-mode .favorites-content {
+  background: #0f172a;
+}
+
+#app.dark-mode .no-favorites {
+  color: #94a3b8;
+}
+
+#app.dark-mode .favorite-item {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+#app.dark-mode .favorite-item:hover {
+  border-color: #f59e0b;
+}
+
+#app.dark-mode .coin-symbol {
+  color: #e2e8f0;
+}
+
+#app.dark-mode .coin-exchange {
+  color: #94a3b8;
+}
+
 @media (max-width: 768px) {
   .favorites-toggle-btn {
     right: 90px;
