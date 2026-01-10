@@ -157,10 +157,9 @@ export default {
 <style scoped>
 .admin-container {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
   max-width: 100%;
-  margin: 0;
-  padding: 0;
+  margin: 0 auto;
 }
 
 .main-content {
@@ -415,6 +414,7 @@ export default {
 @media (max-width: 768px) {
   .admin-container {
     flex-direction: column;
+    gap: 1rem;
   }
 }
 </style>
