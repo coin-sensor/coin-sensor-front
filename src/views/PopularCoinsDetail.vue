@@ -381,6 +381,10 @@ onBeforeUnmount(() => {
   transition: transform 0.2s;
 }
 
+.dark-mode .coin-card {
+  background: #1e293b !important;
+}
+
 .coin-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -408,9 +412,17 @@ onBeforeUnmount(() => {
   font-size: 1.5rem;
 }
 
+.dark-mode .coin-header h3 {
+  color: #f1f5f9 !important;
+}
+
 .ticker {
   color: #6b7280;
   font-size: 0.875rem;
+}
+
+.dark-mode .ticker {
+  color: #94a3b8 !important;
 }
 
 .coin-stats {
@@ -425,15 +437,23 @@ onBeforeUnmount(() => {
   gap: 0.25rem;
 }
 
+.stat-item .value {
+  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.dark-mode .stat-item .value {
+  color: #f1f5f9 !important;
+}
+
 .stat-item .label {
   color: #9ca3af;
   font-size: 0.75rem;
 }
 
-.stat-item .value {
-  color: #1f2937;
-  font-size: 1.125rem;
-  font-weight: 600;
+.dark-mode .stat-item .label {
+  color: #94a3b8 !important;
 }
 
 .view-bar {
@@ -455,6 +475,14 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
+.dark-mode .chart-section {
+  background: #1e293b !important;
+}
+
+.dark-mode .chart-section h2 {
+  color: #f1f5f9 !important;
+}
+
 .chart-section h2 {
   margin: 0 0 1.5rem 0;
   color: #1f2937;
@@ -464,55 +492,38 @@ onBeforeUnmount(() => {
   height: 400px;
 }
 
-:global(body.dark-mode) .popular-coins-detail {
-  color: #f1f5f9;
+:global(.dark-mode) .coin-card {
+  background: #1e293b !important;
 }
 
-:global(body.dark-mode) .header-section h1 {
-  color: #f1f5f9;
+:global(.dark-mode) .chart-section {
+  background: #1e293b !important;
 }
 
-:global(body.dark-mode) .description {
-  color: #94a3b8;
+:global(.dark-mode) .chart-section h2 {
+  color: #f1f5f9 !important;
 }
 
-:global(body.dark-mode) .period-btn {
-  background: #1e293b;
-  border-color: #334155;
-  color: #94a3b8;
+:global(.dark-mode) .coin-header h3 {
+  color: #f1f5f9 !important;
 }
 
-:global(body.dark-mode) .period-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+:global(.dark-mode) .stat-item .value {
+  color: #f1f5f9 !important;
 }
 
-:global(body.dark-mode) .coin-card {
-  background: #1e293b;
+:global(.dark-mode) .period-btn {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
 }
 
-:global(body.dark-mode) .coin-header h3 {
-  color: #f1f5f9;
+:global(.dark-mode) .header-section h1 {
+  color: #f1f5f9 !important;
 }
 
-:global(body.dark-mode) .ticker {
-  color: #94a3b8;
-}
-
-:global(body.dark-mode) .stat-item .value {
-  color: #f1f5f9;
-}
-
-:global(body.dark-mode) .view-bar {
-  background: #374151;
-}
-
-:global(body.dark-mode) .chart-section {
-  background: #1e293b;
-}
-
-:global(body.dark-mode) .chart-section h2 {
-  color: #f1f5f9;
+:global(.dark-mode) .description {
+  color: #94a3b8 !important;
 }
 
 
@@ -547,3 +558,37 @@ onBeforeUnmount(() => {
   }
 }
 </style>
+.dark-mode .coin-card {
+  background: #1e293b;
+}
+
+.dark-mode .chart-section {
+  background: #1e293b;
+}
+
+.dark-mode .chart-section h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .coin-header h3 {
+  color: #f1f5f9;
+}
+
+.dark-mode .stat-item .value {
+  color: #f1f5f9;
+}
+.dark-mode .coin-header h3 {
+  color: #f1f5f9 !important;
+}
+
+.dark-mode .ticker {
+  color: #94a3b8 !important;
+}
+
+.dark-mode .stat-item .value {
+  color: #f1f5f9 !important;
+}
+
+.dark-mode .stat-item .label {
+  color: #94a3b8 !important;
+}

@@ -593,78 +593,72 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-:global(body.dark-mode) .chart-header h2 {
+.dark-mode .chart-header h2 {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .period-info {
+.dark-mode .period-info {
   background: #374151;
   color: #94a3b8;
 }
 
-:global(body.dark-mode) .period-selector {
+.dark-mode .period-selector {
   background: #1e293b;
   border-color: #334155;
 }
 
-:global(body.dark-mode) .period-btn {
+.dark-mode .period-btn {
   color: #94a3b8;
 }
 
-:global(body.dark-mode) .period-btn:hover {
+.dark-mode .period-btn:hover {
   color: #e2e8f0;
   background: rgba(59, 130, 246, 0.15);
 }
 
-:global(body.dark-mode) .period-btn.active {
+.dark-mode .period-btn.active {
   background: #3b82f6;
   color: white;
 }
 
-:global(body.dark-mode) .ranking-section {
+.dark-mode .ranking-section {
   background: #1e293b;
 }
 
-:global(body.dark-mode) .ranking-title {
+.dark-mode .ranking-title {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .ranking-divider {
+.dark-mode .ranking-divider {
   background: #334155;
 }
 
-:global(body.dark-mode) .ranking-header {
+.dark-mode .ranking-header {
   background: #334155;
   color: #94a3b8;
 }
 
-:global(body.dark-mode) .ranking-item:hover {
+.dark-mode .ranking-item:hover {
   background: #334155;
 }
 
-:global(body.dark-mode) .coin-symbol {
+.dark-mode .coin-symbol {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .card,
-:global(body.dark-mode) .stat-card {
+.dark-mode .card,
+.dark-mode .stat-card {
   background: #1e293b;
   border-color: #334155;
 }
 
-:global(body.dark-mode) .header-section h1,
-:global(body.dark-mode) .stat-value {
+.dark-mode .header-section h1,
+.dark-mode .stat-value {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .description,
-:global(body.dark-mode) .stat-card h3 {
-  color: #94a3b8;
-}
-
-:global(body.dark-mode) .period-btn {
-  background: #1e293b;
-  border-color: #334155;
+.dark-mode .description,
+.dark-mode .stat-card h3 {
   color: #94a3b8;
 }
 

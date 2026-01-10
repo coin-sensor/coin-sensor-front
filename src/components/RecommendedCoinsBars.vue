@@ -237,28 +237,29 @@ onMounted(() => {
   line-height: 1.2;
 }
 
-:global(body.dark-mode) .recommended-bars {
+.dark-mode .recommended-bars {
   background: #1e293b;
+  border-color: #334155;
 }
 
-:global(body.dark-mode) .header h3 {
+.dark-mode .header h3 {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .stat .value {
+.dark-mode .stat .value {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .stat-badge {
+.dark-mode .stat-badge {
   background: #064e3b;
   color: #6ee7b7;
 }
 
-:global(body.dark-mode) .combined-bar {
+.dark-mode .combined-bar {
   background: #374151;
 }
 
-:global(body.dark-mode) .legend-name {
+.dark-mode .legend-name {
   color: #f1f5f9;
 }
 

@@ -64,6 +64,16 @@ export default {
 <style scoped>
 .card {
   margin-bottom: 2rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.dark-mode .card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
 }
 
 #technical_analysis {

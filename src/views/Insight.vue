@@ -461,54 +461,54 @@ onBeforeUnmount(() => {
   margin-top: 0;
 }
 
-:global(body.dark-mode) .period-selector {
+.dark-mode .period-selector {
   background: #1e293b;
   border-color: #334155;
 }
 
-:global(body.dark-mode) .period-btn {
+.dark-mode .period-btn {
   color: #94a3b8;
 }
 
-:global(body.dark-mode) .period-btn:hover {
+.dark-mode .period-btn:hover {
   color: #e2e8f0;
   background: rgba(59, 130, 246, 0.15);
 }
 
-:global(body.dark-mode) .period-btn.active {
+.dark-mode .period-btn.active {
   background: #3b82f6;
   color: white;
 }
 
-:global(body.dark-mode) .card {
+.dark-mode .card {
   background: #1e293b;
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .chart-header h2 {
+.dark-mode .chart-header h2 {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .select-input {
+.dark-mode .select-input {
   background: #374151;
   border-color: #4b5563;
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .select-input:focus {
+.dark-mode .select-input:focus {
   border-color: #3b82f6;
 }
 
-:global(body.dark-mode) .period-info {
+.dark-mode .period-info {
   background: #374151;
   color: #94a3b8;
 }
 
-:global(body.dark-mode) .header-section h1 {
+.dark-mode .header-section h1 {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .description {
+.dark-mode .description {
   color: #94a3b8;
 }
 

@@ -663,6 +663,10 @@ onBeforeUnmount(() => {
   color: #1f2937;
 }
 
+.dark-mode .section-header h2 {
+  color: #f1f5f9 !important;
+}
+
 .coins-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -720,6 +724,10 @@ onBeforeUnmount(() => {
   transition: transform 0.2s;
 }
 
+.dark-mode .coin-card {
+  background: #1e293b !important;
+}
+
 .coin-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -755,9 +763,17 @@ onBeforeUnmount(() => {
   font-size: 1.5rem;
 }
 
+.dark-mode .coin-header h3 {
+  color: #f1f5f9 !important;
+}
+
 .ticker {
   color: #6b7280;
   font-size: 0.875rem;
+}
+
+.dark-mode .ticker {
+  color: #94a3b8 !important;
 }
 
 .coin-stats {
@@ -777,10 +793,18 @@ onBeforeUnmount(() => {
   font-size: 0.75rem;
 }
 
+.dark-mode .stat-item .label {
+  color: #94a3b8 !important;
+}
+
 .stat-item .value {
   color: #1f2937;
   font-size: 1.125rem;
   font-weight: 600;
+}
+
+.dark-mode .stat-item .value {
+  color: #f1f5f9 !important;
 }
 
 .reaction-bar {
@@ -803,9 +827,17 @@ onBeforeUnmount(() => {
   margin-bottom: 2rem;
 }
 
+.dark-mode .chart-section {
+  background: #1e293b !important;
+}
+
 .chart-section h2 {
   margin: 0 0 1.5rem 0;
   color: #1f2937;
+}
+
+.dark-mode .chart-section h2 {
+  color: #f1f5f9 !important;
 }
 
 .chart-container {
@@ -872,3 +904,18 @@ onBeforeUnmount(() => {
   }
 }
 </style>
+.dark-mode .coin-header h3 {
+  color: #f1f5f9 !important;
+}
+
+.dark-mode .ticker {
+  color: #94a3b8 !important;
+}
+
+.dark-mode .stat-item .value {
+  color: #f1f5f9 !important;
+}
+
+.dark-mode .stat-item .label {
+  color: #94a3b8 !important;
+}

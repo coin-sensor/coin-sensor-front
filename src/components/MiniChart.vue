@@ -1,6 +1,5 @@
 <template>
   <div class="charts-container">
-    <h2>주요 시장 지표</h2>
     <div class="charts-grid">
       <div 
         v-for="(symbol, index) in symbols" 
@@ -167,6 +166,11 @@ export default {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.dark-mode .charts-container {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
 .charts-container h2 {
   color: #1f2937;
   margin-bottom: 1.5rem;
@@ -175,6 +179,10 @@ export default {
   gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.dark-mode .charts-container h2 {
+  color: #f1f5f9 !important;
 }
 
 .charts-grid {
@@ -192,12 +200,21 @@ export default {
   min-height: 300px;
 }
 
+.dark-mode .chart-card {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
 .chart-card h3 {
   margin: 0 0 1rem 0;
   color: #374151;
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
+}
+
+.dark-mode .chart-card h3 {
+  color: #f1f5f9 !important;
 }
 
 .chart-widget {
