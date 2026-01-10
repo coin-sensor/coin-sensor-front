@@ -4,47 +4,43 @@
       <h2>TradingView 뉴스 피드</h2>
       <div class="card-content">
         <div class="main-layout">
-          <!-- 왼쪽 컬럼 -->
-          <div class="left-column">
-            <div class="widget-container">
-              <h4 class="widget-title">경제 캘린더</h4>
-              <div id="economic-calendar-widget"></div>
-            </div>
-            
-            <div class="widget-container">
-              <h4 class="widget-title">전체 뉴스</h4>
-              <div id="all-news-widget"></div>
-            </div>
-            
-            <div class="widget-container">
-              <h4 class="widget-title">주식</h4>
-              <div id="stock-news-widget"></div>
-            </div>
+          <div class="widget-container">
+            <h4 class="widget-title">경제 캘린더</h4>
+            <div id="economic-calendar-widget"></div>
           </div>
           
-          <!-- 오른쪽 컬럼 -->
-          <div class="right-column">
-            <div class="widget-container">
-              <h4 class="widget-title">암호화폐</h4>
-              <div id="crypto-news-widget"></div>
+          <div class="widget-container">
+            <h4 class="widget-title">전체 뉴스</h4>
+            <div id="all-news-widget"></div>
+          </div>
+
+          <div class="widget-container">
+            <h4 class="widget-title">암호화폐</h4>
+            <div id="crypto-news-widget"></div>
+          </div>
+
+          <div class="widget-container">
+            <h4 class="widget-title">주식</h4>
+            <div id="stock-news-widget"></div>
+          </div>
+          
+          <div class="widget-container">
+            <h4 class="widget-title">외환</h4>
+            <div id="forex-news-widget"></div>
+          </div>
+          
+          <div class="widget-container">
+            <h4 class="widget-title">심볼 뉴스</h4>
+            <div class="symbol-input">
+              <input 
+                v-model="symbolInput" 
+                @keyup.enter="updateSymbolWidget"
+                placeholder="예: BTCUSD"
+                class="symbol-input-field"
+              />
+              <button @click="updateSymbolWidget" class="symbol-btn">적용</button>
             </div>
-            <div class="widget-container">
-              <h4 class="widget-title">외환</h4>
-              <div id="forex-news-widget"></div>
-            </div>
-            <div class="widget-container">
-              <h4 class="widget-title">심볼 뉴스</h4>
-              <div class="symbol-input">
-                <input 
-                  v-model="symbolInput" 
-                  @keyup.enter="updateSymbolWidget"
-                  placeholder="예: BTCUSD"
-                  class="symbol-input-field"
-                />
-                <button @click="updateSymbolWidget" class="symbol-btn">적용</button>
-              </div>
-              <div id="symbol-news-widget"></div>
-            </div>
+            <div id="symbol-news-widget"></div>
           </div>
         </div>
       </div>
@@ -233,21 +229,8 @@ onMounted(() => {
 
 .main-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
-}
-
-.left-column,
-.right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-@media (max-width: 1200px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-  }
 }
 
 .widget-container {
