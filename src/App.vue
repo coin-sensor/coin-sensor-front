@@ -38,8 +38,10 @@
       </div>
     </nav>
 
-    <main class="main-content">
-      <router-view ref="routerView" />
+    <main class="main">
+      <div class="main-content">
+        <router-view ref="routerView" />
+      </div>
     </main>
     
     <FloatingChannel />

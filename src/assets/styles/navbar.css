@@ -109,12 +109,16 @@
   background: #e5e7eb;
 }
 
-.main-content {
-  padding-top: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+.main {
+  width: 100%;
   background: #f9fafb;
   min-height: calc(100vh - 80px);
+}
+
+.main-content {
+  padding: 2rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* 다크모드 네비게이션 */
@@ -164,7 +168,7 @@
   background: #475569;
 }
 
-#app.dark-mode .main-content {
+#app.dark-mode .main {
   background: #0f172a;
 }
 
