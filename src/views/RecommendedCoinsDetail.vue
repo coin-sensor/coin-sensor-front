@@ -8,7 +8,7 @@
         <p class="description">사용자가 추천/비추천한 코인 데이터입니다.</p>
       </div>
 
-      <div class="period-selector">
+      <div class="period-buttons">
         <button 
           v-for="period in periods" 
           :key="period.value"
@@ -627,7 +627,7 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 
-.period-selector {
+.period-buttons {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 2rem;
@@ -669,7 +669,7 @@ onBeforeUnmount(() => {
 
 .coins-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1.5rem;
 }
 
@@ -724,8 +724,13 @@ onBeforeUnmount(() => {
   transition: transform 0.2s;
 }
 
-.dark-mode .coin-card {
-  background: #1e293b !important;
+.coin-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+  transition: transform 0.2s;
 }
 
 .coin-card:hover {
@@ -760,20 +765,14 @@ onBeforeUnmount(() => {
 .coin-header h3 {
   margin: 0 0 0.25rem 0;
   color: #1f2937;
-  font-size: 1.5rem;
-}
-
-.dark-mode .coin-header h3 {
-  color: #f1f5f9 !important;
+  font-size: 1.1rem;
+  word-break: break-all;
+  line-height: 1.2;
 }
 
 .ticker {
   color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.dark-mode .ticker {
-  color: #94a3b8 !important;
+  font-size: 0.8rem;
 }
 
 .coin-stats {
@@ -787,10 +786,22 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 0.25rem;
 }
+.stat-item .value {
+  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
 
 .stat-item .label {
   color: #9ca3af;
   font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .dark-mode .stat-item .label {
@@ -844,78 +855,9 @@ onBeforeUnmount(() => {
   height: 400px;
 }
 
-:global(body.dark-mode) .header-section h1,
-:global(body.dark-mode) .section-header h2,
-:global(body.dark-mode) .chart-section h2 {
-  color: #f1f5f9;
-}
-
-:global(body.dark-mode) .description {
-  color: #94a3b8;
-}
-
-:global(body.dark-mode) .period-btn {
-  background: #1e293b;
-  border-color: #334155;
-  color: #94a3b8;
-}
-
-:global(body.dark-mode) .coin-card,
-:global(body.dark-mode) .chart-section {
-  background: #1e293b;
-}
-
-:global(body.dark-mode) .coin-header h3,
-:global(body.dark-mode) .stat-item .value {
-  color: #f1f5f9;
-}
-
-:global(body.dark-mode) .ticker {
-  color: #94a3b8;
-}
-
-:global(body.dark-mode) .reaction-bar {
-  background: #374151;
-}
-
-@media (max-width: 768px) {
-  .insight-container {
-    flex-direction: column;
-  }
-  
-  .coins-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .period-selector {
-    flex-wrap: wrap;
-  }
-}
-
-@media (max-width: 1200px) {
-  .coins-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
 @media (max-width: 900px) {
   .coins-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 </style>
-.dark-mode .coin-header h3 {
-  color: #f1f5f9 !important;
-}
-
-.dark-mode .ticker {
-  color: #94a3b8 !important;
-}
-
-.dark-mode .stat-item .value {
-  color: #f1f5f9 !important;
-}
-
-.dark-mode .stat-item .label {
-  color: #94a3b8 !important;
-}

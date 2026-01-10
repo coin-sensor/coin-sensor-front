@@ -18,7 +18,6 @@ export default {
   name: 'MiniChart',
   data() {
     return {
-      isDarkMode: localStorage.getItem('darkMode') === 'true',
       symbols: [
         { name: '김치프리미엄', symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100' },
         { name: '전체 시가총액', symbol: 'CRYPTOCAP:TOTAL' },
@@ -51,8 +50,9 @@ export default {
     },
 
     createChart(symbolData, index) {
-      const theme = this.isDarkMode ? 'dark' : 'light'
-      const backgroundColor = this.isDarkMode ? '#1e293b' : '#ffffff'
+      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
+      const theme = isDarkMode ? 'dark' : 'light'
+      const backgroundColor = isDarkMode ? '#1e293b' : '#ffffff'
 
       const container = document.getElementById(`chart_${index}`)
       if (!container) return
@@ -138,7 +138,6 @@ export default {
     },
 
     handleThemeChange(event) {
-      this.isDarkMode = event.detail.isDarkMode
       this.reloadWidgets()
     },
 
@@ -166,11 +165,6 @@ export default {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.dark-mode .charts-container {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-}
-
 .charts-container h2 {
   color: #1f2937;
   margin-bottom: 1.5rem;
@@ -179,10 +173,6 @@ export default {
   gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 600;
-}
-
-.dark-mode .charts-container h2 {
-  color: #f1f5f9 !important;
 }
 
 .charts-grid {
@@ -200,11 +190,6 @@ export default {
   min-height: 300px;
 }
 
-.dark-mode .chart-card {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-}
-
 .chart-card h3 {
   margin: 0 0 1rem 0;
   color: #374151;
@@ -213,31 +198,9 @@ export default {
   text-align: center;
 }
 
-.dark-mode .chart-card h3 {
-  color: #f1f5f9 !important;
-}
-
 .chart-widget {
   height: 250px;
   width: 100%;
-}
-
-:global(body.dark-mode) .charts-container {
-  background: #1e293b;
-  border-color: #334155;
-}
-
-:global(body.dark-mode) .charts-container h2 {
-  color: #f1f5f9;
-}
-
-:global(body.dark-mode) .chart-card {
-  background: #0f172a;
-  border-color: #334155;
-}
-
-:global(body.dark-mode) .chart-card h3 {
-  color: #f1f5f9;
 }
 
 @media (max-width: 1200px) {

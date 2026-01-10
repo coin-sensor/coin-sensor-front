@@ -6,7 +6,7 @@
     <div class="card chart-section">
       <div class="chart-header">
         <h2>
-        <select v-model="selectedChart" @change="changeChart" class="timeframe-select" :class="{ 'dark': isDarkMode }">
+        <select v-model="selectedChart" @change="changeChart" class="timeframe-select">
           <option value="BINANCE:BTCUSDT">BTCUSDT 바이낸스 현물</option>
           <option value="BINANCE:BTCUSDT.P">BTCUSDT.P 바이낸스 선물</option>
           <option value="UPBIT:BTCKRW">BTCKRW 업비트</option>
@@ -24,18 +24,18 @@
       <div class="section-header">
         <div class="header-left">
           <h2>🚨 실시간 탐지 데이터</h2>
-          <select v-model="selectedExchange" @change="changeExchange" class="timeframe-select" :class="{ 'dark': isDarkMode }">
+          <select v-model="selectedExchange" @change="changeExchange" class="timeframe-select">
             <option value="binance-spot">binance-spot</option>
             <option value="binance-future">binance-future</option>
           </select>
 
-          <select v-model="selectedCoinCategory" @change="changeCoinCategory" class="timeframe-select" :class="{ 'dark': isDarkMode }">
+          <select v-model="selectedCoinCategory" @change="changeCoinCategory" class="timeframe-select">
             <option value="all">all</option>
             <option value="top20">top20</option>
             <option value="bottom20">bottom20</option>
           </select>
 
-          <select v-model="selectedTimeframe" @change="changeTimeframe" class="timeframe-select" :class="{ 'dark': isDarkMode }">
+          <select v-model="selectedTimeframe" @change="changeTimeframe" class="timeframe-select">
             <option value="1m">1분</option>
             <option value="5m">5분</option>
             <option value="15m">15분</option>
@@ -50,7 +50,7 @@
         </div>
       </div>
       
-      <div v-if="detections.length > 0" class="detection-list" :class="{ 'dark': isDarkMode }">
+      <div v-if="detections.length > 0" class="detection-list">
         <div v-for="detection in detections" :key="detection.id" class="detection-item">
           <div class="detection-header">
             <div class="detection-info">
@@ -64,11 +64,11 @@
               <div class="coin-info">
                 <div class="coin-symbol clickable" @click="openChartModal(coin.coinTicker, detection.timeframeName, detection.exchangeType, coin.detectedCoinId)">{{ coin.coinTicker }}</div>
                 <div class="coin-metrics">
-                  <span class="metric-item" :style="isDarkMode ? 'color: #94a3b8 !important;' : ''">📈 변동성: <strong :style="isDarkMode ? 'color: #ffffff !important;' : ''">{{ Number(coin.changeX || 0).toFixed(2) }}%</strong></span>
+                  <span class="metric-item">📈 변동성: <strong>{{ Number(coin.changeX || 0).toFixed(2) }}%</strong></span>
                   <span class="metric-separator">|</span>
-                  <span class="metric-item" :style="isDarkMode ? 'color: #94a3b8 !important;' : ''">📊 거래량: <strong :style="isDarkMode ? 'color: #ffffff !important;' : ''">{{ Number(coin.volumeX || 0).toFixed(2) }}배</strong></span>
+                  <span class="metric-item">📊 거래량: <strong>{{ Number(coin.volumeX || 0).toFixed(2) }}배</strong></span>
                   <span class="metric-separator">|</span>
-                  <span class="metric-item" :style="isDarkMode ? 'color: #94a3b8 !important;' : ''"><FontAwesomeIcon icon="eye" /> <strong :style="isDarkMode ? 'color: #ffffff !important;' : ''">{{ coin.viewCount || 0 }}</strong></span>
+                  <span class="metric-item"><FontAwesomeIcon icon="eye" /> <strong>{{ coin.viewCount || 0 }}</strong></span>
                 </div>
               </div>
               <ReactionButtons 
@@ -105,7 +105,7 @@
 
     <!-- 차트 팝업 모달 -->
     <div v-if="showChartModal" class="modal-overlay" @click="closeChartModal">
-      <div class="modal-content" :class="{ 'dark': isDarkMode }" @click.stop>
+      <div class="modal-content" @click.stop>
         <div class="modal-header">
           <h3>{{ selectedSymbol }} 차트 ({{ getTimeframeLabel(chartTimeframe) }})</h3>
           <div class="modal-info">
@@ -170,7 +170,6 @@ export default {
       selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m',
       selectedCoinCategory: localStorage.getItem('selectedCoinCategory') || 'all',
       selectedChart: localStorage.getItem('selectedChart') || 'btc-spot',
-      isDarkMode: localStorage.getItem('darkMode') === 'true',
       favoriteCoins: new Set(),
       favoriteCoinsList: []
     }
@@ -204,9 +203,10 @@ export default {
     },
     
     createTradingViewWidget() {
-      const theme = this.isDarkMode ? 'dark' : 'light'
-      const backgroundColor = this.isDarkMode ? '#0F0F0F' : '#ffffff'
-      const gridColor = this.isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
+      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
+      const theme = isDarkMode ? 'dark' : 'light'
+      const backgroundColor = isDarkMode ? '#0F0F0F' : '#ffffff'
+      const gridColor = isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
       
       this.tradingViewWidget = new TradingView.widget({
         width: '100%',
@@ -240,8 +240,6 @@ export default {
     },
 
     handleThemeChange(event) {
-      this.isDarkMode = event.detail.isDarkMode
-      
       if (this.tradingViewWidget) {
         const container = document.getElementById('tradingview_chart')
         if (container) {
@@ -326,9 +324,10 @@ export default {
     },
 
     createPopupChart() {
-      const theme = this.isDarkMode ? 'dark' : 'light'
-      const backgroundColor = this.isDarkMode ? '#0F0F0F' : '#ffffff'
-      const gridColor = this.isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
+      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
+      const theme = isDarkMode ? 'dark' : 'light'
+      const backgroundColor = isDarkMode ? '#0F0F0F' : '#ffffff'
+      const gridColor = isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
       const symbolSuffix = this.selectedExchangeType === 'future' ? '.P' : ''
 
       this.popupWidget = new TradingView.widget({

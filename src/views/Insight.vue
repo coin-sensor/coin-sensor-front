@@ -159,6 +159,8 @@ const createChart = (data: any) => {
     }
   })
 
+  const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
+
   chartInstance.value = new Chart(ctx, {
     type: 'line',
     data: {
@@ -269,7 +271,6 @@ const createChart = (data: any) => {
 }
 
 const handleThemeChange = (event: any) => {
-  isDarkMode.value = event.detail.isDarkMode
   if (chartInstance.value) {
     loadChartData()
   }
@@ -459,57 +460,6 @@ onBeforeUnmount(() => {
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-top: 0;
-}
-
-.dark-mode .period-selector {
-  background: #1e293b;
-  border-color: #334155;
-}
-
-.dark-mode .period-btn {
-  color: #94a3b8;
-}
-
-.dark-mode .period-btn:hover {
-  color: #e2e8f0;
-  background: rgba(59, 130, 246, 0.15);
-}
-
-.dark-mode .period-btn.active {
-  background: #3b82f6;
-  color: white;
-}
-
-.dark-mode .card {
-  background: #1e293b;
-  color: #f1f5f9;
-}
-
-.dark-mode .chart-header h2 {
-  color: #f1f5f9;
-}
-
-.dark-mode .select-input {
-  background: #374151;
-  border-color: #4b5563;
-  color: #f1f5f9;
-}
-
-.dark-mode .select-input:focus {
-  border-color: #3b82f6;
-}
-
-.dark-mode .period-info {
-  background: #374151;
-  color: #94a3b8;
-}
-
-.dark-mode .header-section h1 {
-  color: #f1f5f9;
-}
-
-.dark-mode .description {
-  color: #94a3b8;
 }
 
 @media (max-width: 768px) {

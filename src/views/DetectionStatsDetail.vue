@@ -346,7 +346,6 @@ onBeforeUnmount(() => {
   margin: 0 auto;
 }
 
-
 .main-content {
   flex: 1;
   min-width: 0;
@@ -591,75 +590,6 @@ onBeforeUnmount(() => {
   color: #1f2937;
   font-size: 2rem;
   font-weight: 700;
-}
-
-.dark-mode .chart-header h2 {
-  color: #f1f5f9;
-}
-
-.dark-mode .period-info {
-  background: #374151;
-  color: #94a3b8;
-}
-
-.dark-mode .period-selector {
-  background: #1e293b;
-  border-color: #334155;
-}
-
-.dark-mode .period-btn {
-  color: #94a3b8;
-}
-
-.dark-mode .period-btn:hover {
-  color: #e2e8f0;
-  background: rgba(59, 130, 246, 0.15);
-}
-
-.dark-mode .period-btn.active {
-  background: #3b82f6;
-  color: white;
-}
-
-.dark-mode .ranking-section {
-  background: #1e293b;
-}
-
-.dark-mode .ranking-title {
-  color: #f1f5f9;
-}
-
-.dark-mode .ranking-divider {
-  background: #334155;
-}
-
-.dark-mode .ranking-header {
-  background: #334155;
-  color: #94a3b8;
-}
-
-.dark-mode .ranking-item:hover {
-  background: #334155;
-}
-
-.dark-mode .coin-symbol {
-  color: #f1f5f9;
-}
-
-.dark-mode .card,
-.dark-mode .stat-card {
-  background: #1e293b;
-  border-color: #334155;
-}
-
-.dark-mode .header-section h1,
-.dark-mode .stat-value {
-  color: #f1f5f9;
-}
-
-.dark-mode .description,
-.dark-mode .stat-card h3 {
-  color: #94a3b8;
 }
 
 @media (max-width: 768px) {

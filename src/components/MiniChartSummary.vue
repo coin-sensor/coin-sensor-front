@@ -9,7 +9,6 @@ export default {
   name: 'MiniChartSummary',
   data() {
     return {
-      isDarkMode: localStorage.getItem('darkMode') === 'true'
     }
   },
 
@@ -30,7 +29,8 @@ export default {
     },
 
     createMiniChart() {
-      const theme = this.isDarkMode ? 'dark' : 'light'
+      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
+      const theme = isDarkMode ? 'dark' : 'light'
 
       const container = document.getElementById('mini_chart')
       if (!container) return
@@ -111,7 +111,6 @@ export default {
     },
 
     handleThemeChange(event) {
-      this.isDarkMode = event.detail.isDarkMode
       this.reloadWidgets()
     },
 

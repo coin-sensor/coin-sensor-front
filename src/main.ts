@@ -9,6 +9,11 @@ import { faEye, faStar, faSyncAlt, faSpinner, faTimes, faUsers } from '@fortawes
 import { faStar as farStar, faThumbsUp, faThumbsDown, faSun, faMoon } from '@fortawesome/free-regular-svg-icons'
 import { useAuthStore } from '@/stores/auth'
 
+// 전역 스타일 import
+import './assets/styles/global.css'
+import './assets/styles/dark-mode.css'
+import './assets/styles/navbar.css'
+
 // localStorage 초기값 설정 (앱 시작 전)
 if (!localStorage.getItem('darkMode')) {
   localStorage.setItem('darkMode', 'false')

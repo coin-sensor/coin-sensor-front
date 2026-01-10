@@ -9,7 +9,6 @@ export default {
   name: 'TechnicalAnalysis',
   data() {
     return {
-      isDarkMode: localStorage.getItem('darkMode') === 'true'
     }
   },
 
@@ -32,8 +31,9 @@ export default {
     },
 
     getTechnicalAnalysisConfig() {
+      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
       return {
-        colorTheme: this.isDarkMode ? 'dark' : 'light',
+        colorTheme: isDarkMode ? 'dark' : 'light',
         displayMode: 'single',
         isTransparent: false,
         locale: 'en',
@@ -47,7 +47,6 @@ export default {
     },
 
     handleThemeChange(event) {
-      this.isDarkMode = event.detail.isDarkMode
       this.reloadWidget()
     },
 
@@ -69,11 +68,6 @@ export default {
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.dark-mode .card {
-  background: #1e293b !important;
-  border-color: #334155 !important;
 }
 
 #technical_analysis {
