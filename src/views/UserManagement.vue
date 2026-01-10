@@ -5,7 +5,7 @@
     <main class="main-content">
       <section class="content-section">
         <div class="admin-header">
-          <h2 class="section-title">👥 사용자 관리</h2>
+          <h2 class="section-title">사용자 관리</h2>
         </div>
         <p class="section-description">사용자 금지 및 권한 관리를 할 수 있습니다.</p>
 

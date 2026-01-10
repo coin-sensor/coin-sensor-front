@@ -5,7 +5,7 @@
     <main class="main-content">
       <section class="content-section">
         <div class="admin-header">
-          <h2 class="section-title">💬 채팅방 관리</h2>
+          <h2 class="section-title">채팅방 관리</h2>
           <button @click="showCreateModal = true" class="create-btn">
             새 채팅방 생성
           </button>

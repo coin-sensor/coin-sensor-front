@@ -5,7 +5,7 @@
     <main class="main-content">
       <section class="content-section">
         <div class="admin-header">
-          <h2 class="section-title">🪙 거래소코인 관리</h2>
+          <h2 class="section-title">거래소코인 관리</h2>
         </div>
         <p class="section-description">거래소별 코인 정보를 관리할 수 있습니다.</p>
 

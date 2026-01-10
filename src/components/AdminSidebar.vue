@@ -1,7 +1,7 @@
 <template>
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h3>🔧 관리자</h3>
+      <h3>관리자</h3>
     </div>
     <nav class="sidebar-nav">
       <router-link to="/admin" class="nav-item" :class="{ active: $route.path === '/admin' }">

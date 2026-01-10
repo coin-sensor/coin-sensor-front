@@ -7,11 +7,7 @@
       <!-- 관리자 메인 섹션 -->
       <section id="overview" class="content-section">
         <div class="admin-header">
-          <h2 class="section-title">🔧 관리자 메인</h2>
-          <div class="admin-status">
-            <span class="status-dot" :class="{ active: isConnected }"></span>
-            <span>{{ isConnected ? '연결됨' : '연결 끊김' }}</span>
-          </div>
+          <h2 class="section-title">관리자 메인</h2>
         </div>
         <p class="section-description">시스템 전반의 관리 기능을 제공합니다.</p>
       </section>
