@@ -137,7 +137,6 @@ export default {
   margin-bottom: 2rem;
 }
 
-#kimchi_chart,
 #stock_heatmap,
 #crypto_heatmap,
 #forex_heatmap {

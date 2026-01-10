@@ -2,15 +2,20 @@
 .navbar {
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 1rem;
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  width: 100%;
+}
+
+.navbar-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  max-width: 1300px;
-  margin: 0 auto;
-  padding-left: 2rem;
-  padding-right: 2rem;
+  max-width: 1200px;
+  width: 100%;
 }
 
 .nav-brand {
@@ -106,7 +111,7 @@
 
 .main-content {
   padding-top: 2rem;
-  max-width: 1300px;
+  max-width: 1200px;
   margin: 0 auto;
   background: #f9fafb;
   min-height: calc(100vh - 80px);

@@ -1,38 +1,40 @@
 <template>
   <div id="app" :class="{ 'dark-mode': isDarkMode }">
     <nav class="navbar">
-      <router-link to="/" class="nav-brand">
-        <img src="/favicon.png" alt="Coin Sensor" class="brand-logo" />
-        <h1>Coin Sensor</h1>
-      </router-link>
-      <div class="nav-center">
-        <router-link to="/" :class="{ active: $route.path === '/' }" class="nav-link">
-          메인
+      <div class="navbar-content">
+        <router-link to="/" class="nav-brand">
+          <img src="/favicon.png" alt="Coin Sensor" class="brand-logo" />
+          <h1>Coin Sensor</h1>
         </router-link>
-        <router-link to="/insight" :class="{ active: $route.path.startsWith('/insight') }" class="nav-link">
-          인사이트
-        </router-link>
-        <router-link to="/Heatmap" :class="{ active: $route.path === '/Heatmap' }" class="nav-link">
-          히트맵
-        </router-link>
-
-        <router-link to="/news" :class="{ active: $route.path === '/news' }" class="nav-link">
-          뉴스
-        </router-link>
-        <AdminOnly>
-          <router-link to="/admin" :class="{ active: $route.path.startsWith('/admin') }" class="nav-link">
-            관리자
+        <div class="nav-center">
+          <router-link to="/" :class="{ active: $route.path === '/' }" class="nav-link">
+            메인
           </router-link>
-        </AdminOnly>
-      </div>
-      <div class="nav-actions">
-        <div class="active-users">
-          <FontAwesomeIcon :icon="faUsers" class="user-icon" />
-          <span class="user-count">{{ activeUserCount }}</span>
+          <router-link to="/insight" :class="{ active: $route.path.startsWith('/insight') }" class="nav-link">
+            인사이트
+          </router-link>
+          <router-link to="/Heatmap" :class="{ active: $route.path === '/Heatmap' }" class="nav-link">
+            히트맵
+          </router-link>
+
+          <router-link to="/news" :class="{ active: $route.path === '/news' }" class="nav-link">
+            뉴스
+          </router-link>
+          <AdminOnly>
+            <router-link to="/admin" :class="{ active: $route.path.startsWith('/admin') }" class="nav-link">
+              관리자
+            </router-link>
+          </AdminOnly>
         </div>
-        <button @click="toggleDarkMode" class="theme-toggle">
-          <font-awesome-icon :icon="isDarkMode ? 'fa-regular fa-sun' : 'fa-regular fa-moon'" />
-        </button>
+        <div class="nav-actions">
+          <div class="active-users">
+            <FontAwesomeIcon :icon="faUsers" class="user-icon" />
+            <span class="user-count">{{ activeUserCount }}</span>
+          </div>
+          <button @click="toggleDarkMode" class="theme-toggle">
+            <font-awesome-icon :icon="isDarkMode ? 'fa-regular fa-sun' : 'fa-regular fa-moon'" />
+          </button>
+        </div>
       </div>
     </nav>
 

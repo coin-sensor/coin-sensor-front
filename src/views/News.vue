@@ -1,9 +1,7 @@
 <template>
-  <div class="news-container">
+  <div>
     <div class="card">
-      <div class="card-header">
-        <h2>TradingView 뉴스 피드</h2>
-      </div>
+      <h2>TradingView 뉴스 피드</h2>
       <div class="card-content">
         <div class="main-layout">
           <!-- 왼쪽 컬럼 -->
@@ -71,12 +69,6 @@ window.addEventListener('theme-changed', (event: any) => {
 // 모든 스크립트 에러 무시
 window.addEventListener('error', () => false, true)
 window.addEventListener('unhandledrejection', () => false, true)
-
-// 콘솔 에러 완전 억제
-const originalConsoleError = console.error
-console.error = () => {}
-
-
 
 const createWidget = (containerId: string, config: any) => {
   const container = document.getElementById(containerId)
@@ -238,57 +230,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.news-container {
-  padding: 2rem;
-}
-
-.card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  overflow: hidden;
-}
-
-.card-header {
-  padding: 1.5rem;
-}
-
-.card-header h2 {
-  margin: 0;
-  color: #1f2937;
-}
-
-/* 다크모드 지원 */
-:global(body.dark-mode) .card {
-  background: #1e293b;
-}
-
-:global(body.dark-mode) .card-header {
-  background: #334155;
-  border-bottom-color: #475569;
-}
-
-:global(body.dark-mode) .card-header h2 {
-  color: #f1f5f9;
-}
-
-:global(body.dark-mode) .widget-title {
-  color: #f1f5f9;
-}
-
-:global(body.dark-mode) .symbol-input-field {
-  background: #374151;
-  border-color: #4b5563;
-  color: #f1f5f9;
-}
-
-:global(body.dark-mode) .symbol-input-field:focus {
-  border-color: #3b82f6;
-}
-
-.card-content {
-  padding: 1.5rem;
-}
 
 .main-layout {
   display: grid;
