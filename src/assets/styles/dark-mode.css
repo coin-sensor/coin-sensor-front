@@ -280,6 +280,214 @@
   color: #e2e8f0;
 }
 
-#app.dark-mode .symbol-input-field:focus {
+/* Admin 페이지 다크모드 */
+#app.dark-mode .sidebar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+#app.dark-mode .sidebar-header {
+  border-bottom-color: #334155;
+}
+
+#app.dark-mode .sidebar-header h3 {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .nav-item {
+  color: #94a3b8;
+}
+
+#app.dark-mode .nav-item:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+#app.dark-mode .nav-item.active {
+  background: #3b82f6;
+  color: white;
+}
+
+#app.dark-mode .admin-container {
+  background: #0f172a;
+}
+
+#app.dark-mode .admin-content {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+#app.dark-mode .admin-header h1 {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .admin-header p {
+  color: #94a3b8;
+}
+
+#app.dark-mode .stats-grid .stat-card {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+#app.dark-mode .stat-card h3 {
+  color: #94a3b8;
+}
+
+#app.dark-mode .stat-value {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .table {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+#app.dark-mode .table th {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #4b5563;
+}
+
+#app.dark-mode .table td {
+  color: #e2e8f0;
+  border-color: #4b5563;
+}
+
+#app.dark-mode .btn {
+  background: #3b82f6;
+  color: white;
+}
+
+#app.dark-mode .btn:hover {
+  background: #2563eb;
+}
+
+#app.dark-mode .btn-danger {
+  background: #dc2626;
+}
+
+#app.dark-mode .btn-danger:hover {
+  background: #b91c1c;
+}
+
+#app.dark-mode .form-group label {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .form-control {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e2e8f0;
+}
+
+#app.dark-mode .form-control:focus {
   border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+#app.dark-mode .modal-content {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+#app.dark-mode .modal-header {
+  border-bottom-color: #334155;
+}
+
+#app.dark-mode .modal-title {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .close {
+  color: #94a3b8;
+}
+
+#app.dark-mode .ban-management .section {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+#app.dark-mode .ban-management .section h3 {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .ban-management .form-section {
+  background: #374151;
+}
+
+#app.dark-mode .ban-management .form-section h4 {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .ban-management th {
+  background: #374151;
+  color: #f1f5f9;
+  border-bottom-color: #4b5563;
+}
+
+#app.dark-mode .ban-management td {
+  color: #e2e8f0;
+  border-bottom-color: #4b5563;
+}
+
+#app.dark-mode .ban-management input,
+#app.dark-mode .ban-management select {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+
+/* ExchangeCoinManagement 다크모드 */
+#app.dark-mode .admin-container .coin-header {
+  background: #334155;
+}
+
+#app.dark-mode .admin-container .coin-stats {
+  color: #94a3b8;
+}
+
+#app.dark-mode .admin-container .coin-list {
+  border-color: #4b5563;
+}
+
+#app.dark-mode .admin-container .table-row {
+  border-bottom-color: #4b5563;
+  color: #e2e8f0;
+}
+
+#app.dark-mode .admin-container .symbol-text {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .admin-container .table-row:hover {
+  background: #334155;
+}
+/* ChannelManagement 다크모드 */
+#app.dark-mode .admin-container .channel-item {
+  background: #334155;
+  border-color: #475569;
+}
+
+#app.dark-mode .admin-container .channel-name {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .admin-container .channel-details {
+  color: #94a3b8;
+}
+
+#app.dark-mode .admin-container .form-input {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f1f5f9;
+}
+
+#app.dark-mode .admin-container .modal-footer {
+  border-top-color: #334155;
+}
+#app.dark-mode .admin-container .table-header {
+  background: #374151;
+  color: #f1f5f9;
+  border-bottom-color: #4b5563;
 }

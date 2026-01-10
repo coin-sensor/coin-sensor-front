@@ -12,8 +12,6 @@ import MarketAnalysisDetail from '../views/MarketAnalysisDetail.vue'
 import RecommendedCoinsDetail from '../views/RecommendedCoinsDetail.vue'
 import ChannelManagement from '../views/ChannelManagement.vue'
 import UserManagement from '../views/UserManagement.vue'
-import SystemManagement from '../views/SystemManagement.vue'
-import LogManagement from '../views/LogManagement.vue'
 import ExchangeCoinManagement from '../views/ExchangeCoinManagement.vue'
 import { useAuthStore } from '@/stores/auth'
 
@@ -86,18 +84,6 @@ const routes = [
         path: '/admin/coins',
         name: 'ExchangeCoinManagement',
         component: ExchangeCoinManagement,
-        meta: { requiresAdmin: true }
-    },
-    {
-        path: '/admin/system',
-        name: 'SystemManagement',
-        component: SystemManagement,
-        meta: { requiresAdmin: true }
-    },
-    {
-        path: '/admin/logs',
-        name: 'LogManagement',
-        component: LogManagement,
         meta: { requiresAdmin: true }
     }
 ]

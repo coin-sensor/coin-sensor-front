@@ -16,12 +16,6 @@
       <router-link to="/admin/coins" class="nav-item" :class="{ active: $route.path === '/admin/coins' }">
         거래소코인 관리
       </router-link>
-      <router-link to="/admin/system" class="nav-item" :class="{ active: $route.path === '/admin/system' }">
-        시스템 관리
-      </router-link>
-      <router-link to="/admin/logs" class="nav-item" :class="{ active: $route.path === '/admin/logs' }">
-        로그 관리
-      </router-link>
     </nav>
   </aside>
 </template>
@@ -78,28 +72,29 @@
   color: white;
 }
 
-:global(body.dark-mode) .sidebar {
+:global(#app.dark-mode) .sidebar {
   background: #1e293b;
+  border-color: #334155;
 }
 
-:global(body.dark-mode) .sidebar-header {
+:global(#app.dark-mode) .sidebar-header {
   border-bottom-color: #334155;
 }
 
-:global(body.dark-mode) .sidebar-header h3 {
+:global(#app.dark-mode) .sidebar-header h3 {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .nav-item {
+:global(#app.dark-mode) .nav-item {
   color: #94a3b8;
 }
 
-:global(body.dark-mode) .nav-item:hover {
+:global(#app.dark-mode) .nav-item:hover {
   background: #334155;
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .nav-item.active {
+:global(#app.dark-mode) .nav-item.active {
   background: #3b82f6;
   color: white;
 }
