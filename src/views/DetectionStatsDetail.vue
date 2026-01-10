@@ -4,31 +4,32 @@
 
     <main class="main-content">
       <div class="header-section">
-        <h1>탐지 통계</h1>
+        <h1 class="section-title">탐지 통계</h1>
         <p class="description">시간대별 암호화폐 급등급락 탐지 현황을 실시간으로 모니터링합니다.</p>
       </div>
 
-      <div class="chart-section">
-        <div class="chart-header">
-          <h2>탐지 통계</h2>
-          <div class="controls">
-            <div class="period-selector">
-              <button
-                  v-for="tf in timeframes"
-                  :key="tf.value"
-                  :class="['period-btn', { active: selectedTimeframe === tf.value }]"
-                  @click="selectedTimeframe = tf.value; loadChartData()"
-              >
-                {{ tf.label }}
-              </button>
+      <section class="content-section">
+        <div class="card">
+          <div class="chart-header">
+            <div class="controls">
+              <div class="period-selector">
+                <button
+                    v-for="tf in timeframes"
+                    :key="tf.value"
+                    :class="['period-btn', { active: selectedTimeframe === tf.value }]"
+                    @click="selectedTimeframe = tf.value; loadChartData()"
+                >
+                  {{ tf.label }}
+                </button>
+              </div>
+              <span class="period-info">최근 {{ dataCount }}개 데이터</span>
             </div>
-            <span class="period-info">최근 {{ dataCount }}개 데이터</span>
+          </div>
+          <div class="chart-container">
+            <canvas ref="chartCanvas"></canvas>
           </div>
         </div>
-        <div class="chart-container">
-          <canvas ref="chartCanvas"></canvas>
-        </div>
-      </div>
+      </section>
 
       <div class="stats-grid">
         <div class="stat-card">
@@ -109,6 +110,7 @@ Chart.register(...registerables)
 
 const selectedTimeframe = ref('5m')
 const dataCount = ref(30)
+const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
 const chartCanvas = ref<HTMLCanvasElement | null>(null)
 const chartInstance = ref<Chart | null>(null)
 const totalDetections = ref(0)
@@ -180,19 +182,32 @@ const calculateStats = (data: any) => {
 
 const createChart = (data: any) => {
   if (chartInstance.value) {
-    chartInstance.value.destroy()
+    try {
+      chartInstance.value.stop()
+      chartInstance.value.destroy()
+    } catch (error) {
+      console.warn('Chart destroy error:', error)
+    }
+    chartInstance.value = null
   }
 
-  if (!chartCanvas.value || !data?.labels) return
+  if (!chartCanvas.value || !chartCanvas.value.isConnected) return
 
   const ctx = chartCanvas.value.getContext('2d')
   if (!ctx) return
 
-  const isDarkMode = localStorage.getItem('darkMode') === 'true'
-  const timeData = data.labels.map((label: string, index: number) => ({
-    x: new Date(label.replace(' ', 'T')),
-    y: data.datasets[0].data[index] || 0
-  }))
+  if (!data || !data.labels || !data.datasets || !data.datasets[0]) {
+    console.error('잘못된 데이터 구조:', data)
+    return
+  }
+
+  const timeData = data.labels.map((label: string, index: number) => {
+    const date = new Date(label.replace(' ', 'T'))
+    return {
+      x: date,
+      y: data.datasets[0].data[index] || 0
+    }
+  })
 
   chartInstance.value = new Chart(ctx, {
     type: 'line',
@@ -200,54 +215,54 @@ const createChart = (data: any) => {
       datasets: [{
         label: '탐지 수',
         data: timeData,
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderColor: '#3b82f6',
+        backgroundColor: isDarkMode.value ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+        borderColor: isDarkMode.value ? '#60a5fa' : '#3b82f6',
         borderWidth: 2,
         fill: true,
         tension: 0.4,
         pointRadius: 0,
-        pointHoverRadius: 4
+        pointHoverRadius: 4,
+        pointBackgroundColor: isDarkMode.value ? '#60a5fa' : '#3b82f6',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: {
-        duration: 0
-      },
-      transitions: {
-        active: {
-          animation: {
-            duration: 0
-          }
-        }
+      animation: false,
+      interaction: {
+        intersect: false,
+        mode: 'index'
       },
       plugins: {
-        legend: {display: false},
+        legend: { display: false },
         tooltip: {
-          backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          titleColor: isDarkMode ? '#f1f5f9' : '#374151',
-          bodyColor: isDarkMode ? '#f1f5f9' : '#374151',
-          borderColor: isDarkMode ? '#334155' : '#e5e7eb',
+          enabled: true,
+          backgroundColor: isDarkMode.value ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          titleColor: isDarkMode.value ? '#f1f5f9' : '#374151',
+          bodyColor: isDarkMode.value ? '#f1f5f9' : '#374151',
+          borderColor: isDarkMode.value ? '#334155' : '#e5e7eb',
           borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: true,
+          position: 'nearest',
+          caretPadding: 10,
           callbacks: {
-            title: function (context: any) {
+            title: function(context: any) {
               const date = new Date(context[0].parsed.x)
               return `시간: ${date.toLocaleString('ko-KR')}`
             },
-            label: function (context: any) {
+            label: function(context: any) {
               return `탐지 수: ${context.parsed.y}개`
             }
           }
         }
       },
-      interaction: {
-        intersect: false,
-        mode: 'index'
-      },
       scales: {
         x: {
           type: 'time',
+          display: true,
           time: {
             displayFormats: {
               minute: 'HH:mm',
@@ -256,8 +271,10 @@ const createChart = (data: any) => {
             },
             tooltipFormat: 'MM/dd HH:mm'
           },
+          min: timeData[0]?.x,
+          max: new Date(),
           ticks: {
-            color: isDarkMode ? '#94a3b8' : '#6b7280',
+            color: isDarkMode.value ? '#94a3b8' : '#6b7280',
             maxTicksLimit: 6,
             autoSkip: true,
             maxRotation: 0,
@@ -267,38 +284,57 @@ const createChart = (data: any) => {
             }
           },
           grid: {
-            color: isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+            color: isDarkMode.value ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
             drawOnChartArea: true,
             drawTicks: false
           }
         },
         y: {
+          display: true,
           beginAtZero: true,
           ticks: {
-            color: isDarkMode ? '#94a3b8' : '#6b7280',
+            color: isDarkMode.value ? '#94a3b8' : '#6b7280',
             maxTicksLimit: 6,
             font: {
               size: 11
+            },
+            callback: function(value: any) {
+              return value + '개'
             }
           },
           grid: {
-            color: isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+            color: isDarkMode.value ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+            drawOnChartArea: true,
             drawTicks: false
           }
         }
-      }
+      },
+      elements: {
+        point: {
+          hoverBackgroundColor: isDarkMode.value ? '#93c5fd' : '#2563eb'
+        }
+      },
     }
   })
 }
 
+const handleThemeChange = (event: any) => {
+  isDarkMode.value = event.detail.isDarkMode
+  if (chartInstance.value) {
+    loadChartData()
+  }
+}
+
 onMounted(() => {
   loadChartData()
+  window.addEventListener('theme-changed', handleThemeChange)
 })
 
 onBeforeUnmount(() => {
   if (chartInstance.value) {
     chartInstance.value.destroy()
   }
+  window.removeEventListener('theme-changed', handleThemeChange)
 })
 </script>
 
@@ -393,12 +429,17 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
-.chart-section {
+.content-section {
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  margin-bottom: 0;
+  padding: 1.25rem;
   background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
 }
 
 .chart-container {
@@ -605,9 +646,10 @@ onBeforeUnmount(() => {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .chart-section,
+:global(body.dark-mode) .card,
 :global(body.dark-mode) .stat-card {
   background: #1e293b;
+  border-color: #334155;
 }
 
 :global(body.dark-mode) .header-section h1,

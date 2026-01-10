@@ -5,20 +5,19 @@
     <!-- 메인 콘텐츠 -->
     <main class="main-content">
       <!-- 인사이트 요약 섹션 -->
-      <section id="overview" class="content-section">
-        <h2 class="section-title">인사이트 요약</h2>
-        <p class="section-description">코인센서가 분석한 내용을 바탕으로 주요 인사이트를 쉽게 확인할 수 있습니다.</p>
-      </section>
+      <div class="header-section">
+        <h1 class="section-title">인사이트 요약</h1>
+        <p class="description">코인센서가 분석한 내용을 바탕으로 주요 인사이트를 쉽게 확인할 수 있습니다.</p>
+      </div>
 
       <!-- 탐지 통계 차트 -->
       <section id="detection-stats" class="content-section">
         <div class="card">
       <div class="chart-header">
-        <h2>📈 탐지 통계</h2>
         <div class="controls">
           <div class="period-selector">
-            <button 
-              v-for="tf in timeframes" 
+            <button
+              v-for="tf in timeframes"
               :key="tf.value"
               :class="['period-btn', { active: selectedTimeframe === tf.value }]"
               @click="selectedTimeframe = tf.value; loadChartData()"
@@ -55,7 +54,7 @@
       <div class="column">
         <MiniChartSummary />
       </div>
-      
+
       <div class="column">
         <TechnicalAnalysis />
       </div>
@@ -96,7 +95,7 @@ const timeframes = [
 const loadChartData = async () => {
   try {
     const now = new Date()
-    
+
     // 로컬 시간으로 변환
     const endTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
     const dataCount = 30;
@@ -109,13 +108,13 @@ const loadChartData = async () => {
       '4h': dataCount * 240,
       '1d': dataCount * 1440
     }
-    
+
     const minutesToSubtract = timeframeMinutes[selectedTimeframe.value as keyof typeof timeframeMinutes] || 7200
     const startTime = new Date(endTime.getTime() - minutesToSubtract * 60 * 1000)
-    
+
     const startTimeISO = startTime.toISOString().slice(0, -1)
     const endTimeISO = endTime.toISOString().slice(0, -1)
-    
+
     const response = await api.get('/detections/chart', {
       params: {
         timeframe: selectedTimeframe.value,
@@ -123,7 +122,7 @@ const loadChartData = async () => {
         endTime: endTimeISO
       }
     })
-    
+
     createChart(response.data)
   } catch (error) {
     console.error('차트 데이터 로드 실패:', error)
@@ -140,17 +139,17 @@ const createChart = (data: any) => {
     }
     chartInstance.value = null
   }
-  
+
   if (!detectionChart.value || !detectionChart.value.isConnected) return
-  
+
   const ctx = detectionChart.value.getContext('2d')
   if (!ctx) return
-  
+
   if (!data || !data.labels || !data.datasets || !data.datasets[0]) {
     console.error('잘못된 데이터 구조:', data)
     return
   }
-  
+
   // 시간 데이터를 실제 Date 객체로 변환 (YYYY-MM-DD HH:mm:ss 형식)
   const timeData = data.labels.map((label: string, index: number) => {
     const date = new Date(label.replace(' ', 'T'))
@@ -159,7 +158,7 @@ const createChart = (data: any) => {
       y: data.datasets[0].data[index] || 0
     }
   })
-  
+
   chartInstance.value = new Chart(ctx, {
     type: 'line',
     data: {
@@ -187,13 +186,7 @@ const createChart = (data: any) => {
         mode: 'index'
       },
       plugins: {
-        legend: {
-          labels: {
-            color: isDarkMode.value ? '#f1f5f9' : '#374151',
-            usePointStyle: true,
-            padding: 20
-          }
-        },
+        legend: { display: false },
         tooltip: {
           enabled: true,
           backgroundColor: isDarkMode.value ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
@@ -286,7 +279,7 @@ const scrollToSection = (sectionId: string) => {
   const element = document.getElementById(sectionId)
   if (element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    
+
     // 네비게이션 활성화 상태 업데이트
     document.querySelectorAll('.nav-item').forEach(item => {
       item.classList.remove('active')
@@ -312,13 +305,10 @@ onBeforeUnmount(() => {
 <style scoped>
 .insight-container {
   display: flex;
-  gap: 1rem;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
-
-
 
 .main-content {
   flex: 1;
@@ -329,19 +319,19 @@ onBeforeUnmount(() => {
   margin-bottom: 1.5rem;
 }
 
-.content-section:first-of-type {
-  margin-top: 0;
+.header-section {
+  margin-bottom: 2rem;
 }
 
-.content-section:first-of-type .section-title {
-  margin-top: 0;
+.header-section h1 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-size: 2rem;
 }
 
-.section-description {
+.description {
   color: #6b7280;
-  font-size: 0.95rem;
-  margin: 0 0 1rem 0;
-  line-height: 1.6;
+  margin: 0;
 }
 
 .card {
@@ -432,17 +422,6 @@ onBeforeUnmount(() => {
   position: relative;
 }
 
-.section-title {
-  margin: 0 0 0.75rem 0;
-}
-
-.section-title h2 {
-  color: #1f2937;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-}
-
 .insights-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -525,11 +504,11 @@ onBeforeUnmount(() => {
   color: #94a3b8;
 }
 
-:global(body.dark-mode) .section-title h2 {
+:global(body.dark-mode) .header-section h1 {
   color: #f1f5f9;
 }
 
-:global(body.dark-mode) .section-description {
+:global(body.dark-mode) .description {
   color: #94a3b8;
 }
 
@@ -537,28 +516,23 @@ onBeforeUnmount(() => {
   .insight-container {
     flex-direction: column;
   }
-  
+
   .insights-grid,
   .three-column-grid,
   .insight-row.cols-2,
   .insight-row.cols-3 {
     grid-template-columns: 1fr;
   }
-  
+
   .chart-header {
     flex-direction: column;
     gap: 1rem;
     align-items: flex-start;
   }
-  
+
   .controls {
     width: 100%;
     justify-content: space-between;
   }
-  
-  .section-title {
-    margin: 2rem 0 1rem 0;
-  }
 }
-
 </style>

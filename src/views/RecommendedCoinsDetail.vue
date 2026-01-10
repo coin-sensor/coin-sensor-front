@@ -4,7 +4,7 @@
 
     <main class="main-content">
       <div class="header-section">
-        <h1>추천 코인 분석</h1>
+        <h1 class="section-title">추천 코인 분석</h1>
         <p class="description">사용자가 추천/비추천한 코인 데이터입니다.</p>
       </div>
 
@@ -100,7 +100,7 @@
       </div>
 
       <div class="chart-section">
-        <h2>📊 추천/비추천 비율 차트</h2>
+        <h2>추천/비추천 비율 차트</h2>
         <div class="chart-container">
           <canvas ref="reactionChart"></canvas>
         </div>

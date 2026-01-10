@@ -81,6 +81,7 @@ export default {
       this.isDarkMode = !this.isDarkMode
       localStorage.setItem('darkMode', this.isDarkMode)
       window.dispatchEvent(new CustomEvent('theme-changed', { detail: { isDarkMode: this.isDarkMode } }))
+      window.location.reload()
     },
     
     initWebSocket() {
@@ -269,6 +270,17 @@ body {
   font-weight: 600;
 }
 
+/* 섹션 타이틀 공통 스타일 */
+.section-title {
+  color: #1f2937;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 2rem 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* 다크 모드 */
 #app.dark-mode {
   background: #0f172a;
@@ -336,6 +348,10 @@ body {
 }
 
 #app.dark-mode .card h2 {
+  color: #f1f5f9;
+}
+
+#app.dark-mode .section-title {
   color: #f1f5f9;
 }
 
