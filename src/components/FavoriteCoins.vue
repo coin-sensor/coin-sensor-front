@@ -122,28 +122,23 @@ export default {
   border-radius: 4px;
   padding: 0.5rem;
   cursor: pointer;
-  color: #6b7280;
+  color: #1f2937;
   transition: all 0.2s;
-}
-
-.refresh-btn:hover:not(:disabled) {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.refresh-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .favorite-coins.dark .refresh-btn {
   border-color: #4b5563;
-  color: #9ca3af;
+  color: #f1f5f9;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #000000;
 }
 
 .favorite-coins.dark .refresh-btn:hover:not(:disabled) {
   background: #374151;
-  color: #f1f5f9;
+  color: #ffffff;
 }
 
 .favorite-list {
@@ -224,3 +219,7 @@ export default {
   font-size: 0.875rem;
 }
 </style>
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

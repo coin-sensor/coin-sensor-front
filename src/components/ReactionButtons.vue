@@ -110,13 +110,23 @@ const handleReaction = async (reaction: 'like' | 'dislike') => {
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #1f2937;
   transition: all 0.2s;
+}
+
+.dark-mode .reaction-btn {
+  border-color: #4b5563 !important;
+  color: #f1f5f9 !important;
 }
 
 .reaction-btn:hover {
   border-color: #9ca3af;
-  color: #374151;
+  color: #000000;
+}
+
+.dark-mode .reaction-btn:hover {
+  border-color: #6b7280 !important;
+  color: #ffffff !important;
 }
 
 .like-btn.active {
