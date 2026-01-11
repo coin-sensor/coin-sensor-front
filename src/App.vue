@@ -31,6 +31,9 @@
             <FontAwesomeIcon :icon="faUsers" class="user-icon" />
             <span class="user-count">{{ activeUserCount }}</span>
           </div>
+          <button @click="toggleNotification" class="theme-toggle">
+            <font-awesome-icon :icon="isNotification ? faVolumeHigh : faVolumeXmark" />
+          </button>
           <button @click="toggleDarkMode" class="theme-toggle">
             <font-awesome-icon :icon="isDarkMode ? 'fa-regular fa-sun' : 'fa-regular fa-moon'" />
           </button>
@@ -52,8 +55,9 @@
 import FloatingChannel from './components/FloatingChannel.vue'
 import AdminOnly from './components/AdminOnly.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faUsers } from '@fortawesome/free-solid-svg-icons'
+import { faUsers, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons'
 import { faSun, faMoon } from '@fortawesome/free-regular-svg-icons'
+import { useSettingsStore } from './stores/settings'
 
 export default {
   name: 'App',
@@ -67,8 +71,20 @@ export default {
       isDarkMode: localStorage.getItem('darkMode') === 'true',
       activeUserCount: 0,
       faUsers,
+      faVolumeHigh,
+      faVolumeXmark,
       faSun,
       faMoon
+    }
+  },
+  
+  computed: {
+    settingsStore() {
+      return useSettingsStore()
+    },
+    
+    isNotification() {
+      return this.settingsStore.isNotification
     }
   },
   
@@ -81,6 +97,10 @@ export default {
   },
   
   methods: {
+    toggleNotification() {
+      this.settingsStore.toggleNotification()
+    },
+    
     toggleDarkMode() {
       this.isDarkMode = !this.isDarkMode
       localStorage.setItem('darkMode', this.isDarkMode)
@@ -113,7 +133,7 @@ export default {
     
     async loadActiveUserCount() {
       try {
-        const response = await fetch('/api/websocket/activeUsers')
+        const response = await fetch('http://localhost:8080/api/websocket/activeUsers')
         const count = await response.json()
         console.log('현재 활성 사용자 수:', count)
         this.activeUserCount = count

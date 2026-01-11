@@ -1,6 +1,8 @@
 import { Client, Frame, StompSubscription } from '@stomp/stompjs'
 import { API_CONFIG } from '../config'
 import { getOrCreateUUID } from '../utils/uuid'
+import { notificationSound } from '../utils/notification'
+import { useSettingsStore } from '../stores/settings'
 
 interface Message {
   messageId?: number
@@ -83,6 +85,13 @@ class WebSocketService {
       try {
         const detection: DetectionData = JSON.parse(message.body)
         console.log('탐지 알림 수신:', detection)
+        
+        // 탐지 시 알림 소리 재생 (전역 설정 확인)
+        const settingsStore = useSettingsStore()
+        if (settingsStore.isNotification) {
+          notificationSound.play()
+        }
+        
         this.executeCallbacks('detection', detection)
       } catch (error) {
         console.error('탐지 메시지 파싱 실패:', error)
