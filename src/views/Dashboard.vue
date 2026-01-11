@@ -361,6 +361,11 @@ const initWebSocketSubscriptions = () => {
   import('../services/websocket').then(({ websocketService }) => {
     isConnected.value = websocketService.isConnected()
     
+    // 기존 연결이 있으면 바로 구독, 없으면 연결 대기
+    if (websocketService.isConnected()) {
+      websocketService.subscribeToDetection()
+    }
+    
     websocketService.onConnect(() => {
       isConnected.value = true
       websocketService.subscribeToDetection()
@@ -373,11 +378,6 @@ const initWebSocketSubscriptions = () => {
     websocketService.onError((error) => {
       isConnected.value = false
     })
-    
-    if (websocketService.isConnected()) {
-      websocketService.subscribeToDetection()
-      isConnected.value = true
-    }
   })
 }
 
@@ -426,13 +426,6 @@ const handleNotification = (detection) => {
   
   if (detections.value.length > 24) {
     detections.value = detections.value.slice(0, 24)
-  }
-  
-  if (Notification.permission === 'granted') {
-    new Notification('코인 탐지 알림', {
-      body: `${detection.exchangeName} ${detection.exchangeType}: ${detection.coins.length}개 코인 탐지`,
-      icon: '/favicon.ico'
-    })
   }
 }
 

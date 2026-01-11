@@ -13,7 +13,14 @@ interface Message {
 }
 
 interface DetectionData {
-  [key: string]: any
+  exchangeName: string
+  exchangeType: string
+  timeframeName: string
+  summary: string
+  conditionChangeX: number
+  conditionVolumeX: number
+  detectedAt: string
+  coins: any[]
 }
 
 interface DetectionParams {
@@ -87,10 +94,26 @@ class WebSocketService {
         const detection: DetectionData = JSON.parse(message.body)
         console.log('탐지 알림 수신:', detection)
         
-        // 탐지 시 알림 소리 재생 (전역 설정 확인)
+        // 탐지 시 알림 소리 재생 및 윈도우 알림 표시
         const settingsStore = useSettingsStore()
         if (settingsStore.isNotification) {
+          // 알림 소리 재생
           notificationSound.play()
+        }
+
+        // 윈도우 알림 표시 (권한이 있고 페이지가 백그라운드에 있을 때만)
+        if (Notification.permission === 'granted' && document.hidden) {
+          const notification = new Notification('코인 탐지 알림 ' + "[" + `${detection.coins?.length || 0}` +"개]", {
+            body: detection.summary,
+            icon: '/favicon.png',
+            tag: 'coin-detection'
+          })
+
+          // 알림 클릭 시 기존 탭으로 포커스만 이동
+          notification.onclick = () => {
+            window.focus()
+            notification.close()
+          }
         }
         
         this.executeCallbacks('detection', detection)
@@ -144,6 +167,8 @@ class WebSocketService {
   }
 
   onDetection(callback: CallbackFunction): void {
+    // 기존 detection 콜백 모두 제거 후 새로 등록
+    this.callbacks.delete('detection')
     this.addCallback('detection', callback)
   }
 
@@ -223,7 +248,11 @@ class WebSocketService {
     if (!this.callbacks.has(event)) {
       this.callbacks.set(event, [])
     }
-    this.callbacks.get(event)!.push(callback)
+    // 중복 콜백 방지
+    const existingCallbacks = this.callbacks.get(event)!
+    if (!existingCallbacks.includes(callback)) {
+      existingCallbacks.push(callback)
+    }
   }
 
   private executeCallbacks(event: CallbackEvent, data?: any): void {
