@@ -104,12 +104,12 @@
     width: 100%;
     position: static;
   }
-  
+
   .sidebar-nav {
     flex-direction: row;
     overflow-x: auto;
   }
-  
+
   .nav-item {
     white-space: nowrap;
   }

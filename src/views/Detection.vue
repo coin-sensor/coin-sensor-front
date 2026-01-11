@@ -82,78 +82,54 @@
   </v-container>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted } from 'vue'
 import { detectionApi } from '@/services/detectionApi'
 import ReactionButtons from '@/components/ReactionButtons.vue'
 
-export default {
-  name: 'Detection',
-  components: {
-    ReactionButtons
-  },
-  setup() {
-    const detections = ref([])
-    const loading = ref(false)
-    
-    const selectedExchange = ref('binance')
-    const selectedExchangeType = ref('spot')
-    const selectedCoinCategory = ref('all')
-    const selectedTimeframe = ref('1h')
-    
-    const exchanges = ['binance', 'upbit', 'bithumb']
-    const exchangeTypes = ['spot', 'futures']
-    const coinCategories = ['all', 'top20', 'bottom20']
-    const timeframes = ['1m', '5m', '15m', '1h', '4h', '1d']
+const detections = ref([])
+const loading = ref(false)
 
-    const loadDetectionData = async () => {
-      if (!selectedExchange.value || !selectedExchangeType.value || !selectedCoinCategory.value || !selectedTimeframe.value) return
-      
-      loading.value = true
-      try {
-        const response = await detectionApi.getDetections(
-            selectedExchange.value,
-            selectedExchangeType.value,
-            selectedCoinCategory.value,
-            selectedTimeframe.value
-        )
-        detections.value = response.data
-      } catch (error) {
-        console.error('탐지 데이터 로드 실패:', error)
-      } finally {
-        loading.value = false
-      }
-    }
+const selectedExchange = ref('binance')
+const selectedExchangeType = ref('spot')
+const selectedCoinCategory = ref('all')
+const selectedTimeframe = ref('1h')
 
-    const formatTime = (timestamp) => {
-      return new Date(timestamp).toLocaleString('ko-KR')
-    }
-    
-    const handleReactionChanged = (detectionId, reaction) => {
-      console.log(`탐지 ${detectionId}에 ${reaction} 리액션`)
-    }
+const exchanges = ['binance', 'upbit', 'bithumb']
+const exchangeTypes = ['spot', 'futures']
+const coinCategories = ['all', 'top20', 'bottom20']
+const timeframes = ['1m', '5m', '15m', '1h', '4h', '1d']
 
-    onMounted(() => {
-      loadDetectionData()
-    })
-
-    return {
-      detections,
-      loading,
-      selectedExchange,
-      selectedExchangeType,
-      selectedCoinCategory,
-      selectedTimeframe,
-      exchanges,
-      exchangeTypes,
-      coinCategories,
-      timeframes,
-      loadDetectionData,
-      formatTime,
-      handleReactionChanged
-    }
+const loadDetectionData = async () => {
+  if (!selectedExchange.value || !selectedExchangeType.value || !selectedCoinCategory.value || !selectedTimeframe.value) return
+  
+  loading.value = true
+  try {
+    const response = await detectionApi.getDetections(
+        selectedExchange.value,
+        selectedExchangeType.value,
+        selectedCoinCategory.value,
+        selectedTimeframe.value
+    )
+    detections.value = response.data
+  } catch (error) {
+    console.error('탐지 데이터 로드 실패:', error)
+  } finally {
+    loading.value = false
   }
 }
+
+const formatTime = (timestamp) => {
+  return new Date(timestamp).toLocaleString('ko-KR')
+}
+
+const handleReactionChanged = (detectionId, reaction) => {
+  console.log(`탐지 ${detectionId}에 ${reaction} 리액션`)
+}
+
+onMounted(() => {
+  loadDetectionData()
+})
 </script>
 
 <style scoped>

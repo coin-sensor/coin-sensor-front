@@ -4,60 +4,55 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'TechnicalAnalysis',
-  data() {
-    return {
-    }
-  },
+<script setup>
+import { onMounted, onBeforeUnmount } from 'vue'
+import { useSettingsStore } from '../stores/settings'
 
-  mounted() {
-    this.initWidget()
-    window.addEventListener('theme-changed', this.handleThemeChange)
-  },
+const settingsStore = useSettingsStore()
 
-  beforeUnmount() {
-    window.removeEventListener('theme-changed', this.handleThemeChange)
-  },
+const initWidget = () => {
+  const script = document.createElement('script')
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js'
+  script.async = true
+  script.text = JSON.stringify(getTechnicalAnalysisConfig())
+  document.getElementById('technical_analysis').appendChild(script)
+}
 
-  methods: {
-    initWidget() {
-      const script = document.createElement('script')
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js'
-      script.async = true
-      script.text = JSON.stringify(this.getTechnicalAnalysisConfig())
-      document.getElementById('technical_analysis').appendChild(script)
-    },
-
-    getTechnicalAnalysisConfig() {
-      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
-      return {
-        colorTheme: isDarkMode ? 'dark' : 'light',
-        displayMode: 'single',
-        isTransparent: false,
-        locale: 'en',
-        interval: '5m',
-        disableInterval: false,
-        width: '100%',
-        height: 400,
-        symbol: 'BITSTAMP:BTCUSD',
-        showIntervalTabs: true
-      }
-    },
-
-    handleThemeChange(event) {
-      this.reloadWidget()
-    },
-
-    reloadWidget() {
-      document.getElementById('technical_analysis').innerHTML = ''
-      setTimeout(() => {
-        this.initWidget()
-      }, 100)
-    }
+const getTechnicalAnalysisConfig = () => {
+  const isDarkMode = settingsStore.isDarkMode
+  return {
+    colorTheme: isDarkMode ? 'dark' : 'light',
+    displayMode: 'single',
+    isTransparent: false,
+    locale: 'en',
+    interval: '5m',
+    disableInterval: false,
+    width: '100%',
+    height: 400,
+    symbol: 'BITSTAMP:BTCUSD',
+    showIntervalTabs: true
   }
 }
+
+const handleThemeChange = () => {
+  reloadWidget()
+}
+
+const reloadWidget = () => {
+  document.getElementById('technical_analysis').innerHTML = ''
+  setTimeout(() => {
+    initWidget()
+  }, 100)
+}
+
+onMounted(() => {
+  initWidget()
+  window.addEventListener('theme-changed', handleThemeChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('theme-changed', handleThemeChange)
+})
 </script>
 
 <style scoped>

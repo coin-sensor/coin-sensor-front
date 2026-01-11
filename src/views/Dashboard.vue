@@ -133,491 +133,480 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { api } from '../services/api'
-import { DetectionInfoResponse } from '../types'
 import { favoriteApi } from '../services/favoriteApi'
+import { useSettingsStore } from '../stores/settings'
 
 import ReactionButtons from '../components/ReactionButtons.vue'
 import FloatingChannel from '../components/FloatingChannel.vue'
 import FloatingFavorites from '../components/FloatingFavorites.vue'
 
-export default {
-  name: 'Dashboard',
+const settingsStore = useSettingsStore()
+
+const isConnected = ref(false)
+const detections = ref([])
+const tradingViewWidget = ref(null)
+const showChartModal = ref(false)
+const selectedSymbol = ref('')
+const chartTimeframe = ref('1')
+const selectedExchangeType = ref('')
+const popupWidget = ref(null)
+const countdownInterval = ref(null)
+const countdownText = ref('00:00')
+const favoriteCoins = ref(new Set())
+const favoriteCoinsList = ref([])
+
+const selectedExchange = computed({
+  get: () => settingsStore.selectedExchange,
+  set: (value) => settingsStore.setSelectedExchange(value)
+})
+
+const selectedTimeframe = computed({
+  get: () => settingsStore.selectedTimeframe,
+  set: (value) => settingsStore.setSelectedTimeframe(value)
+})
+
+const selectedCoinCategory = computed({
+  get: () => settingsStore.selectedCoinCategory,
+  set: (value) => settingsStore.setSelectedCoinCategory(value)
+})
+
+const selectedChart = computed({
+  get: () => settingsStore.selectedChart,
+  set: (value) => settingsStore.setSelectedChart(value)
+})
+const initTradingView = () => {
+  const script = document.createElement('script')
+  script.src = 'https://s3.tradingview.com/tv.js'
+  script.async = true
+  script.onload = () => {
+    createTradingViewWidget()
+  }
+  document.head.appendChild(script)
+}
+
+const createTradingViewWidget = () => {
+  const isDarkMode = settingsStore.isDarkMode
+  const theme = isDarkMode ? 'dark' : 'light'
+  const backgroundColor = isDarkMode ? '#0F0F0F' : '#ffffff'
+  const gridColor = isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
   
-  components: {
-    ReactionButtons,
-    FloatingChannel,
-    FloatingFavorites
-  },
+  tradingViewWidget.value = new TradingView.widget({
+    width: '100%',
+    height: 500,
+    symbol: selectedChart.value || 'BINANCE:BTCUSDT',
+    interval: '1',
+    timezone: 'Asia/Seoul',
+    theme: theme,
+    style: '1',
+    locale: 'kr',
+    hide_side_toolbar: false,
+    hide_top_toolbar: false,
+    hide_legend: false,
+    save_image: false,
+    container_id: 'tradingview_chart',
+    allow_symbol_change: true,
+    backgroundColor: backgroundColor,
+    gridColor: gridColor
+  })
+}
 
-  data() {
-    return {
-      loading: false,
-      isConnected: false,
-      detections: [],
+const changeChart = () => {
+  const container = document.getElementById('tradingview_chart')
+  if (container) {
+    container.innerHTML = ''
+  }
+  setTimeout(() => {
+    createTradingViewWidget()
+  }, 100)
+}
 
-      tradingViewWidget: null,
-
-      showChartModal: false,
-      selectedSymbol: '',
-      chartTimeframe: '1',
-      selectedExchangeType: '',
-      popupWidget: null,
-      countdownInterval: null,
-      countdownText: '00:00',
-      selectedExchange: localStorage.getItem('selectedExchange') || 'binance-future',
-      selectedTimeframe: localStorage.getItem('selectedTimeframe') || '5m',
-      selectedCoinCategory: localStorage.getItem('selectedCoinCategory') || 'all',
-      selectedChart: localStorage.getItem('selectedChart') || 'btc-spot',
-      favoriteCoins: new Set(),
-      favoriteCoinsList: []
+const handleThemeChange = () => {
+  if (tradingViewWidget.value) {
+    const container = document.getElementById('tradingview_chart')
+    if (container) {
+      container.innerHTML = ''
     }
-  },
-
-
-
-  mounted() {
-    this.initTradingView()
-    this.loadInitialData()
-    this.loadFavoriteCoins()
-    this.initWebSocketSubscriptions()
-    this.requestNotificationPermission()
-    window.addEventListener('theme-changed', this.handleThemeChange)
-  },
+    setTimeout(() => {
+      createTradingViewWidget()
+    }, 100)
+  }
   
-  beforeUnmount() {
-    this.unsubscribeWebSocket()
-    window.removeEventListener('theme-changed', this.handleThemeChange)
-  },
-  
-  methods: {
-    initTradingView() {
-      const script = document.createElement('script')
-      script.src = 'https://s3.tradingview.com/tv.js'
-      script.async = true
-      script.onload = () => {
-        this.createTradingViewWidget()
-      }
-      document.head.appendChild(script)
-    },
-    
-    createTradingViewWidget() {
-      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
-      const theme = isDarkMode ? 'dark' : 'light'
-      const backgroundColor = isDarkMode ? '#0F0F0F' : '#ffffff'
-      const gridColor = isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
+  if (showChartModal.value && popupWidget.value) {
+    const popupContainer = document.getElementById('popup_tradingview_chart')
+    if (popupContainer) {
+      popupContainer.innerHTML = ''
+    }
+    setTimeout(() => {
+      createPopupChart()
+    }, 100)
+  }
+}
+
+onMounted(() => {
+  initTradingView()
+  loadInitialData()
+  loadFavoriteCoins()
+  initWebSocketSubscriptions()
+  requestNotificationPermission()
+  window.addEventListener('theme-changed', handleThemeChange)
+})
+
+onBeforeUnmount(() => {
+  unsubscribeWebSocket()
+  window.removeEventListener('theme-changed', handleThemeChange)
+})
+
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const dayName = dayNames[date.getDay()]
+  const hour = String(date.getHours()).padStart(2, '0')
+  const minute = String(date.getMinutes()).padStart(2, '0')
+  const second = String(date.getSeconds()).padStart(2, '0')
+
+  return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
+}
+
+const openChartModal = async (symbol, timeframeName, exchangeType, detectedCoinId) => {
+  selectedSymbol.value = symbol
+  chartTimeframe.value = convertTimeframeToInterval(timeframeName)
+  selectedExchangeType.value = exchangeType
+  showChartModal.value = true
+  countdownText.value = '00:00'
+
+  if (detectedCoinId) {
+    try {
+      const response = await api.post(`/detectedCoins/${detectedCoinId}/view`)
+      const newViewCount = response.data
       
-      this.tradingViewWidget = new TradingView.widget({
-        width: '100%',
-        height: 500,
-        symbol: this.selectedChart || 'BINANCE:BTCUSDT',
-        interval: '1',
-        timezone: 'Asia/Seoul',
-        theme: theme,
-        style: '1',
-        locale: 'kr',
-        hide_side_toolbar: false,
-        hide_top_toolbar: false,
-        hide_legend: false,
-        save_image: false,
-        container_id: 'tradingview_chart',
-        allow_symbol_change: true,
-        backgroundColor: backgroundColor,
-        gridColor: gridColor
-      })
-    },
-
-    changeChart() {
-      localStorage.setItem('selectedChart', this.selectedChart)
-      const container = document.getElementById('tradingview_chart')
-      if (container) {
-        container.innerHTML = ''
-      }
-      setTimeout(() => {
-        this.createTradingViewWidget()
-      }, 100)
-    },
-
-    handleThemeChange(event) {
-      if (this.tradingViewWidget) {
-        const container = document.getElementById('tradingview_chart')
-        if (container) {
-          container.innerHTML = ''
-        }
-        setTimeout(() => {
-          this.createTradingViewWidget()
-        }, 100)
-      }
-      
-      if (this.showChartModal && this.popupWidget) {
-        const popupContainer = document.getElementById('popup_tradingview_chart')
-        if (popupContainer) {
-          popupContainer.innerHTML = ''
-        }
-        setTimeout(() => {
-          this.createPopupChart()
-        }, 100)
-      }
-    },
-
-    formatTime(timestamp) {
-      const date = new Date(timestamp)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-      const dayName = dayNames[date.getDay()]
-      const hour = String(date.getHours()).padStart(2, '0')
-      const minute = String(date.getMinutes()).padStart(2, '0')
-      const second = String(date.getSeconds()).padStart(2, '0')
-
-      return `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
-    },
-
-    async openChartModal(symbol, timeframeName, exchangeType, detectedCoinId) {
-      this.selectedSymbol = symbol
-      this.chartTimeframe = this.convertTimeframeToInterval(timeframeName)
-      this.selectedExchangeType = exchangeType
-      this.showChartModal = true
-      this.countdownText = '00:00'
-
-      // API 호출
-      if (detectedCoinId) {
-        try {
-          const response = await api.post(`/detectedCoins/${detectedCoinId}/view`)
-          const newViewCount = response.data
-          
-          // 해당 코인의 조회수 업데이트
-          this.detections.forEach(detection => {
-            const coin = detection.coins.find(c => c.detectedCoinId === detectedCoinId)
-            if (coin) {
-              coin.viewCount = newViewCount
-            }
-          })
-          
-          console.info('탐지된 코인 조회')
-        } catch (error) {
-          console.error('탐지된 코인 조회 API 호출 실패:', error)
-        }
-      }
-
-      // 즉시 카운트다운 시작
-      this.startHeaderCountdown()
-
-      this.$nextTick(() => {
-        this.createPopupChart()
-      })
-    },
-
-    closeChartModal() {
-      this.showChartModal = false
-      this.selectedSymbol = ''
-      this.countdownText = '00:00'
-      if (this.popupWidget) {
-        this.popupWidget = null
-      }
-      if (this.countdownInterval) {
-        clearInterval(this.countdownInterval)
-        this.countdownInterval = null
-      }
-    },
-
-    createPopupChart() {
-      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
-      const theme = isDarkMode ? 'dark' : 'light'
-      const backgroundColor = isDarkMode ? '#0F0F0F' : '#ffffff'
-      const gridColor = isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
-      const symbolSuffix = this.selectedExchangeType === 'future' ? '.P' : ''
-
-      this.popupWidget = new TradingView.widget({
-        width: '100%',
-        height: 400,
-        symbol: `BINANCE:${this.selectedSymbol}${symbolSuffix}`,
-        interval: this.chartTimeframe,
-        timezone: 'Asia/Seoul',
-        theme: theme,
-        style: '1',
-        locale: 'kr',
-        hide_top_toolbar: false,
-        hide_legend: false,
-        save_image: true,
-        container_id: 'popup_tradingview_chart',
-        allow_symbol_change: true,
-        backgroundColor: backgroundColor,
-        gridColor: gridColor
-      })
-
-    },
-    
-    async loadInitialData() {
-      try {
-        const { detectionApi } = await import('../services/detectionApi')
-        const [exchange, exchangeType] = this.selectedExchange.split('-')
-        const response = await detectionApi.getDetections(exchange, exchangeType, this.selectedCoinCategory, this.selectedTimeframe)
-        
-        this.detections = response.data || []
-      } catch (error) {
-        console.error('초기 데이터 로드 실패:', error)
-        this.detections = []
-      }
-    },
-
-    initWebSocketSubscriptions() {
-      import('../services/websocket').then(({ websocketService }) => {
-        this.isConnected = websocketService.isConnected()
-        
-        websocketService.onConnect(() => {
-          this.isConnected = true
-          websocketService.subscribeToDetection()
-        })
-        
-        websocketService.onDetection((detection) => {
-          this.handleNotification(detection)
-        })
-        
-        websocketService.onError((error) => {
-          this.isConnected = false
-        })
-        
-        if (websocketService.isConnected()) {
-          websocketService.subscribeToDetection()
-          this.isConnected = true
+      detections.value.forEach(detection => {
+        const coin = detection.coins.find(c => c.detectedCoinId === detectedCoinId)
+        if (coin) {
+          coin.viewCount = newViewCount
         }
       })
-    },
-
-    unsubscribeWebSocket() {
-      import('../services/websocket').then(({ websocketService }) => {
-        websocketService.unsubscribe('detection')
-      })
-    },
-
-    changeExchange() {
-      localStorage.setItem('selectedExchange', this.selectedExchange)
-      this.detections = []
-      this.loadInitialData()
-      this.resubscribeDetection()
-    },
-
-    changeCoinCategory() {
-      localStorage.setItem('selectedCoinCategory', this.selectedCoinCategory)
-      this.detections = []
-      this.loadInitialData()
-      this.resubscribeDetection()
-    },
-
-    changeTimeframe() {
-      localStorage.setItem('selectedTimeframe', this.selectedTimeframe)
-      this.detections = []
-      this.loadInitialData()
-      this.resubscribeDetection()
-    },
-    
-    resubscribeDetection() {
-      import('../services/websocket').then(({ websocketService }) => {
-        websocketService.subscribeToDetection()
-      })
-    },
-    
-    handleNotification(detection) {
-      console.log('실시간 알림:', detection)
-
-      const detectionId = `${detection.detectedAt}_${detection.conditionChangeX}_${detection.conditionVolumeX}`
       
-      const newDetection = {
-        ...detection,
-        id: detectionId,
-        coins: detection.coins || []
-      }
-      
-      this.detections.unshift(newDetection)
-      
-      if (this.detections.length > 24) {
-        this.detections = this.detections.slice(0, 24)
-      }
-      
-      if (Notification.permission === 'granted') {
-        new Notification('코인 탐지 알림', {
-          body: `${detection.exchangeName} ${detection.exchangeType}: ${detection.coins.length}개 코인 탐지`,
-          icon: '/favicon.ico'
-        })
-      }
-    },
-    
-    disconnectWebSocket() {
-      import('../services/websocket').then(({ websocketService }) => {
-        websocketService.unsubscribe('detection')
-      })
-    },
-    
-    requestNotificationPermission() {
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission()
-      }
-    },
-    
-    handleEscKey(event) {
-      if (event.key === 'Escape' && this.showChartModal) {
-        this.closeChartModal()
-      }
-    },
-    
-    convertTimeframeToInterval(timeframeName) {
-      const timeframeMap = {
-        '1m': '1',
-        '3m': '3', 
-        '5m': '5',
-        '15m': '15',
-        '30m': '30',
-        '1h': '60',
-        '2h': '120',
-        '4h': '240',
-        '6h': '360',
-        '8h': '480',
-        '12h': '720',
-        '1d': '1D',
-        '3d': '3D',
-        '1w': '1W',
-        '1M': '1M'
-      }
-      return timeframeMap[timeframeName] || '1'
-    },
-    
-    getTimeframeLabel(interval) {
-      const labelMap = {
-        '1': '1분',
-        '3': '3분',
-        '5': '5분', 
-        '15': '15분',
-        '30': '30분',
-        '60': '1시간',
-        '120': '2시간',
-        '240': '4시간',
-        '360': '6시간',
-        '480': '8시간',
-        '720': '12시간',
-        '1D': '1일',
-        '3D': '3일',
-        '1W': '1주',
-        '1M': '1개월'
-      }
-      return labelMap[interval] || '1분'
-    },
-    
-    startCustomCountdown() {
-      const updateCountdown = () => {
-        const now = new Date()
-        const intervalMs = this.getIntervalInMs(this.chartTimeframe)
-        const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
-        const remaining = nextCandle - now
-        
-        const hours = Math.floor(remaining / 3600000)
-        const minutes = Math.floor((remaining % 3600000) / 60000)
-        const seconds = Math.floor((remaining % 60000) / 1000)
-        
-        let timeText
-        if (hours > 0) {
-          timeText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-        } else {
-          timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-        }
-        
-        this.countdownText = timeText
-        
-        const countdownElement = document.getElementById('custom-countdown')
-        if (countdownElement) {
-          countdownElement.textContent = `다음 봉: ${timeText}`
-        }
-      }
-      
-      updateCountdown()
-      this.countdownInterval = setInterval(updateCountdown, 1000)
-    },
-    
-    getIntervalInMs(interval) {
-      const intervalMap = {
-        '1': 60000,
-        '3': 180000,
-        '5': 300000,
-        '15': 900000,
-        '30': 1800000,
-        '60': 3600000,
-        '120': 7200000,
-        '240': 14400000,
-        '360': 21600000,
-        '480': 28800000,
-        '720': 43200000,
-        '1D': 86400000,
-        '1W': 604800000
-      }
-      return intervalMap[interval] || 60000
-    },
-    
-    startHeaderCountdown() {
-      const updateHeaderCountdown = () => {
-        const now = new Date()
-        const intervalMs = this.getIntervalInMs(this.chartTimeframe)
-        const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
-        const remaining = nextCandle - now
-        
-        const hours = Math.floor(remaining / 3600000)
-        const minutes = Math.floor((remaining % 3600000) / 60000)
-        const seconds = Math.floor((remaining % 60000) / 1000)
-        
-        if (hours > 0) {
-          this.countdownText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-        } else {
-          this.countdownText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-        }
-      }
-      
-      updateHeaderCountdown()
-      
-      if (this.countdownInterval) {
-        clearInterval(this.countdownInterval)
-      }
-      
-      this.countdownInterval = setInterval(updateHeaderCountdown, 1000)
-    },
-    
-    async loadFavoriteCoins() {
-      try {
-        const response = await favoriteApi.getFavoriteCoins()
-        const coins = response.data || []
-        this.favoriteCoins = new Set(coins.map(coin => coin.exchangeCoinId))
-        this.favoriteCoinsList = coins
-      } catch (error) {
-        console.error('즐겨찾기 로드 실패:', error)
-        this.favoriteCoins = new Set()
-        this.favoriteCoinsList = []
-      }
-    },
-    
-    async toggleFavorite(exchangeCoinId) {
-      try {
-        await favoriteApi.toggleFavoriteCoin(exchangeCoinId)
-        if (this.favoriteCoins.has(exchangeCoinId)) {
-          this.favoriteCoins.delete(exchangeCoinId)
-          this.favoriteCoinsList = this.favoriteCoinsList.filter(coin => coin.exchangeCoinId !== exchangeCoinId)
-        } else {
-          this.favoriteCoins.add(exchangeCoinId)
-          this.loadFavoriteCoins()
-        }
-      } catch (error) {
-        console.error('즐겨찾기 토글 실패:', error)
-      }
-    },
-    
-    handleFavoriteRemoved(exchangeCoinId) {
-      this.favoriteCoins.delete(exchangeCoinId)
-      this.favoriteCoinsList = this.favoriteCoinsList.filter(coin => coin.exchangeCoinId !== exchangeCoinId)
-    },
-    
-    handleReactionChanged(detectedCoinId, reaction) {
-      console.log(`탐지된 코인 ${detectedCoinId}에 ${reaction} 리액션`)
+      console.info('탐지된 코인 조회')
+    } catch (error) {
+      console.error('탐지된 코인 조회 API 호출 실패:', error)
     }
   }
+
+  startHeaderCountdown()
+
+  nextTick(() => {
+    createPopupChart()
+  })
+}
+
+const closeChartModal = () => {
+  showChartModal.value = false
+  selectedSymbol.value = ''
+  countdownText.value = '00:00'
+  if (popupWidget.value) {
+    popupWidget.value = null
+  }
+  if (countdownInterval.value) {
+    clearInterval(countdownInterval.value)
+    countdownInterval.value = null
+  }
+}
+
+const createPopupChart = () => {
+  const isDarkMode = settingsStore.isDarkMode
+  const theme = isDarkMode ? 'dark' : 'light'
+  const backgroundColor = isDarkMode ? '#0F0F0F' : '#ffffff'
+  const gridColor = isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)'
+  const symbolSuffix = selectedExchangeType.value === 'future' ? '.P' : ''
+
+  popupWidget.value = new TradingView.widget({
+    width: '100%',
+    height: 400,
+    symbol: `BINANCE:${selectedSymbol.value}${symbolSuffix}`,
+    interval: chartTimeframe.value,
+    timezone: 'Asia/Seoul',
+    theme: theme,
+    style: '1',
+    locale: 'kr',
+    hide_top_toolbar: false,
+    hide_legend: false,
+    save_image: true,
+    container_id: 'popup_tradingview_chart',
+    allow_symbol_change: true,
+    backgroundColor: backgroundColor,
+    gridColor: gridColor
+  })
+}
+
+const loadInitialData = async () => {
+  try {
+    const { detectionApi } = await import('../services/detectionApi')
+    const [exchange, exchangeType] = selectedExchange.value.split('-')
+    const response = await detectionApi.getDetections(exchange, exchangeType, selectedCoinCategory.value, selectedTimeframe.value)
+    
+    detections.value = response.data || []
+  } catch (error) {
+    console.error('초기 데이터 로드 실패:', error)
+    detections.value = []
+  }
+}
+
+const initWebSocketSubscriptions = () => {
+  import('../services/websocket').then(({ websocketService }) => {
+    isConnected.value = websocketService.isConnected()
+    
+    websocketService.onConnect(() => {
+      isConnected.value = true
+      websocketService.subscribeToDetection()
+    })
+    
+    websocketService.onDetection((detection) => {
+      handleNotification(detection)
+    })
+    
+    websocketService.onError((error) => {
+      isConnected.value = false
+    })
+    
+    if (websocketService.isConnected()) {
+      websocketService.subscribeToDetection()
+      isConnected.value = true
+    }
+  })
+}
+
+const unsubscribeWebSocket = () => {
+  import('../services/websocket').then(({ websocketService }) => {
+    websocketService.unsubscribe('detection')
+  })
+}
+
+const changeExchange = () => {
+  detections.value = []
+  loadInitialData()
+  resubscribeDetection()
+}
+
+const changeCoinCategory = () => {
+  detections.value = []
+  loadInitialData()
+  resubscribeDetection()
+}
+
+const changeTimeframe = () => {
+  detections.value = []
+  loadInitialData()
+  resubscribeDetection()
+}
+
+const resubscribeDetection = () => {
+  import('../services/websocket').then(({ websocketService }) => {
+    websocketService.subscribeToDetection()
+  })
+}
+
+const handleNotification = (detection) => {
+  console.log('실시간 알림:', detection)
+
+  const detectionId = `${detection.detectedAt}_${detection.conditionChangeX}_${detection.conditionVolumeX}`
+  
+  const newDetection = {
+    ...detection,
+    id: detectionId,
+    coins: detection.coins || []
+  }
+  
+  detections.value.unshift(newDetection)
+  
+  if (detections.value.length > 24) {
+    detections.value = detections.value.slice(0, 24)
+  }
+  
+  if (Notification.permission === 'granted') {
+    new Notification('코인 탐지 알림', {
+      body: `${detection.exchangeName} ${detection.exchangeType}: ${detection.coins.length}개 코인 탐지`,
+      icon: '/favicon.ico'
+    })
+  }
+}
+
+const disconnectWebSocket = () => {
+  import('../services/websocket').then(({ websocketService }) => {
+    websocketService.unsubscribe('detection')
+  })
+}
+
+const requestNotificationPermission = () => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+}
+
+const handleEscKey = (event) => {
+  if (event.key === 'Escape' && showChartModal.value) {
+    closeChartModal()
+  }
+}
+
+const convertTimeframeToInterval = (timeframeName) => {
+  const timeframeMap = {
+    '1m': '1',
+    '3m': '3', 
+    '5m': '5',
+    '15m': '15',
+    '30m': '30',
+    '1h': '60',
+    '2h': '120',
+    '4h': '240',
+    '6h': '360',
+    '8h': '480',
+    '12h': '720',
+    '1d': '1D',
+    '3d': '3D',
+    '1w': '1W',
+    '1M': '1M'
+  }
+  return timeframeMap[timeframeName] || '1'
+}
+
+const getTimeframeLabel = (interval) => {
+  const labelMap = {
+    '1': '1분',
+    '3': '3분',
+    '5': '5분', 
+    '15': '15분',
+    '30': '30분',
+    '60': '1시간',
+    '120': '2시간',
+    '240': '4시간',
+    '360': '6시간',
+    '480': '8시간',
+    '720': '12시간',
+    '1D': '1일',
+    '3D': '3일',
+    '1W': '1주',
+    '1M': '1개월'
+  }
+  return labelMap[interval] || '1분'
+}
+
+const startCustomCountdown = () => {
+  const updateCountdown = () => {
+    const now = new Date()
+    const intervalMs = getIntervalInMs(chartTimeframe.value)
+    const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
+    const remaining = nextCandle - now
+    
+    const hours = Math.floor(remaining / 3600000)
+    const minutes = Math.floor((remaining % 3600000) / 60000)
+    const seconds = Math.floor((remaining % 60000) / 1000)
+    
+    let timeText
+    if (hours > 0) {
+      timeText = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    } else {
+      timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    }
+    
+    countdownText.value = timeText
+    
+    const countdownElement = document.getElementById('custom-countdown')
+    if (countdownElement) {
+      countdownElement.textContent = `다음 봉: ${timeText}`
+    }
+  }
+  
+  updateCountdown()
+  countdownInterval.value = setInterval(updateCountdown, 1000)
+}
+
+const getIntervalInMs = (interval) => {
+  const intervalMap = {
+    '1': 60000,
+    '3': 180000,
+    '5': 300000,
+    '15': 900000,
+    '30': 1800000,
+    '60': 3600000,
+    '120': 7200000,
+    '240': 14400000,
+    '360': 21600000,
+    '480': 28800000,
+    '720': 43200000,
+    '1D': 86400000,
+    '1W': 604800000
+  }
+  return intervalMap[interval] || 60000
+}
+
+const startHeaderCountdown = () => {
+  const updateHeaderCountdown = () => {
+    const now = new Date()
+    const intervalMs = getIntervalInMs(chartTimeframe.value)
+    const nextCandle = new Date(Math.ceil(now.getTime() / intervalMs) * intervalMs)
+    const remaining = nextCandle - now
+    
+    const hours = Math.floor(remaining / 3600000)
+    const minutes = Math.floor((remaining % 3600000) / 60000)
+    const seconds = Math.floor((remaining % 60000) / 1000)
+    
+    if (hours > 0) {
+      countdownText.value = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    } else {
+      countdownText.value = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    }
+  }
+  
+  updateHeaderCountdown()
+  
+  if (countdownInterval.value) {
+    clearInterval(countdownInterval.value)
+  }
+  
+  countdownInterval.value = setInterval(updateHeaderCountdown, 1000)
+}
+
+const loadFavoriteCoins = async () => {
+  try {
+    const response = await favoriteApi.getFavoriteCoins()
+    const coins = response.data || []
+    favoriteCoins.value = new Set(coins.map(coin => coin.exchangeCoinId))
+    favoriteCoinsList.value = coins
+  } catch (error) {
+    console.error('즐겨찾기 로드 실패:', error)
+    favoriteCoins.value = new Set()
+    favoriteCoinsList.value = []
+  }
+}
+
+const toggleFavorite = async (exchangeCoinId) => {
+  try {
+    await favoriteApi.toggleFavoriteCoin(exchangeCoinId)
+    if (favoriteCoins.value.has(exchangeCoinId)) {
+      favoriteCoins.value.delete(exchangeCoinId)
+      favoriteCoinsList.value = favoriteCoinsList.value.filter(coin => coin.exchangeCoinId !== exchangeCoinId)
+    } else {
+      favoriteCoins.value.add(exchangeCoinId)
+      loadFavoriteCoins()
+    }
+  } catch (error) {
+    console.error('즐겨찾기 토글 실패:', error)
+  }
+}
+
+const handleFavoriteRemoved = (exchangeCoinId) => {
+  favoriteCoins.value.delete(exchangeCoinId)
+  favoriteCoinsList.value = favoriteCoinsList.value.filter(coin => coin.exchangeCoinId !== exchangeCoinId)
+}
+
+const handleReactionChanged = (detectedCoinId, reaction) => {
+  console.log(`탐지된 코인 ${detectedCoinId}에 ${reaction} 리액션`)
 }
 </script>
 

@@ -105,12 +105,13 @@ import {Chart, registerables} from 'chart.js'
 import 'chartjs-adapter-date-fns'
 import {api} from '../services/api'
 import InsightSidebar from '../components/InsightSidebar.vue'
+import { useSettingsStore } from '../stores/settings'
 
 Chart.register(...registerables)
 
 const selectedTimeframe = ref('5m')
 const dataCount = ref(30)
-const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
+const settingsStore = useSettingsStore()
 const chartCanvas = ref<HTMLCanvasElement | null>(null)
 const chartInstance = ref<Chart | null>(null)
 const totalDetections = ref(0)
@@ -215,14 +216,14 @@ const createChart = (data: any) => {
       datasets: [{
         label: '탐지 수',
         data: timeData,
-        backgroundColor: isDarkMode.value ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-        borderColor: isDarkMode.value ? '#60a5fa' : '#3b82f6',
+        backgroundColor: settingsStore.isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+        borderColor: settingsStore.isDarkMode ? '#60a5fa' : '#3b82f6',
         borderWidth: 2,
         fill: true,
         tension: 0.4,
         pointRadius: 0,
         pointHoverRadius: 4,
-        pointBackgroundColor: isDarkMode.value ? '#60a5fa' : '#3b82f6',
+        pointBackgroundColor: settingsStore.isDarkMode ? '#60a5fa' : '#3b82f6',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2
       }]
@@ -239,10 +240,10 @@ const createChart = (data: any) => {
         legend: { display: false },
         tooltip: {
           enabled: true,
-          backgroundColor: isDarkMode.value ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          titleColor: isDarkMode.value ? '#f1f5f9' : '#374151',
-          bodyColor: isDarkMode.value ? '#f1f5f9' : '#374151',
-          borderColor: isDarkMode.value ? '#334155' : '#e5e7eb',
+          backgroundColor: settingsStore.isDarkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          titleColor: settingsStore.isDarkMode ? '#f1f5f9' : '#374151',
+          bodyColor: settingsStore.isDarkMode ? '#f1f5f9' : '#374151',
+          borderColor: settingsStore.isDarkMode ? '#334155' : '#e5e7eb',
           borderWidth: 1,
           cornerRadius: 8,
           displayColors: true,
@@ -274,7 +275,7 @@ const createChart = (data: any) => {
           min: timeData[0]?.x,
           max: new Date(),
           ticks: {
-            color: isDarkMode.value ? '#94a3b8' : '#6b7280',
+            color: settingsStore.isDarkMode ? '#94a3b8' : '#6b7280',
             maxTicksLimit: 6,
             autoSkip: true,
             maxRotation: 0,
@@ -284,7 +285,7 @@ const createChart = (data: any) => {
             }
           },
           grid: {
-            color: isDarkMode.value ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+            color: settingsStore.isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
             drawOnChartArea: true,
             drawTicks: false
           }
@@ -293,7 +294,7 @@ const createChart = (data: any) => {
           display: true,
           beginAtZero: true,
           ticks: {
-            color: isDarkMode.value ? '#94a3b8' : '#6b7280',
+            color: settingsStore.isDarkMode ? '#94a3b8' : '#6b7280',
             maxTicksLimit: 6,
             font: {
               size: 11
@@ -303,7 +304,7 @@ const createChart = (data: any) => {
             }
           },
           grid: {
-            color: isDarkMode.value ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+            color: settingsStore.isDarkMode ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
             drawOnChartArea: true,
             drawTicks: false
           }
@@ -311,7 +312,7 @@ const createChart = (data: any) => {
       },
       elements: {
         point: {
-          hoverBackgroundColor: isDarkMode.value ? '#93c5fd' : '#2563eb'
+          hoverBackgroundColor: settingsStore.isDarkMode ? '#93c5fd' : '#2563eb'
         }
       },
     }
@@ -319,7 +320,6 @@ const createChart = (data: any) => {
 }
 
 const handleThemeChange = (event: any) => {
-  isDarkMode.value = event.detail.isDarkMode
   if (chartInstance.value) {
     loadChartData()
   }

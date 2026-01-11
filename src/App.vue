@@ -51,7 +51,8 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import FloatingChannel from './components/FloatingChannel.vue'
 import AdminOnly from './components/AdminOnly.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -59,94 +60,61 @@ import { faUsers, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-sv
 import { faSun, faMoon } from '@fortawesome/free-regular-svg-icons'
 import { useSettingsStore } from './stores/settings'
 
-export default {
-  name: 'App',
-  components: {
-    FloatingChannel: FloatingChannel,
-    AdminOnly,
-    FontAwesomeIcon
-  },
-  data() {
-    return {
-      isDarkMode: localStorage.getItem('darkMode') === 'true',
-      activeUserCount: 0,
-      faUsers,
-      faVolumeHigh,
-      faVolumeXmark,
-      faSun,
-      faMoon
-    }
-  },
-  
-  computed: {
-    settingsStore() {
-      return useSettingsStore()
-    },
-    
-    isNotification() {
-      return this.settingsStore.isNotification
-    }
-  },
-  
-  mounted() {
-    this.initWebSocket()
-  },
-  
-  beforeUnmount() {
-    this.disconnectWebSocket()
-  },
-  
-  methods: {
-    toggleNotification() {
-      this.settingsStore.toggleNotification()
-    },
-    
-    toggleDarkMode() {
-      this.isDarkMode = !this.isDarkMode
-      localStorage.setItem('darkMode', this.isDarkMode)
-      window.dispatchEvent(new CustomEvent('theme-changed', { detail: { isDarkMode: this.isDarkMode } }))
-      window.location.reload()
-    },
-    
-    initWebSocket() {
-      import('./services/websocket').then(({ websocketService }) => {
-        websocketService.onConnect(() => {
-          // 소켓 연결 완료 후 활성 사용자 수 로드
-          this.loadActiveUserCount()
-        })
-        
-        websocketService.onActiveUsers((count) => {
-          this.activeUserCount = count
-        })
-        
-        websocketService.connect()
-        console.log('전역 WebSocket 연결 초기화')
-      })
-    },
-    
-    disconnectWebSocket() {
-      import('./services/websocket').then(({ websocketService }) => {
-        websocketService.disconnect()
-        console.log('전역 WebSocket 연결 해제')
-      })
-    },
-    
-    async loadActiveUserCount() {
-      try {
-        const response = await fetch('http://localhost:8080/api/websocket/activeUsers')
-        const count = await response.json()
-        console.log('현재 활성 사용자 수:', count)
-        this.activeUserCount = count
-      } catch (error) {
-        console.error('활성 사용자 수 로드 실패:', error)
-        this.activeUserCount = 0
-      }
-    }
-  },
+const activeUserCount = ref(0)
+const settingsStore = useSettingsStore()
 
+const isNotification = computed(() => settingsStore.isNotification)
+const isDarkMode = computed(() => settingsStore.isDarkMode)
+
+const toggleNotification = () => {
+  settingsStore.toggleNotification()
 }
-</script>
 
-<style scoped>
-/* App.vue 전용 스타일만 남김 */
-</style>
+const toggleDarkMode = () => {
+  settingsStore.toggleDarkMode()
+  window.dispatchEvent(new CustomEvent('theme-changed', { detail: { isDarkMode: isDarkMode.value } }))
+  window.location.reload()
+}
+
+const initWebSocket = () => {
+  import('./services/websocket').then(({ websocketService }) => {
+    websocketService.onConnect(() => {
+      loadActiveUserCount()
+    })
+    
+    websocketService.onActiveUsers((count) => {
+      activeUserCount.value = count
+    })
+    
+    websocketService.connect()
+    console.log('전역 WebSocket 연결 초기화')
+  })
+}
+
+const disconnectWebSocket = () => {
+  import('./services/websocket').then(({ websocketService }) => {
+    websocketService.disconnect()
+    console.log('전역 WebSocket 연결 해제')
+  })
+}
+
+const loadActiveUserCount = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/api/websocket/activeUsers')
+    const count = await response.json()
+    console.log('현재 활성 사용자 수:', count)
+    activeUserCount.value = count
+  } catch (error) {
+    console.error('활성 사용자 수 로드 실패:', error)
+    activeUserCount.value = 0
+  }
+}
+
+onMounted(() => {
+  initWebSocket()
+})
+
+onBeforeUnmount(() => {
+  disconnectWebSocket()
+})
+</script>

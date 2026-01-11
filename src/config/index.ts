@@ -14,5 +14,3 @@ if (!isDevelopment) {
   API_CONFIG.WS_URL = 'wss://your-production-domain.com/ws'
   API_CONFIG.API_URL = 'https://your-production-domain.com/api'
 }
-
-export default API_CONFIG

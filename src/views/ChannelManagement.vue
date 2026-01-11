@@ -60,98 +60,85 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
 import { apiService } from '@/services/api'
 import AdminSidebar from '../components/AdminSidebar.vue'
 
-export default {
-  name: 'ChannelManagement',
-  components: {
-    AdminSidebar
-  },
-  data() {
-    return {
-      channels: [],
-      showCreateModal: false,
-      showEditModal: false,
-      channelForm: {
-        name: ''
-      },
-      editingChannel: null
-    }
-  },
+const channels = ref([])
+const showCreateModal = ref(false)
+const showEditModal = ref(false)
+const channelForm = ref({ name: '' })
+const editingChannel = ref(null)
 
-  mounted() {
-    this.loadChannels()
-  },
-
-  methods: {
-    async loadChannels() {
-      try {
-        this.channels = await apiService.getChannels()
-      } catch (error) {
-        console.error('채팅방 목록 로드 실패:', error)
-      }
-    },
-
-    editChannel(channel) {
-      this.editingChannel = channel
-      this.channelForm = { name: channel.name }
-      this.showEditModal = true
-    },
-
-    async deleteChannel(channelId) {
-      if (!confirm('정말로 이 채팅방을 삭제하시겠습니까?')) return
-
-      try {
-        await apiService.deleteChannel(channelId)
-        this.channels = this.channels.filter(channel => channel.channelId !== channelId)
-        alert('채팅방이 삭제되었습니다.')
-      } catch (error) {
-        console.error('채팅방 삭제 실패:', error)
-        alert(`${error.response?.data?.message || error.message}`)
-      }
-    },
-
-    async saveChannel() {
-      if (!this.channelForm.name) {
-        alert('채팅방 이름을 입력해주세요.')
-        return
-      }
-
-      try {
-        if (this.showEditModal) {
-          const updatedChannel = await apiService.updateChannel(this.editingChannel.channelId, this.channelForm)
-          const index = this.channels.findIndex(channel => channel.channelId === this.editingChannel.channelId)
-          if (index !== -1) {
-            this.channels[index].name = this.channelForm.name
-          }
-          alert('채팅방이 수정되었습니다.')
-        } else {
-          const newChannel = await apiService.createChannel(this.channelForm)
-          this.channels.push(newChannel)
-          alert('채팅방이 생성되었습니다.')
-        }
-        
-        this.closeModal()
-      } catch (error) {
-        console.error('채팅방 저장 실패:', error)
-        alert(`${error.response?.data?.message || error.message}`)
-      }
-    },
-
-    closeModal() {
-      this.showCreateModal = false
-      this.showEditModal = false
-      this.channelForm = { name: '' }
-      this.editingChannel = null
-    },
-
-    formatDate(date) {
-      return new Date(date).toLocaleDateString('ko-KR')
-    }
+const loadChannels = async () => {
+  try {
+    channels.value = await apiService.getChannels()
+  } catch (error) {
+    console.error('채팅방 목록 로드 실패:', error)
   }
 }
+
+const editChannel = (channel) => {
+  editingChannel.value = channel
+  channelForm.value = { name: channel.name }
+  showEditModal.value = true
+}
+
+const deleteChannel = async (channelId) => {
+  if (!confirm('정말로 이 채팅방을 삭제하시겠습니까?')) return
+
+  try {
+    await apiService.deleteChannel(channelId)
+    channels.value = channels.value.filter(channel => channel.channelId !== channelId)
+    alert('채팅방이 삭제되었습니다.')
+  } catch (error) {
+    console.error('채팅방 삭제 실패:', error)
+    alert(`${error.response?.data?.message || error.message}`)
+  }
+}
+
+const saveChannel = async () => {
+  if (!channelForm.value.name) {
+    alert('채팅방 이름을 입력해주세요.')
+    return
+  }
+
+  try {
+    if (showEditModal.value) {
+      const updatedChannel = await apiService.updateChannel(editingChannel.value.channelId, channelForm.value)
+      const index = channels.value.findIndex(channel => channel.channelId === editingChannel.value.channelId)
+      if (index !== -1) {
+        channels.value[index].name = channelForm.value.name
+      }
+      alert('채팅방이 수정되었습니다.')
+    } else {
+      const newChannel = await apiService.createChannel(channelForm.value)
+      channels.value.push(newChannel)
+      alert('채팅방이 생성되었습니다.')
+    }
+    
+    closeModal()
+  } catch (error) {
+    console.error('채팅방 저장 실패:', error)
+    alert(`${error.response?.data?.message || error.message}`)
+  }
+}
+
+const closeModal = () => {
+  showCreateModal.value = false
+  showEditModal.value = false
+  channelForm.value = { name: '' }
+  editingChannel.value = null
+}
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('ko-KR')
+}
+
+onMounted(() => {
+  loadChannels()
+})
 </script>
 
 <style scoped>

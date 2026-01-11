@@ -3,7 +3,7 @@
     <div class="header">
       <h3>인기 TOP 3 코인 (24h)</h3>
     </div>
-    
+
     <div class="total-stats">
       <div class="stat">
         <span class="value">{{ topCoin?.baseAsset || '-' }}</span>
@@ -12,14 +12,14 @@
         <span>{{ formatValue(totalViews) }}회</span>
       </div>
     </div>
-    
+
     <div class="combined-bar-container">
       <div class="combined-bar">
-        <div 
-          v-for="(item, index) in insightData" 
+        <div
+          v-for="(item, index) in insightData"
           :key="item.id"
           class="bar-segment"
-          :style="{ 
+          :style="{
             width: getSegmentWidth(item.value) + '%',
             backgroundColor: getSegmentColor(index)
           }"
@@ -27,15 +27,15 @@
         </div>
       </div>
     </div>
-    
+
     <div class="legend">
-      <div 
-        v-for="(item, index) in insightData" 
+      <div
+        v-for="(item, index) in insightData"
         :key="item.id"
         class="legend-item"
       >
-        <div 
-          class="legend-color" 
+        <div
+          class="legend-color"
           :style="{ backgroundColor: getSegmentColor(index) }"
         ></div>
         <span class="legend-name">{{ item.baseAsset }}</span>
@@ -70,19 +70,19 @@ const colors = [
 const loadData = async () => {
   try {
     const response = await api.get('/coinClicks/top', {
-      params: { 
+      params: {
         days: parseInt(selectedPeriod),
-        limit: 3 
+        limit: 3
       }
     })
-    
+
     insightData.value = response.data.map((coin: any) => ({
       id: coin.coinId,
       baseAsset: coin.baseAsset,
       coinTicker: coin.coinTicker,
       value: coin.totalViewCount
     }))
-    
+
     totalViews.value = insightData.value.reduce((sum, item) => sum + item.value, 0)
     topCoin.value = insightData.value[0] || null
   } catch (error) {
@@ -281,7 +281,7 @@ onMounted(() => {
     align-items: flex-start;
     gap: 0.75rem;
   }
-  
+
   .combined-bar {
     height: 20px;
   }

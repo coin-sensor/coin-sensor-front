@@ -15,39 +15,28 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
 import AdminSidebar from '../components/AdminSidebar.vue'
 import { useAuthStore } from '@/stores/auth'
 
-export default {
-  name: 'Admin',
-  components: {
-    AdminSidebar
-  },
-  data() {
-    return {
-      isConnected: false
-    }
-  },
+const isConnected = ref(false)
 
-  async mounted() {
-    this.initWebSocket()
-  },
-
-  methods: {
-    initWebSocket() {
-      import('../services/websocket').then(({ websocketService }) => {
-        websocketService.onConnect(() => {
-          this.isConnected = true
-        })
-        
-        websocketService.onError(() => {
-          this.isConnected = false
-        })
-      })
-    }
-  }
+const initWebSocket = () => {
+  import('../services/websocket').then(({ websocketService }) => {
+    websocketService.onConnect(() => {
+      isConnected.value = true
+    })
+    
+    websocketService.onError(() => {
+      isConnected.value = false
+    })
+  })
 }
+
+onMounted(() => {
+  initWebSocket()
+})
 </script>
 
 <style scoped>

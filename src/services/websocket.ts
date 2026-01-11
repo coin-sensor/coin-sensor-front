@@ -74,11 +74,12 @@ class WebSocketService {
   }
 
   subscribeToDetection(): void {
-    // 실시간으로 localStorage에서 값 읽기
-    const selectedExchange = localStorage.getItem('selectedExchange') || 'binance-future'
+    // Pinia 스토어에서 값 읽기
+    const settingsStore = useSettingsStore()
+    const selectedExchange = settingsStore.selectedExchange
     const [exchangeName, exchangeType] = selectedExchange.split('-')
-    const coinCategory = localStorage.getItem('selectedCoinCategory') || 'all'
-    const timeframe = localStorage.getItem('selectedTimeframe') || '5m'
+    const coinCategory = settingsStore.selectedCoinCategory
+    const timeframe = settingsStore.selectedTimeframe
     
     const topic = `/topic/detections?exchange=${exchangeName}&exchangeType=${exchangeType}&coinCategory=${coinCategory}&timeframe=${timeframe}`
     this.subscribe('detection', topic, (message) => {

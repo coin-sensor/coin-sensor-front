@@ -7,16 +7,20 @@
       <router-link to="/insight" class="nav-item" :class="{ active: $route.path === '/insight' }">
         인사이트 요약
       </router-link>
-      <router-link to="/insight/detectionStats" class="nav-item" :class="{ active: $route.path === '/insight/detectionStats' }">
+      <router-link to="/insight/detectionStats" class="nav-item"
+                   :class="{ active: $route.path === '/insight/detectionStats' }">
         탐지 통계
       </router-link>
-      <router-link to="/insight/popularCoins" class="nav-item" :class="{ active: $route.path === '/insight/popularCoins' }">
+      <router-link to="/insight/popularCoins" class="nav-item"
+                   :class="{ active: $route.path === '/insight/popularCoins' }">
         인기 코인
       </router-link>
-      <router-link to="/insight/recommendedCoins" class="nav-item" :class="{ active: $route.path === '/insight/recommendedCoins' }">
+      <router-link to="/insight/recommendedCoins" class="nav-item"
+                   :class="{ active: $route.path === '/insight/recommendedCoins' }">
         추천 코인
       </router-link>
-      <router-link to="/insight/marketAnalysis" class="nav-item" :class="{ active: $route.path === '/insight/marketAnalysis' }">
+      <router-link to="/insight/marketAnalysis" class="nav-item"
+                   :class="{ active: $route.path === '/insight/marketAnalysis' }">
         시장 분석
       </router-link>
     </nav>
@@ -33,7 +37,7 @@
   background: white;
   border-radius: 8px;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .dark-mode .sidebar {
@@ -132,12 +136,12 @@
     width: 100%;
     position: static;
   }
-  
+
   .sidebar-nav {
     flex-direction: row;
     overflow-x: auto;
   }
-  
+
   .nav-item {
     white-space: nowrap;
   }

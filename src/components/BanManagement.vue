@@ -2,12 +2,12 @@
   <div class="ban-management">
     <div class="section">
       <h3>🚫 금지 유형 관리</h3>
-      
+
       <div class="form-section">
         <h4>{{ showEditModal ? '금지 유형 수정' : '새 금지 유형 추가' }}</h4>
         <form @submit.prevent="showEditModal ? updateBanType() : createBanType()" class="ban-type-form">
-          <input v-model="newBanType.reason" placeholder="금지 사유" required />
-          <input v-model.number="newBanType.period" type="number" placeholder="금지기간(일)" required />
+          <input v-model="newBanType.reason" placeholder="금지 사유" required/>
+          <input v-model.number="newBanType.period" type="number" placeholder="금지기간(일)" required/>
           <button type="submit" class="btn-primary">{{ showEditModal ? '수정' : '추가' }}</button>
           <button v-if="showEditModal" @click="cancelEdit" type="button" class="btn-secondary">취소</button>
         </form>
@@ -17,23 +17,23 @@
         <h4>금지 유형 목록</h4>
         <table>
           <thead>
-            <tr>
-              <th>ID</th>
-              <th>사유</th>
-              <th>기간(일)</th>
-              <th>작업</th>
-            </tr>
+          <tr>
+            <th>ID</th>
+            <th>사유</th>
+            <th>기간(일)</th>
+            <th>작업</th>
+          </tr>
           </thead>
           <tbody>
-            <tr v-for="banType in banTypes" :key="banType.banTypeId">
-              <td>{{ banType.banTypeId }}</td>
-              <td>{{ banType.reason }}</td>
-              <td>{{ banType.period }}일</td>
-              <td>
-                <button @click="editBanType(banType)" class="btn-warning">수정</button>
-                <button @click="deleteBanType(banType.banTypeId)" class="btn-danger">삭제</button>
-              </td>
-            </tr>
+          <tr v-for="banType in banTypes" :key="banType.banTypeId">
+            <td>{{ banType.banTypeId }}</td>
+            <td>{{ banType.reason }}</td>
+            <td>{{ banType.period }}일</td>
+            <td>
+              <button @click="editBanType(banType)" class="btn-warning">수정</button>
+              <button @click="deleteBanType(banType.banTypeId)" class="btn-danger">삭제</button>
+            </td>
+          </tr>
           </tbody>
         </table>
       </div>
@@ -41,11 +41,11 @@
 
     <div class="section">
       <h3>👤 사용자 금지 관리</h3>
-      
+
       <div class="form-section">
         <h4>사용자 금지</h4>
         <form @submit.prevent="banUser" class="user-ban-form">
-          <input v-model.number="newUserBan.userId" type="number" placeholder="사용자 ID" required />
+          <input v-model.number="newUserBan.userId" type="number" placeholder="사용자 ID" required/>
           <select v-model="newUserBan.banTypeId" required>
             <option value="">금지 유형 선택</option>
             <option v-for="banType in banTypes" :key="banType.banTypeId" :value="banType.banTypeId">
@@ -60,26 +60,26 @@
         <h4>금지된 사용자 목록</h4>
         <table>
           <thead>
-            <tr>
-              <th>사용자 ID</th>
-              <th>금지 유형 ID</th>
-              <th>사유</th>
-              <th>시작 시간</th>
-              <th>종료 시간</th>
-              <th>작업</th>
-            </tr>
+          <tr>
+            <th>사용자 ID</th>
+            <th>금지 유형 ID</th>
+            <th>사유</th>
+            <th>시작 시간</th>
+            <th>종료 시간</th>
+            <th>작업</th>
+          </tr>
           </thead>
           <tbody>
-            <tr v-for="ban in bannedUsers" :key="ban.userBanId">
-              <td>{{ ban.userId }}</td>
-              <td>{{ ban.banTypeId }}</td>
-              <td>{{ ban.reason }}</td>
-              <td>{{ formatDate(ban.startTime) }}</td>
-              <td>{{ formatDate(ban.endTime) }}</td>
-              <td>
-                <button @click="unbanUser(ban.userBanId)" class="btn-success">해제</button>
-              </td>
-            </tr>
+          <tr v-for="ban in bannedUsers" :key="ban.userBanId">
+            <td>{{ ban.userId }}</td>
+            <td>{{ ban.banTypeId }}</td>
+            <td>{{ ban.reason }}</td>
+            <td>{{ formatDate(ban.startTime) }}</td>
+            <td>{{ formatDate(ban.endTime) }}</td>
+            <td>
+              <button @click="unbanUser(ban.userBanId)" class="btn-success">해제</button>
+            </td>
+          </tr>
           </tbody>
         </table>
       </div>
@@ -88,8 +88,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { banApi, type BanTypeRequest, type BanTypeResponse, type UserBanRequest, type UserBanResponse } from '../services/banApi'
+import {ref, onMounted} from 'vue'
+import {
+  banApi,
+  type BanTypeRequest,
+  type BanTypeResponse,
+  type UserBanRequest,
+  type UserBanResponse
+} from '../services/banApi'
 
 const banTypes = ref<BanTypeResponse[]>([])
 const bannedUsers = ref<UserBanResponse[]>([])
@@ -125,7 +131,7 @@ const loadBannedUsers = async () => {
 const createBanType = async () => {
   try {
     await banApi.createBanType(newBanType.value)
-    newBanType.value = { period: 1, reason: '' }
+    newBanType.value = {period: 1, reason: ''}
     await loadBanTypes()
   } catch (error) {
     console.error('금지 유형 생성 실패:', error)
@@ -134,7 +140,7 @@ const createBanType = async () => {
 
 const editBanType = (banType: BanTypeResponse) => {
   editingBanType.value = banType
-  newBanType.value = { period: banType.period, reason: banType.reason }
+  newBanType.value = {period: banType.period, reason: banType.reason}
   showEditModal.value = true
 }
 
@@ -144,7 +150,7 @@ const updateBanType = async () => {
     await banApi.updateBanType(editingBanType.value.banTypeId, newBanType.value)
     showEditModal.value = false
     editingBanType.value = null
-    newBanType.value = { period: 1, reason: '' }
+    newBanType.value = {period: 1, reason: ''}
     await loadBanTypes()
   } catch (error) {
     console.error('금지 유형 수정 실패:', error)
@@ -154,7 +160,7 @@ const updateBanType = async () => {
 const cancelEdit = () => {
   showEditModal.value = false
   editingBanType.value = null
-  newBanType.value = { period: 1, reason: '' }
+  newBanType.value = {period: 1, reason: ''}
 }
 
 const deleteBanType = async (banTypeId: number) => {
@@ -171,7 +177,7 @@ const deleteBanType = async (banTypeId: number) => {
 const banUser = async () => {
   try {
     await banApi.banUser(newUserBan.value)
-    newUserBan.value = { userId: 0, banTypeId: 0 }
+    newUserBan.value = {userId: 0, banTypeId: 0}
     await loadBannedUsers()
   } catch (error) {
     console.error('사용자 금지 실패:', error)
@@ -188,7 +194,6 @@ const unbanUser = async (userBanId: number) => {
     }
   }
 }
-
 
 
 const formatDate = (dateString: string) => {
@@ -211,7 +216,7 @@ onMounted(() => {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .section h3 {

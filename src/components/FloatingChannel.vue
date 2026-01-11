@@ -120,422 +120,389 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faMessage, faUser } from '@fortawesome/free-regular-svg-icons'
 import { useFloatingPanelsStore } from '../stores/floatingPanels'
-import { mapState } from 'pinia'
+import { useSettingsStore } from '../stores/settings'
 
-export default {
-  name: 'FloatingChannel',
-  components: {
-    FontAwesomeIcon
-  },
-  setup() {
-    return {
-      faMessage,
-      faUser
+const settingsStore = useSettingsStore()
+const floatingPanelsStore = useFloatingPanelsStore()
+
+const messages = ref([])
+const selectedChannel = ref(null)
+const newMessage = ref('')
+const nickname = ref(null)
+const uuid = ref(null) // 현재 사용자 UUID 추가
+const isBanned = ref(false)
+const banInfo = ref(null)
+const channels = ref([])
+const loading = ref(false)
+const hasMoreMessages = ref(true)
+const showNicknameModal = ref(false)
+const newNickname = ref('')
+const isAdmin = ref(false)
+const showBanUserModal = ref(false)
+const selectedMessage = ref(null)
+const banTypes = ref([])
+const banForm = ref({ banTypeId: '' })
+const messagesContainer = ref(null)
+
+const showChannel = computed(() => floatingPanelsStore.activePanel === 'chat')
+
+const groupedMessages = computed(() => {
+  return messages.value.map((msg, index) => {
+    const prevMsg = messages.value[index - 1]
+    const showNickname = !prevMsg || prevMsg.userId !== msg.userId
+    const showDateSeparator = !prevMsg || !isSameDay(prevMsg.createdAt, msg.createdAt)
+    return { ...msg, showNickname, showDateSeparator }
+  })
+})
+const toggleChat = async () => {
+  if (showChannel.value) {
+    floatingPanelsStore.closeAll()
+    unsubscribeFromChat()
+  } else {
+    floatingPanelsStore.openChat()
+    
+    await checkUserBanStatus()
+    
+    if (channels.value.length === 0) {
+      await loadChannels()
     }
-  },
-  data() {
-    return {
-      messages: [],
-      selectedChannel: null,
-      newMessage: '',
-      nickname: null,
-      uuid: localStorage.getItem('uuid'),
-      isBanned: false,
-      banInfo: null,
-      channels: [],
-      loading: false,
-      hasMoreMessages: true,
-      isConnected: false,
-      showNicknameModal: false,
-      newNickname: '',
-      isAdmin: false,
-      showBanUserModal: false,
-      selectedMessage: null,
-      banTypes: [],
-      banForm: {
-        banTypeId: ''
-      }
+    
+    await subscribeToChat()
+    
+    if (messages.value.length === 0) {
+      loadRecentMessages()
+    } else {
+      scrollToBottom()
     }
-  },
-  
-  computed: {
-    ...mapState(useFloatingPanelsStore, ['activePanel']),
-    showChannel() {
-      return this.activePanel === 'chat'
-    },
-    groupedMessages() {
-      return this.messages.map((msg, index) => {
-        const prevMsg = this.messages[index - 1]
-        const showNickname = !prevMsg || prevMsg.userId !== msg.userId
-        const showDateSeparator = !prevMsg || !this.isSameDay(prevMsg.createdAt, msg.createdAt)
-        return { ...msg, showNickname, showDateSeparator }
-      })
-    }
-  },
-  
-  async mounted() {
-    await this.loadUserInfo()
-    this.checkAdminStatus()
-    this.loadBanTypes()
-  },
-  
-  methods: {
-    async toggleChat() {
-      const store = useFloatingPanelsStore()
-      if (this.showChannel) {
-        store.closeAll()
-        this.unsubscribeFromChat()
-      } else {
-        store.openChat()
-        
-        // 채팅창 열 때 필요한 데이터 먼저 로드
-        await this.checkUserBanStatus()
-        
-        if (this.channels.length === 0) {
-          await this.loadChannels()
-        }
-        
-        // 채널이 선택된 후 구독
-        await this.subscribeToChat()
-        
-        if (this.messages.length === 0) {
-          this.loadRecentMessages()
-        } else {
-          this.$nextTick(() => {
-            this.scrollToBottom()
-          })
-        }
-      }
-    },
-    
-    async subscribeToChat() {
-      try {
-        const { websocketService } = await import('../services/websocket')
-        
-        // 콜백을 한 번만 등록하기 위해 기존 콜백 제거
-        websocketService.callbacks?.delete('channel')
-        
-        websocketService.onChat((message) => {
-          this.messages.push({
-            messageId: message.messageId,
-            channelId: message.channelId,
-            userId: message.userId,
-            uuid: message.uuid,
-            nickname: message.nickname,
-            content: message.content,
-            createdAt: new Date(message.createdAt)
-          })
-          
-          this.$nextTick(() => {
-            this.scrollToBottom()
-          })
-        })
-        
-        if (this.selectedChannel) {
-          websocketService.subscribeToChat(this.selectedChannel)
-        }
-      } catch (error) {
-        console.error('채팅 구독 실패:', error)
-      }
-    },
-    
-    unsubscribeFromChat() {
-      import('../services/websocket').then(({ websocketService }) => {
-        websocketService.unsubscribeFromChat()
-      })
-    },
-
-    
-    changeChannel(channelId) {
-      this.selectedChannel = channelId
-      this.messages = []
-      this.hasMoreMessages = true
-      this.loadRecentMessages()
-      
-      import('../services/websocket').then(({ websocketService }) => {
-        websocketService.subscribeToChat(channelId)
-      })
-    },
-    
-    async sendMessage() {
-      if (!this.newMessage.trim() || this.isBanned) return
-      
-      const messageText = this.newMessage
-      this.newMessage = ''
-      
-      try {
-        const { websocketService } = await import('../services/websocket')
-        await websocketService.sendMessage(this.selectedChannel, this.nickname, messageText)
-      } catch (error) {
-        console.error('메시지 전송 실패:', error)
-        this.newMessage = messageText
-      }
-    },
-    
-    async loadRecentMessages() {
-      try {
-        this.loading = true
-        const { apiService } = await import('../services/api')
-        const recentMessages = await apiService.getRecentMessages(this.selectedChannel, 20)
-        
-        this.messages = recentMessages.map(msg => ({
-          messageId: msg.messageId,
-          channelId: msg.channelId,
-          userId: msg.userId,
-          uuid: msg.uuid,
-          nickname: msg.nickname,
-          content: msg.content,
-          createdAt: new Date(msg.createdAt)
-        }))
-        
-        this.hasMoreMessages = recentMessages.length === 20
-        
-        this.$nextTick(() => {
-          this.scrollToBottom()
-        })
-      } catch (error) {
-        console.error('최근 메시지 로드 실패:', error)
-        // 실패 시 임시 데이터
-        this.messages = []
-        this.hasMoreMessages = false
-      } finally {
-        this.loading = false
-      }
-    },
-    
-    scrollToBottom() {
-      const container = this.$refs.messagesContainer
-      if (container) {
-        container.scrollTop = container.scrollHeight
-      }
-    },
-    
-    async loadMoreMessages() {
-      if (!this.hasMoreMessages || this.loading || this.messages.length === 0) return
-      
-      try {
-        this.loading = true
-        const oldestMessage = this.messages[0]
-        const { apiService } = await import('../services/api')
-        const olderMessages = await apiService.getMessagesBefore(this.selectedChannel, oldestMessage.messageId, 20)
-        
-        if (olderMessages.length > 0) {
-          const formattedMessages = olderMessages.map(msg => ({
-            messageId: msg.messageId,
-            channelId: msg.channelId,
-            userId: msg.userId,
-            uuid: msg.uuid,
-            nickname: msg.nickname,
-            content: msg.content,
-            createdAt: new Date(msg.createdAt)
-          }))
-          
-          const container = this.$refs.messagesContainer
-          const scrollHeight = container.scrollHeight
-          
-          this.messages = [...formattedMessages, ...this.messages]
-          
-          this.$nextTick(() => {
-            container.scrollTop = container.scrollHeight - scrollHeight
-          })
-          
-          this.hasMoreMessages = olderMessages.length === 20
-        } else {
-          this.hasMoreMessages = false
-        }
-      } catch (error) {
-        console.error('이전 메시지 로드 실패:', error)
-      } finally {
-        this.loading = false
-      }
-    },
-    
-    handleScroll() {
-      const container = this.$refs.messagesContainer
-      if (container.scrollTop === 0 && this.hasMoreMessages && !this.loading) {
-        this.loadMoreMessages()
-      }
-    },
-    
-
-
-    async loadChannels() {
-      try {
-        const { apiService } = await import('../services/api')
-        const channels = await apiService.getChannels()
-        
-        if (Array.isArray(channels) && channels.length > 0) {
-          this.channels = channels.map(channel => ({
-            id: channel.channelId,
-            name: channel.name
-          }))
-          
-          // "일반" 채팅방 찾기
-          const generalChannel = this.channels.find(channel => channel.name === '일반')
-          if (generalChannel) {
-            this.selectedChannel = generalChannel.id
-            console.log('"일반" 채팅방 선택:', generalChannel.id)
-          } else {
-            // "일반" 채팅방이 없으면 첫 번째 방 선택
-            this.selectedChannel = this.channels[0].id
-            console.log('"일반" 채팅방이 없어서 첫 번째 방 선택:', this.selectedChannel)
-          }
-        }
-      } catch (error) {
-        console.error('채팅방 목록 로드 실패:', error)
-      }
-    },
-    
-    formatTime(timestamp) {
-      return new Date(timestamp).toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    },
-    
-    formatDate(timestamp) {
-      const date = new Date(timestamp)
-      const today = new Date()
-      const yesterday = new Date(today)
-      yesterday.setDate(today.getDate() - 1)
-      
-      if (this.isSameDay(date, today)) {
-        return '오늘'
-      } else if (this.isSameDay(date, yesterday)) {
-        return '어제'
-      } else {
-        const year = date.getFullYear()
-        const month = date.getMonth() + 1
-        const day = date.getDate()
-        const weekdays = ['일', '월', '화', '수', '목', '금', '토']
-        const weekday = weekdays[date.getDay()]
-        return `${year}년 ${month}월 ${day}일(${weekday})`
-      }
-    },
-    
-    isSameDay(date1, date2) {
-      const d1 = new Date(date1)
-      const d2 = new Date(date2)
-      return d1.getFullYear() === d2.getFullYear() &&
-             d1.getMonth() === d2.getMonth() &&
-             d1.getDate() === d2.getDate()
-    },
-    
-    async loadUserInfo() {
-      try {
-        const { apiService } = await import('../services/api')
-        const userInfo = await apiService.getUserInfo()
-        this.nickname = userInfo.nickname
-      } catch (error) {
-        console.error('사용자 정보 로드 실패:', error)
-        this.nickname = `사용자${Math.floor(Math.random() * 1000)}`
-      }
-    },
-    
-    async updateNickname() {
-      if (!this.newNickname.trim()) return
-      
-      try {
-        const { apiService } = await import('../services/api')
-        const updatedUser = await apiService.updateNickname(this.newNickname)
-        this.nickname = updatedUser.nickname
-        this.showNicknameModal = false
-        this.newNickname = ''
-        alert(`닉네임이 '${updatedUser.nickname}'로 변경되었습니다.`)
-      } catch (error) {
-        console.error('닉네임 변경 실패:', error)
-        alert('닉네임 변경에 실패했습니다.')
-      }
-    },
-
-    async checkAdminStatus() {
-      try {
-        const { apiService } = await import('../services/api')
-        this.isAdmin = await apiService.isAdmin()
-        console.log('관리자 상태:', this.isAdmin)
-      } catch (error) {
-        console.error('관리자 권한 체크 실패:', error)
-        this.isAdmin = false
-      }
-    },
-
-    async loadBanTypes() {
-      try {
-        const { banApi } = await import('../services/banApi')
-        this.banTypes = await banApi.getAllBanTypes()
-      } catch (error) {
-        console.error('금지 유형 로드 실패:', error)
-      }
-    },
-
-    showBanModal(message) {
-      this.selectedMessage = message
-      this.showBanUserModal = true
-    },
-
-    closeBanModal() {
-      this.showBanUserModal = false
-      this.selectedMessage = null
-      this.banForm = { banTypeId: '' }
-    },
-
-    async banUser() {
-      if (!this.banForm.banTypeId) {
-        alert('금지 유형을 선택해주세요.')
-        return
-      }
-
-      try {
-        const { banApi } = await import('../services/banApi')
-        // UUID로 userId를 찾아야 함 (임시로 1로 설정)
-        await banApi.banUser({
-          userId: 1, // 실제로는 message.uuid로 userId를 찾아야 함
-          banTypeId: this.banForm.banTypeId
-        })
-
-        alert('사용자가 금지되었습니다.')
-        this.closeBanModal()
-      } catch (error) {
-        console.error('사용자 금지 실패:', error)
-        alert('사용자 금지에 실패했습니다.')
-      }
-    },
-
-    formatDuration(days) {
-      return `${days}일`
-    },
-
-    async checkUserBanStatus() {
-      try {
-        const { banApi } = await import('../services/banApi')
-        const banInfo = await banApi.getActiveBan()
-        
-        if (banInfo && this.isActiveBan(banInfo)) {
-          this.isBanned = true
-          this.banInfo = banInfo
-        } else {
-          this.isBanned = false
-          this.banInfo = null
-        }
-      } catch (error) {
-        console.error('금지 상태 확인 실패:', error)
-      }
-    },
-
-    isActiveBan(banInfo) {
-      if (!banInfo) return false
-      const now = new Date()
-      const endTime = new Date(banInfo.endTime)
-      return now < endTime
-    },
-
-
   }
 }
+
+const subscribeToChat = async () => {
+  try {
+    const { websocketService } = await import('../services/websocket')
+    
+    websocketService.callbacks?.delete('channel')
+    
+    websocketService.onChat((message) => {
+      messages.value.push({
+        messageId: message.messageId,
+        channelId: message.channelId,
+        userId: message.userId,
+        uuid: message.uuid,
+        nickname: message.nickname,
+        content: message.content,
+        createdAt: new Date(message.createdAt)
+      })
+      
+      nextTick(() => {
+        scrollToBottom()
+      })
+    })
+    
+    if (selectedChannel.value) {
+      websocketService.subscribeToChat(selectedChannel.value)
+    }
+  } catch (error) {
+    console.error('채팅 구독 실패:', error)
+  }
+}
+
+const unsubscribeFromChat = () => {
+  import('../services/websocket').then(({ websocketService }) => {
+    websocketService.unsubscribeFromChat()
+  })
+}
+
+const changeChannel = (channelId) => {
+  selectedChannel.value = channelId
+  messages.value = []
+  hasMoreMessages.value = true
+  loadRecentMessages()
+  
+  import('../services/websocket').then(({ websocketService }) => {
+    websocketService.subscribeToChat(channelId)
+  })
+}
+
+const sendMessage = async () => {
+  if (!newMessage.value.trim() || isBanned.value) return
+  
+  const messageText = newMessage.value
+  newMessage.value = ''
+  
+  try {
+    const { websocketService } = await import('../services/websocket')
+    await websocketService.sendMessage(selectedChannel.value, nickname.value, messageText)
+  } catch (error) {
+    console.error('메시지 전송 실패:', error)
+    newMessage.value = messageText
+  }
+}
+
+const loadRecentMessages = async () => {
+  try {
+    loading.value = true
+    const { apiService } = await import('../services/api')
+    const recentMessages = await apiService.getRecentMessages(selectedChannel.value, 20)
+    
+    messages.value = recentMessages.map(msg => ({
+      messageId: msg.messageId,
+      channelId: msg.channelId,
+      userId: msg.userId,
+      uuid: msg.uuid,
+      nickname: msg.nickname,
+      content: msg.content,
+      createdAt: new Date(msg.createdAt)
+    }))
+    
+    hasMoreMessages.value = recentMessages.length === 20
+    
+    nextTick(() => {
+      scrollToBottom()
+    })
+  } catch (error) {
+    console.error('최근 메시지 로드 실패:', error)
+    messages.value = []
+    hasMoreMessages.value = false
+  } finally {
+    loading.value = false
+  }
+}
+
+const scrollToBottom = () => {
+  const container = messagesContainer.value
+  if (container) {
+    container.scrollTop = container.scrollHeight
+  }
+}
+
+const loadMoreMessages = async () => {
+  if (!hasMoreMessages.value || loading.value || messages.value.length === 0) return
+  
+  try {
+    loading.value = true
+    const oldestMessage = messages.value[0]
+    const { apiService } = await import('../services/api')
+    const olderMessages = await apiService.getMessagesBefore(selectedChannel.value, oldestMessage.messageId, 20)
+    
+    if (olderMessages.length > 0) {
+      const formattedMessages = olderMessages.map(msg => ({
+        messageId: msg.messageId,
+        channelId: msg.channelId,
+        userId: msg.userId,
+        uuid: msg.uuid,
+        nickname: msg.nickname,
+        content: msg.content,
+        createdAt: new Date(msg.createdAt)
+      }))
+      
+      const container = messagesContainer.value
+      const scrollHeight = container.scrollHeight
+      
+      messages.value = [...formattedMessages, ...messages.value]
+      
+      nextTick(() => {
+        container.scrollTop = container.scrollHeight - scrollHeight
+      })
+      
+      hasMoreMessages.value = olderMessages.length === 20
+    } else {
+      hasMoreMessages.value = false
+    }
+  } catch (error) {
+    console.error('이전 메시지 로드 실패:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleScroll = () => {
+  const container = messagesContainer.value
+  if (container.scrollTop === 0 && hasMoreMessages.value && !loading.value) {
+    loadMoreMessages()
+  }
+}
+
+const loadChannels = async () => {
+  try {
+    const { apiService } = await import('../services/api')
+    const channelList = await apiService.getChannels()
+    
+    if (Array.isArray(channelList) && channelList.length > 0) {
+      channels.value = channelList.map(channel => ({
+        id: channel.channelId,
+        name: channel.name
+      }))
+      
+      const generalChannel = channels.value.find(channel => channel.name === '일반')
+      if (generalChannel) {
+        selectedChannel.value = generalChannel.id
+        console.log('"일반" 채팅방 선택:', generalChannel.id)
+      } else {
+        selectedChannel.value = channels.value[0].id
+        console.log('"일반" 채팅방이 없어서 첫 번째 방 선택:', selectedChannel.value)
+      }
+    }
+  } catch (error) {
+    console.error('채팅방 목록 로드 실패:', error)
+  }
+}
+
+const formatTime = (timestamp) => {
+  return new Date(timestamp).toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const formatDate = (timestamp) => {
+  const date = new Date(timestamp)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+  
+  if (isSameDay(date, today)) {
+    return '오늘'
+  } else if (isSameDay(date, yesterday)) {
+    return '어제'
+  } else {
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토']
+    const weekday = weekdays[date.getDay()]
+    return `${year}년 ${month}월 ${day}일(${weekday})`
+  }
+}
+
+const isSameDay = (date1, date2) => {
+  const d1 = new Date(date1)
+  const d2 = new Date(date2)
+  return d1.getFullYear() === d2.getFullYear() &&
+         d1.getMonth() === d2.getMonth() &&
+         d1.getDate() === d2.getDate()
+}
+
+const loadUserInfo = async () => {
+  try {
+    const { apiService } = await import('../services/api')
+    const userInfo = await apiService.getUserInfo()
+    nickname.value = userInfo.nickname
+    uuid.value = userInfo.uuid // UUID 저장
+  } catch (error) {
+    console.error('사용자 정보 로드 실패:', error)
+    nickname.value = `사용자${Math.floor(Math.random() * 1000)}`
+    // UUID가 없으면 임시 UUID 생성
+    uuid.value = 'temp-' + Math.random().toString(36).substr(2, 9)
+  }
+}
+
+const updateNickname = async () => {
+  if (!newNickname.value.trim()) return
+  
+  try {
+    const { apiService } = await import('../services/api')
+    const updatedUser = await apiService.updateNickname(newNickname.value)
+    nickname.value = updatedUser.nickname
+    showNicknameModal.value = false
+    newNickname.value = ''
+    alert(`닉네임이 '${updatedUser.nickname}'로 변경되었습니다.`)
+  } catch (error) {
+    console.error('닉네임 변경 실패:', error)
+    alert('닉네임 변경에 실패했습니다.')
+  }
+}
+
+const checkAdminStatus = async () => {
+  try {
+    const { apiService } = await import('../services/api')
+    isAdmin.value = await apiService.isAdmin()
+    console.log('관리자 상태:', isAdmin.value)
+  } catch (error) {
+    console.error('관리자 권한 체크 실패:', error)
+    isAdmin.value = false
+  }
+}
+
+const loadBanTypes = async () => {
+  try {
+    const { banApi } = await import('../services/banApi')
+    banTypes.value = await banApi.getAllBanTypes()
+  } catch (error) {
+    console.error('금지 유형 로드 실패:', error)
+  }
+}
+
+const showBanModal = (message) => {
+  selectedMessage.value = message
+  showBanUserModal.value = true
+}
+
+const closeBanModal = () => {
+  showBanUserModal.value = false
+  selectedMessage.value = null
+  banForm.value = { banTypeId: '' }
+}
+
+const banUser = async () => {
+  if (!banForm.value.banTypeId) {
+    alert('금지 유형을 선택해주세요.')
+    return
+  }
+
+  try {
+    const { banApi } = await import('../services/banApi')
+    await banApi.banUser({
+      userId: 1,
+      banTypeId: banForm.value.banTypeId
+    })
+
+    alert('사용자가 금지되었습니다.')
+    closeBanModal()
+  } catch (error) {
+    console.error('사용자 금지 실패:', error)
+    alert('사용자 금지에 실패했습니다.')
+  }
+}
+
+const formatDuration = (days) => {
+  return `${days}일`
+}
+
+const checkUserBanStatus = async () => {
+  try {
+    const { banApi } = await import('../services/banApi')
+    const banInfoData = await banApi.getActiveBan()
+    
+    if (banInfoData && isActiveBan(banInfoData)) {
+      isBanned.value = true
+      banInfo.value = banInfoData
+    } else {
+      isBanned.value = false
+      banInfo.value = null
+    }
+  } catch (error) {
+    console.error('금지 상태 확인 실패:', error)
+  }
+}
+
+const isActiveBan = (banInfoData) => {
+  if (!banInfoData) return false
+  const now = new Date()
+  const endTime = new Date(banInfoData.endTime)
+  return now < endTime
+}
+
+onMounted(() => {
+  loadUserInfo()
+  checkAdminStatus()
+  loadBanTypes()
+})
 </script>
 
 <style scoped>

@@ -1,8 +1,8 @@
 <template>
   <div>
     <!-- 즐겨찾기 토글 버튼 -->
-    <button 
-      @click="toggleFavorites" 
+    <button
+      @click="toggleFavorites"
       class="favorites-toggle-btn"
       :class="{ active: showFavorites }"
     >
@@ -33,58 +33,44 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faStar } from '@fortawesome/free-regular-svg-icons'
 import { useFloatingPanelsStore } from '../stores/floatingPanels'
-import { mapState } from 'pinia'
 
-export default {
-  name: 'FloatingFavorites',
-  components: {
-    FontAwesomeIcon
-  },
-  props: {
-    favoriteCoins: {
-      type: Array,
-      default: () => []
-    }
-  },
-  setup() {
-    return {
-      faStar
-    }
-  },
-  computed: {
-    ...mapState(useFloatingPanelsStore, ['activePanel']),
-    showFavorites() {
-      return this.activePanel === 'favorites'
-    }
-  },
-  
-  methods: {
-    toggleFavorites() {
-      const store = useFloatingPanelsStore()
-      if (this.showFavorites) {
-        store.closeAll()
-      } else {
-        store.openFavorites()
-      }
-    },
+const props = defineProps({
+  favoriteCoins: {
+    type: Array,
+    default: () => []
+  }
+})
 
-    openChart(coin) {
-      this.$emit('open-chart', coin.coinTicker, '5m', coin.exchangeType)
-    },
+const emit = defineEmits(['open-chart', 'favorite-removed'])
 
-    async removeFavorite(exchangeCoinId) {
-      try {
-        const { favoriteApi } = await import('../services/favoriteApi')
-        await favoriteApi.toggleFavoriteCoin(exchangeCoinId)
-        this.$emit('favorite-removed', exchangeCoinId)
-      } catch (error) {
-        console.error('즐겨찾기 제거 실패:', error)
-      }
-    }
+const floatingPanelsStore = useFloatingPanelsStore()
+
+const showFavorites = computed(() => floatingPanelsStore.activePanel === 'favorites')
+
+const toggleFavorites = () => {
+  if (showFavorites.value) {
+    floatingPanelsStore.closeAll()
+  } else {
+    floatingPanelsStore.openFavorites()
+  }
+}
+
+const openChart = (coin) => {
+  emit('open-chart', coin.coinTicker, '5m', coin.exchangeType)
+}
+
+const removeFavorite = async (exchangeCoinId) => {
+  try {
+    const { favoriteApi } = await import('../services/favoriteApi')
+    await favoriteApi.toggleFavoriteCoin(exchangeCoinId)
+    emit('favorite-removed', exchangeCoinId)
+  } catch (error) {
+    console.error('즐겨찾기 제거 실패:', error)
   }
 }
 </script>
@@ -258,7 +244,7 @@ export default {
   .favorites-toggle-btn {
     right: 90px;
   }
-  
+
   .floating-favorites {
     width: calc(100vw - 40px);
     right: 20px;

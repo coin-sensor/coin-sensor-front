@@ -13,146 +13,142 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'MiniChart',
-  data() {
-    return {
-      symbols: [
-        { name: '김치프리미엄', symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100' },
-        { name: '전체 시가총액', symbol: 'CRYPTOCAP:TOTAL' },
-        { name: 'BTC 도미넌스', symbol: 'CRYPTOCAP:BTC.D' },
-        { name: 'USDT 도미넌스', symbol: 'CRYPTOCAP:USDT.D' },
-        { name: '나스닥', symbol: 'NASDAQ:NDX' },
-        { name: '금 가격', symbol: 'OANDA:XAUUSD' },
-        { name: '바이낸스 BTCUSDT', symbol: 'BINANCE:BTCUSDT' },
-        { name: '바이낸스 ETHUSDT', symbol: 'BINANCE:ETHUSDT' }
-      ]
-    }
-  },
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useSettingsStore } from '../stores/settings'
 
-  mounted() {
-    this.initWidgets()
-    window.addEventListener('theme-changed', this.handleThemeChange)
-  },
+const settingsStore = useSettingsStore()
 
-  beforeUnmount() {
-    window.removeEventListener('theme-changed', this.handleThemeChange)
-  },
+const symbols = ref([
+  { name: '김치프리미엄', symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100' },
+  { name: '전체 시가총액', symbol: 'CRYPTOCAP:TOTAL' },
+  { name: 'BTC 도미넌스', symbol: 'CRYPTOCAP:BTC.D' },
+  { name: 'USDT 도미넌스', symbol: 'CRYPTOCAP:USDT.D' },
+  { name: '나스닥', symbol: 'NASDAQ:NDX' },
+  { name: '금 가격', symbol: 'OANDA:XAUUSD' },
+  { name: '바이낸스 BTCUSDT', symbol: 'BINANCE:BTCUSDT' },
+  { name: '바이낸스 ETHUSDT', symbol: 'BINANCE:ETHUSDT' }
+])
 
-  methods: {
-    initWidgets() {
-      setTimeout(() => {
-        this.symbols.forEach((symbol, index) => {
-          this.createChart(symbol, index)
-        })
-      }, 100)
-    },
-
-    createChart(symbolData, index) {
-      const isDarkMode = document.documentElement.classList.contains('dark-mode') || localStorage.getItem('darkMode') === 'true'
-      const theme = isDarkMode ? 'dark' : 'light'
-      const backgroundColor = isDarkMode ? '#1e293b' : '#ffffff'
-
-      const container = document.getElementById(`chart_${index}`)
-      if (!container) return
-      
-      container.innerHTML = ''
-      
-      // Technical Analysis 위젯인 경우
-      if (symbolData.type === 'technical') {
-        this.createTechnicalAnalysisWidget(container, theme)
-        return
-      }
-      
-      // 일반 차트 위젯
-      const widgetContainer = document.createElement('div')
-      widgetContainer.className = 'tradingview-widget-container'
-      widgetContainer.style.height = '100%'
-      widgetContainer.style.width = '100%'
-      
-      const widgetDiv = document.createElement('div')
-      widgetDiv.className = 'tradingview-widget-container__widget'
-      widgetDiv.style.height = 'calc(100% - 32px)'
-      widgetDiv.style.width = '100%'
-      
-      const copyrightDiv = document.createElement('div')
-      copyrightDiv.className = 'tradingview-widget-copyright'
-      copyrightDiv.innerHTML = '<a href="https://kr.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a>'
-      
-      const script = document.createElement('script')
-      script.type = 'text/javascript'
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
-      script.async = true
-      
-      const isKimchiPremium = symbolData.name === '김치프리미엄'
-      
-      script.innerHTML = JSON.stringify({
-        allow_symbol_change: true,
-        calendar: false,
-        details: false,
-        hide_side_toolbar: true,
-        hide_top_toolbar: true,
-        hide_legend: false,
-        hide_volume: true,
-        hotlist: false,
-        interval: 'D',
-        locale: 'en',
-        style: '3',
-        symbol: symbolData.symbol,
-        theme: theme,
-        timezone: 'Asia/Seoul',
-        backgroundColor: backgroundColor,
-        gridColor: 'rgba(242, 242, 242, 0.06)',
-        watchlist: [],
-        withdateranges: true,
-        range: isKimchiPremium ? '12M' : '1D',
-        compareSymbols: [],
-        studies: [],
-        autosize: true
-      })
-      
-      widgetContainer.appendChild(widgetDiv)
-      widgetContainer.appendChild(copyrightDiv)
-      widgetContainer.appendChild(script)
-      container.appendChild(widgetContainer)
-    },
-
-    createTechnicalAnalysisWidget(container, theme) {
-      const script = document.createElement('script')
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js'
-      script.async = true
-      script.innerHTML = JSON.stringify({
-        colorTheme: theme,
-        displayMode: 'single',
-        isTransparent: false,
-        locale: 'en',
-        interval: '5m',
-        disableInterval: false,
-        width: '100%',
-        height: 250,
-        symbol: 'BITSTAMP:BTCUSD',
-        showIntervalTabs: true
-      })
-      container.appendChild(script)
-    },
-
-    handleThemeChange(event) {
-      this.reloadWidgets()
-    },
-
-    reloadWidgets() {
-      this.symbols.forEach((symbol, index) => {
-        const container = document.getElementById(`chart_${index}`)
-        if (container) container.innerHTML = ''
-      })
-      
-      setTimeout(() => {
-        this.initWidgets()
-      }, 100)
-    }
-  }
+const initWidgets = () => {
+  setTimeout(() => {
+    symbols.value.forEach((symbol, index) => {
+      createChart(symbol, index)
+    })
+  }, 100)
 }
+
+const createChart = (symbolData, index) => {
+  const isDarkMode = settingsStore.isDarkMode
+  const theme = isDarkMode ? 'dark' : 'light'
+  const backgroundColor = isDarkMode ? '#1e293b' : '#ffffff'
+
+  const container = document.getElementById(`chart_${index}`)
+  if (!container) return
+  
+  container.innerHTML = ''
+  
+  // Technical Analysis 위젯인 경우
+  if (symbolData.type === 'technical') {
+    createTechnicalAnalysisWidget(container, theme)
+    return
+  }
+  
+  // 일반 차트 위젯
+  const widgetContainer = document.createElement('div')
+  widgetContainer.className = 'tradingview-widget-container'
+  widgetContainer.style.height = '100%'
+  widgetContainer.style.width = '100%'
+  
+  const widgetDiv = document.createElement('div')
+  widgetDiv.className = 'tradingview-widget-container__widget'
+  widgetDiv.style.height = 'calc(100% - 32px)'
+  widgetDiv.style.width = '100%'
+  
+  const copyrightDiv = document.createElement('div')
+  copyrightDiv.className = 'tradingview-widget-copyright'
+  copyrightDiv.innerHTML = '<a href="https://kr.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a>'
+  
+  const script = document.createElement('script')
+  script.type = 'text/javascript'
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js'
+  script.async = true
+  
+  const isKimchiPremium = symbolData.name === '김치프리미엄'
+  
+  script.innerHTML = JSON.stringify({
+    allow_symbol_change: true,
+    calendar: false,
+    details: false,
+    hide_side_toolbar: true,
+    hide_top_toolbar: true,
+    hide_legend: false,
+    hide_volume: true,
+    hotlist: false,
+    interval: 'D',
+    locale: 'en',
+    style: '3',
+    symbol: symbolData.symbol,
+    theme: theme,
+    timezone: 'Asia/Seoul',
+    backgroundColor: backgroundColor,
+    gridColor: 'rgba(242, 242, 242, 0.06)',
+    watchlist: [],
+    withdateranges: true,
+    range: isKimchiPremium ? '12M' : '1D',
+    compareSymbols: [],
+    studies: [],
+    autosize: true
+  })
+  
+  widgetContainer.appendChild(widgetDiv)
+  widgetContainer.appendChild(copyrightDiv)
+  widgetContainer.appendChild(script)
+  container.appendChild(widgetContainer)
+}
+
+const createTechnicalAnalysisWidget = (container, theme) => {
+  const script = document.createElement('script')
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js'
+  script.async = true
+  script.innerHTML = JSON.stringify({
+    colorTheme: theme,
+    displayMode: 'single',
+    isTransparent: false,
+    locale: 'en',
+    interval: '5m',
+    disableInterval: false,
+    width: '100%',
+    height: 250,
+    symbol: 'BITSTAMP:BTCUSD',
+    showIntervalTabs: true
+  })
+  container.appendChild(script)
+}
+
+const handleThemeChange = () => {
+  reloadWidgets()
+}
+
+const reloadWidgets = () => {
+  symbols.value.forEach((symbol, index) => {
+    const container = document.getElementById(`chart_${index}`)
+    if (container) container.innerHTML = ''
+  })
+  
+  setTimeout(() => {
+    initWidgets()
+  }, 100)
+}
+
+onMounted(() => {
+  initWidgets()
+  window.addEventListener('theme-changed', handleThemeChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('theme-changed', handleThemeChange)
+})
 </script>
 
 <style scoped>

@@ -17,17 +17,9 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import AdminSidebar from '../components/AdminSidebar.vue'
 import BanManagement from '../components/BanManagement.vue'
-
-export default {
-  name: 'UserManagement',
-  components: {
-    AdminSidebar,
-    BanManagement
-  }
-}
 </script>
 
 <style scoped>

@@ -72,6 +72,7 @@ import { api } from '../services/api'
 import { Chart, registerables } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 import InsightSidebar from '../components/InsightSidebar.vue'
+import { useSettingsStore } from '../stores/settings'
 
 Chart.register(...registerables)
 
@@ -83,6 +84,7 @@ interface CoinData {
 }
 
 const router = useRouter()
+const settingsStore = useSettingsStore()
 const selectedPeriod = ref('1')
 const coinsData = ref<CoinData[]>([])
 const totalViews = ref(0)
@@ -174,7 +176,7 @@ const createTrendChart = (trendData: any[]) => {
   const ctx = trendChart.value.getContext('2d')
   if (!ctx) return
   
-  const isDarkMode = localStorage.getItem('darkMode') === 'true'
+  const isDarkMode = settingsStore.isDarkMode
   
   const datasets = trendData.map((coin, index) => ({
     label: coin.baseAsset,

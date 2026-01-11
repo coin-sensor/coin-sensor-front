@@ -5,78 +5,70 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'KimchiPremiumMiniChart',
-  data() {
-    return {
-      isDarkMode: localStorage.getItem('darkMode') === 'true',
-      widgets: []
-    }
-  },
+<script setup>
+import { onMounted, onBeforeUnmount } from 'vue'
+import { useSettingsStore } from '../stores/settings'
 
-  mounted() {
-    this.initWidgets()
-    window.addEventListener('theme-changed', this.handleThemeChange)
-  },
+const settingsStore = useSettingsStore()
 
-  beforeUnmount() {
-    window.removeEventListener('theme-changed', this.handleThemeChange)
-  },
-
-  methods: {
-    initWidgets() {
-      setTimeout(() => {
-        this.createKimchiChart()
-      }, 100)
-    },
-
-    createKimchiChart() {
-      const container = document.getElementById('kimchi_premium_mini_chart')
-      if (!container) return
-      
-      container.innerHTML = ''
-      
-      const widgetContainer = document.createElement('div')
-      widgetContainer.className = 'tradingview-widget-container'
-      
-      const widgetDiv = document.createElement('div')
-      widgetDiv.className = 'tradingview-widget-container__widget'
-      
-      const script = document.createElement('script')
-      script.type = 'text/javascript'
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js'
-      script.async = true
-      script.innerHTML = JSON.stringify({
-        symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100',
-        chartOnly: false,
-        dateRange: '12M',
-        noTimeScale: false,
-        colorTheme: this.isDarkMode ? 'dark' : 'light',
-        isTransparent: false,
-        locale: 'kr',
-        width: '100%',
-        autosize: true,
-        height: '300'
-      })
-      
-      widgetContainer.appendChild(widgetDiv)
-      widgetContainer.appendChild(script)
-      container.appendChild(widgetContainer)
-    },
-
-    handleThemeChange(event) {
-      this.isDarkMode = event.detail.isDarkMode
-      this.reloadWidgets()
-    },
-
-    reloadWidgets() {
-      setTimeout(() => {
-        this.initWidgets()
-      }, 100)
-    }
-  }
+const initWidgets = () => {
+  setTimeout(() => {
+    createKimchiChart()
+  }, 100)
 }
+
+const createKimchiChart = () => {
+  const container = document.getElementById('kimchi_premium_mini_chart')
+  if (!container) return
+  
+  container.innerHTML = ''
+  
+  const widgetContainer = document.createElement('div')
+  widgetContainer.className = 'tradingview-widget-container'
+  
+  const widgetDiv = document.createElement('div')
+  widgetDiv.className = 'tradingview-widget-container__widget'
+  
+  const script = document.createElement('script')
+  script.type = 'text/javascript'
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js'
+  script.async = true
+  script.innerHTML = JSON.stringify({
+    symbol: '(BINANCE:BTCUSD/BINANCE:BTCUSD*UPBIT:BTCKRW-BINANCE:BTCUSDT*FX_IDC:USDKRW)/(BINANCE:BTCUSD*FX_IDC:USDKRW)*100',
+    chartOnly: false,
+    dateRange: '12M',
+    noTimeScale: false,
+    colorTheme: settingsStore.isDarkMode ? 'dark' : 'light',
+    isTransparent: false,
+    locale: 'kr',
+    width: '100%',
+    autosize: true,
+    height: '300'
+  })
+  
+  widgetContainer.appendChild(widgetDiv)
+  widgetContainer.appendChild(script)
+  container.appendChild(widgetContainer)
+}
+
+const handleThemeChange = () => {
+  reloadWidgets()
+}
+
+const reloadWidgets = () => {
+  setTimeout(() => {
+    initWidgets()
+  }, 100)
+}
+
+onMounted(() => {
+  initWidgets()
+  window.addEventListener('theme-changed', handleThemeChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('theme-changed', handleThemeChange)
+})
 </script>
 
 <style scoped>

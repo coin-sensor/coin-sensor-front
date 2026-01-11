@@ -149,131 +149,119 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
 import AdminSidebar from '../components/AdminSidebar.vue'
 import { api } from '../services/api'
 
-export default {
-  name: 'ExchangeCoinManagement',
-  components: {
-    AdminSidebar
-  },
-  data() {
-    return {
-      coins: [],
-      filteredCoins: [],
-      selectedExchange: '',
-      selectedType: '',
-      searchQuery: '',
-      currentPage: 1,
-      coinsPerPage: 20,
-      sortField: '',
-      sortOrder: 'asc'
-    }
-  },
+const coins = ref([])
+const filteredCoins = ref([])
+const selectedExchange = ref('')
+const selectedType = ref('')
+const searchQuery = ref('')
+const currentPage = ref(1)
+const coinsPerPage = 20
+const sortField = ref('')
+const sortOrder = ref('asc')
 
-  computed: {
-    totalPages() {
-      return Math.ceil(this.filteredCoins.length / this.coinsPerPage)
-    },
-    paginatedCoins() {
-      const start = (this.currentPage - 1) * this.coinsPerPage
-      const end = start + this.coinsPerPage
-      return this.filteredCoins.slice(start, end)
-    }
-  },
+const totalPages = computed(() => {
+  return Math.ceil(filteredCoins.value.length / coinsPerPage)
+})
 
-  mounted() {
-    this.loadCoins()
-  },
+const paginatedCoins = computed(() => {
+  const start = (currentPage.value - 1) * coinsPerPage
+  const end = start + coinsPerPage
+  return filteredCoins.value.slice(start, end)
+})
 
-  methods: {
-    async loadCoins() {
-      try {
-        const response = await api.get('/exchangeCoins')
-        this.coins = response.data
-        this.filterCoins()
-      } catch (error) {
-        console.error('거래소코인 목록 로드 실패:', error)
-        alert('거래소코인 목록을 불러오는데 실패했습니다.')
-      }
-    },
-
-    filterCoins() {
-      let filtered = this.coins.filter(coin => {
-        const exchangeMatch = !this.selectedExchange || 
-          coin.exchangeName.toLowerCase().includes(this.selectedExchange.toLowerCase())
-        const typeMatch = !this.selectedType || coin.exchangeType === this.selectedType
-        const searchMatch = !this.searchQuery || 
-          coin.coinTicker.toLowerCase().includes(this.searchQuery.toLowerCase())
-        
-        return exchangeMatch && typeMatch && searchMatch
-      })
-      
-      if (this.sortField) {
-        filtered.sort((a, b) => {
-          let aVal = a[this.sortField]
-          let bVal = b[this.sortField]
-          
-          if (typeof aVal === 'boolean') {
-            aVal = aVal ? 1 : 0
-            bVal = bVal ? 1 : 0
-          } else if (typeof aVal === 'string') {
-            aVal = aVal.toLowerCase()
-            bVal = bVal.toLowerCase()
-          }
-          
-          if (this.sortOrder === 'asc') {
-            return aVal > bVal ? 1 : -1
-          } else {
-            return aVal < bVal ? 1 : -1
-          }
-        })
-      }
-      
-      this.filteredCoins = filtered
-      this.currentPage = 1
-    },
-
-    sort(field) {
-      if (this.sortField === field) {
-        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc'
-      } else {
-        this.sortField = field
-        this.sortOrder = 'asc'
-      }
-      this.filterCoins()
-    },
-
-    getSortClass(field) {
-      if (this.sortField !== field) return ''
-      return this.sortOrder === 'asc' ? 'asc' : 'desc'
-    },
-
-    async toggleDetection(coin) {
-      try {
-        await api.put(`/exchangeCoins/${coin.exchangeCoinId}/detection/toggle`)
-        coin.enableDetection = !coin.enableDetection
-        alert(`${coin.coinTicker} 탐지가 ${coin.enableDetection ? '활성화' : '비활성화'}되었습니다.`)
-      } catch (error) {
-        console.error('탐지 상태 변경 실패:', error)
-        alert('탐지 상태 변경에 실패했습니다.')
-      }
-    }
-  },
-
-  watch: {
-    selectedExchange() {
-      this.filterCoins()
-    },
-    selectedType() {
-      this.filterCoins()
-    },
-    searchQuery() {
-      this.filterCoins()
-    }
+const loadCoins = async () => {
+  try {
+    const response = await api.get('/exchangeCoins')
+    coins.value = response.data
+    filterCoins()
+  } catch (error) {
+    console.error('거래소코인 목록 로드 실패:', error)
+    alert('거래소코인 목록을 불러오는데 실패했습니다.')
   }
 }
+
+const filterCoins = () => {
+  let filtered = coins.value.filter(coin => {
+    const exchangeMatch = !selectedExchange.value || 
+      coin.exchangeName.toLowerCase().includes(selectedExchange.value.toLowerCase())
+    const typeMatch = !selectedType.value || coin.exchangeType === selectedType.value
+    const searchMatch = !searchQuery.value || 
+      coin.coinTicker.toLowerCase().includes(searchQuery.value.toLowerCase())
+    
+    return exchangeMatch && typeMatch && searchMatch
+  })
+  
+  if (sortField.value) {
+    filtered.sort((a, b) => {
+      let aVal = a[sortField.value]
+      let bVal = b[sortField.value]
+      
+      if (typeof aVal === 'boolean') {
+        aVal = aVal ? 1 : 0
+        bVal = bVal ? 1 : 0
+      } else if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase()
+        bVal = bVal.toLowerCase()
+      }
+      
+      if (sortOrder.value === 'asc') {
+        return aVal > bVal ? 1 : -1
+      } else {
+        return aVal < bVal ? 1 : -1
+      }
+    })
+  }
+  
+  filteredCoins.value = filtered
+  currentPage.value = 1
+}
+
+const sort = (field) => {
+  if (sortField.value === field) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortField.value = field
+    sortOrder.value = 'asc'
+  }
+  filterCoins()
+}
+
+const getSortClass = (field) => {
+  if (sortField.value !== field) return ''
+  return sortOrder.value === 'asc' ? 'asc' : 'desc'
+}
+
+const toggleDetection = async (coin) => {
+  try {
+    await api.put(`/exchangeCoins/${coin.exchangeCoinId}/detection/toggle`)
+    coin.enableDetection = !coin.enableDetection
+    alert(`${coin.coinTicker} 탐지가 ${coin.enableDetection ? '활성화' : '비활성화'}되었습니다.`)
+  } catch (error) {
+    console.error('탐지 상태 변경 실패:', error)
+    alert('탐지 상태 변경에 실패했습니다.')
+  }
+}
+
+watch(selectedExchange, () => {
+  filterCoins()
+})
+
+watch(selectedType, () => {
+  filterCoins()
+})
+
+watch(searchQuery, () => {
+  filterCoins()
+})
+
+onMounted(() => {
+  loadCoins()
+})
 </script>
 
 <style scoped>

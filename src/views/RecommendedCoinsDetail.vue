@@ -129,6 +129,7 @@ import { reactionApi } from '../services/reactionApi'
 import { Chart, registerables } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 import InsightSidebar from '../components/InsightSidebar.vue'
+import { useSettingsStore } from '../stores/settings'
 
 Chart.register(...registerables)
 
@@ -139,6 +140,7 @@ interface CoinReaction {
 }
 
 const selectedPeriod = ref('1')
+const settingsStore = useSettingsStore()
 const topLikedCoins = ref<CoinReaction[]>([])
 const topDislikedCoins = ref<CoinReaction[]>([])
 const totalLiked = ref(0)
@@ -206,7 +208,7 @@ const createReactionChart = () => {
   const ctx = reactionChart.value.getContext('2d')
   if (!ctx) return
   
-  const isDarkMode = localStorage.getItem('darkMode') === 'true'
+  const isDarkMode = settingsStore.isDarkMode
   
   const labels = []
   const data = []
@@ -363,7 +365,7 @@ const createLikedTrendChart = (trendData: any[]) => {
   const ctx = likedTrendChart.value.getContext('2d')
   if (!ctx) return
   
-  const isDarkMode = localStorage.getItem('darkMode') === 'true'
+  const isDarkMode = settingsStore.isDarkMode
   
   const datasets = trendData.map((coin, index) => ({
     label: coin.baseAsset,
@@ -451,7 +453,7 @@ const createDislikedTrendChart = (trendData: any[]) => {
   const ctx = dislikedTrendChart.value.getContext('2d')
   if (!ctx) return
   
-  const isDarkMode = localStorage.getItem('darkMode') === 'true'
+  const isDarkMode = settingsStore.isDarkMode
   
   const datasets = trendData.map((coin, index) => ({
     label: coin.baseAsset,

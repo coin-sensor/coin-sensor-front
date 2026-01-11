@@ -50,13 +50,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useSettingsStore } from '../stores/settings'
 
 const symbolInput = ref('BTCUSD')
-const isDarkMode = ref(localStorage.getItem('darkMode') === 'true')
+const settingsStore = useSettingsStore()
 
 // 다크모드 변경 감지
 window.addEventListener('theme-changed', (event: any) => {
-  isDarkMode.value = event.detail.isDarkMode
   setTimeout(() => {
     initTradingViewWidgets()
   }, 100)
@@ -95,7 +95,7 @@ const createEconomicCalendarWidget = () => {
   const container = document.getElementById('economic-calendar-widget')
   if (!container) return
   
-  const theme = isDarkMode.value ? 'dark' : 'light'
+  const theme = settingsStore.isDarkMode ? 'dark' : 'light'
   
   container.innerHTML = `
     <div class="tradingview-widget-container">
@@ -129,7 +129,7 @@ const createEconomicCalendarWidget = () => {
 const initTradingViewWidgets = () => {
   console.log('TradingView 위젯 초기화')
   
-  const theme = isDarkMode.value ? 'dark' : 'light'
+  const theme = settingsStore.isDarkMode ? 'dark' : 'light'
   
   // DOM이 완전히 준비될 때까지 대기
   const checkAndInit = () => {
@@ -198,7 +198,7 @@ const initTradingViewWidgets = () => {
 }
 
 const createSymbolWidget = () => {
-  const theme = isDarkMode.value ? 'dark' : 'light'
+  const theme = settingsStore.isDarkMode ? 'dark' : 'light'
   // BITSTAMP: 접두사 자동 추가
   const fullSymbol = symbolInput.value.includes(':') ? symbolInput.value : `BITSTAMP:${symbolInput.value}`
   
