@@ -77,7 +77,6 @@
                 :like-count="coin.likeCount || 0"
                 :dislike-count="coin.dislikeCount || 0"
                 :user-reaction="coin.userReaction"
-                @reaction-changed="handleReactionChanged(coin.detectedCoinId, $event)"
                 @refresh-data="loadInitialData"
               />
               <button 
@@ -598,9 +597,6 @@ const handleFavoriteRemoved = (exchangeCoinId) => {
   favoriteCoinsList.value = favoriteCoinsList.value.filter(coin => coin.exchangeCoinId !== exchangeCoinId)
 }
 
-const handleReactionChanged = (detectedCoinId, reaction) => {
-  console.log(`탐지된 코인 ${detectedCoinId}에 ${reaction} 리액션`)
-}
 </script>
 
 <style scoped>

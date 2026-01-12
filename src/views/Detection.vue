@@ -71,7 +71,6 @@
                   :like-count="detection.likeCount || 0"
                   :dislike-count="detection.dislikeCount || 0"
                   :user-reaction="detection.userReaction"
-                  @reaction-changed="handleReactionChanged(detection.id, $event)"
                 />
               </div>
             </div>
@@ -121,10 +120,6 @@ const loadDetectionData = async () => {
 
 const formatTime = (timestamp) => {
   return new Date(timestamp).toLocaleString('ko-KR')
-}
-
-const handleReactionChanged = (detectionId, reaction) => {
-  console.log(`탐지 ${detectionId}에 ${reaction} 리액션`)
 }
 
 onMounted(() => {
