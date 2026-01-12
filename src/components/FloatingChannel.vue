@@ -134,7 +134,7 @@ const messages = ref([])
 const selectedChannel = ref(null)
 const newMessage = ref('')
 const nickname = ref(null)
-const uuid = ref(null) // 현재 사용자 UUID 추가
+const uuid = settingsStore.uuid
 const isBanned = ref(false)
 const banInfo = ref(null)
 const channels = ref([])
@@ -159,6 +159,7 @@ const groupedMessages = computed(() => {
     return { ...msg, showNickname, showDateSeparator }
   })
 })
+
 const toggleChat = async () => {
   if (showChannel.value) {
     floatingPanelsStore.closeAll()
@@ -395,10 +396,6 @@ const loadUserInfo = async () => {
     nickname.value = userInfo.nickname
     uuid.value = userInfo.uuid // UUID 저장
   } catch (error) {
-    console.error('사용자 정보 로드 실패:', error)
-    nickname.value = `사용자${Math.floor(Math.random() * 1000)}`
-    // UUID가 없으면 임시 UUID 생성
-    uuid.value = 'temp-' + Math.random().toString(36).substr(2, 9)
   }
 }
 
@@ -458,7 +455,7 @@ const banUser = async () => {
   try {
     const { banApi } = await import('../services/banApi')
     await banApi.banUser({
-      userId: 1,
+      userId: selectedMessage.value.userId,
       banTypeId: banForm.value.banTypeId
     })
 
