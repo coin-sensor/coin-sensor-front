@@ -124,7 +124,7 @@ const loadChartData = async () => {
       }
     })
 
-    createChart(response.data)
+    createChart(response.data.data)
   } catch (error) {
     console.error('차트 데이터 로드 실패:', error)
   }

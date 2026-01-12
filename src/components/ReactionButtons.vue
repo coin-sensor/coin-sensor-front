@@ -68,12 +68,9 @@ const handleReaction = async (reaction: 'like' | 'dislike') => {
     
     // 리액션 토글 후 업데이트된 수치 받기
     const response = await reactionService.toggleReaction(request)
-    console.log('리액션 응답 전체:', response) // 디버깅용
-    console.log('응답 타입:', typeof response, Array.isArray(response)) // 디버깅용
     
     // 응답이 배열인지 확인
     const updatedCounts = Array.isArray(response) ? response : []
-    console.log('처리된 updatedCounts:', updatedCounts) // 디버깅용
     
     // 로컬 상태 즉시 업데이트
     updatedCounts.forEach((count: ReactionCountResponse) => {

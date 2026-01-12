@@ -2,10 +2,12 @@ import { api } from './api'
 
 export const favoriteApi = {
   async getFavoriteCoins() {
-    return api.get('/favoriteCoins')
+    const response = await api.get('/favoriteCoins')
+    return { data: response.data.data }
   },
 
   async toggleFavoriteCoin(exchangeCoinId: number) {
-    return api.post(`/favoriteCoins/${exchangeCoinId}`)
+    const response = await api.post(`/favoriteCoins/${exchangeCoinId}`)
+    return response.data.data
   }
 }

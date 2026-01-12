@@ -164,9 +164,9 @@ const loadChartData = async () => {
       })
     ])
 
-    calculateStats(chartResponse.data)
-    createChart(chartResponse.data)
-    topCoins.value = topCoinsResponse.data
+    calculateStats(chartResponse.data.data)
+    createChart(chartResponse.data.data)
+    topCoins.value = topCoinsResponse.data.data
   } catch (error) {
     console.error('차트 데이터 로드 실패:', error)
   }

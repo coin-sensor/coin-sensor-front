@@ -188,7 +188,6 @@ class WebSocketService {
     this.subscribe('activeUsers', topic, (message) => {
       try {
         const activeCount = JSON.parse(message.body)
-        console.log('활성 사용자 수 수신:', activeCount)
         this.executeCallbacks('activeUsers', activeCount)
       } catch (error) {
         console.error('활성 사용자 메시지 파싱 실패:', error)
@@ -201,7 +200,6 @@ class WebSocketService {
     this.subscribe('chat', topic, (message) => {
       try {
         const channelMessage: Message = JSON.parse(message.body)
-        console.log('채팅 메시지 수신:', channelMessage)
         this.executeCallbacks('channel', channelMessage)
       } catch (error) {
         console.error('채팅 메시지 파싱 실패:', error)

@@ -1,4 +1,5 @@
 import { api } from './api'
+import { ApiResponse } from '../types/ApiResponse'
 
 export interface ReactionRequest {
   reactionName: 'like' | 'dislike'
@@ -13,8 +14,7 @@ export interface ReactionCountResponse {
 
 export const reactionService = {
   async toggleReaction(request: ReactionRequest): Promise<ReactionCountResponse[]> {
-    const response = await api.post('/reactions', request)
-    // axios는 response.data에 실제 데이터가 있음
-    return response.data
+    const response = await api.post<ApiResponse<ReactionCountResponse[]>>('/reactions', request)
+    return response.data.data
   }
 }

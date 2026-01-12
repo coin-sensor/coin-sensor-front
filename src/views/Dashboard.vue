@@ -283,7 +283,7 @@ const openChartModal = async (symbol, timeframeName, exchangeType, detectedCoinI
   if (detectedCoinId) {
     try {
       const response = await api.post(`/detectedCoins/${detectedCoinId}/view`)
-      const newViewCount = response.data
+      const newViewCount = response.data.data
       
       detections.value.forEach(detection => {
         const coin = detection.coins.find(c => c.detectedCoinId === detectedCoinId)

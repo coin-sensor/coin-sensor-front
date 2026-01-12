@@ -100,7 +100,8 @@ const disconnectWebSocket = () => {
 const loadActiveUserCount = async () => {
   try {
     const response = await fetch('http://localhost:8080/api/websocket/activeUsers')
-    activeUserCount.value = await response.json()
+    const apiResponse = await response.json()
+    activeUserCount.value = apiResponse.data
   } catch (error) {
     activeUserCount.value = 0
   }

@@ -177,7 +177,7 @@ const paginatedCoins = computed(() => {
 const loadCoins = async () => {
   try {
     const response = await api.get('/exchangeCoins')
-    coins.value = response.data
+    coins.value = response.data.data || []
     filterCoins()
   } catch (error) {
     console.error('거래소코인 목록 로드 실패:', error)

@@ -127,8 +127,6 @@ const createEconomicCalendarWidget = () => {
 }
 
 const initTradingViewWidgets = () => {
-  console.log('TradingView 위젯 초기화')
-  
   const theme = settingsStore.isDarkMode ? 'dark' : 'light'
   
   // DOM이 완전히 준비될 때까지 대기

@@ -76,7 +76,7 @@ const loadData = async () => {
       }
     })
 
-    insightData.value = response.data.map((coin: any) => ({
+    insightData.value = response.data.data.map((coin: any) => ({
       id: coin.coinId,
       baseAsset: coin.baseAsset,
       coinTicker: coin.coinTicker,

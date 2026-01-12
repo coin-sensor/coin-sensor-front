@@ -111,7 +111,7 @@ const loadData = async () => {
       }
     })
     
-    coinsData.value = topResponse.data
+    coinsData.value = topResponse.data.data
     totalViews.value = coinsData.value.reduce((sum, coin) => sum + coin.totalViewCount, 0)
     
     try {
@@ -121,12 +121,9 @@ const loadData = async () => {
           limit: 10
         }
       })
-      console.log('Trend API Response:', trendResponse.data)
-      createTrendChart(trendResponse.data)
+      createTrendChart(trendResponse.data.data)
     } catch (trendError) {
       console.error('추이 데이터 로드 실패:', trendError)
-      console.log('API가 없어 모크 데이터를 사용합니다.')
-      createMockTrendChart()
     }
   } catch (error) {
     console.error('데이터 로드 실패:', error)
@@ -195,8 +192,6 @@ const createTrendChart = (trendData: any[]) => {
     pointBorderWidth: 1,
     pointHoverBorderWidth: 2
   }))
-  
-  console.log('Creating chart with datasets:', datasets.length)
   
   trendChartInstance.value = new Chart(ctx, {
     type: 'line',
