@@ -47,19 +47,15 @@ export const apiService = {
   channelsLoading: false,
   async getChannels(): Promise<Channel[]> {
     if (this.channelsLoading) {
-      console.log('채팅방 목록 요청 중복 방지')
       return []
     }
     
     try {
       this.channelsLoading = true
-      console.log('API 채팅방 목록 요청...')
+
       const response: AxiosResponse = await api.get('/channels')
-      console.log('API 채팅방 목록 응답:', response.data)
       return response.data
     } catch (error) {
-      console.error('Failed to fetch channel channels:', error)
-      console.error('API 에러 상세:', (error as any).response?.data)
       throw error
     } finally {
       this.channelsLoading = false
@@ -68,13 +64,9 @@ export const apiService = {
 
   async createChannel(channelData: { name: string }): Promise<Channel> {
     try {
-      console.log('API 채팅방 생성 요청:', channelData)
       const response: AxiosResponse = await api.post('/channels', channelData)
-      console.log('API 채팅방 생성 응답:', response.data)
       return response.data
     } catch (error) {
-      console.error('Failed to create channel channel:', error)
-      console.error('API 에러 상세:', (error as any).response?.data)
       throw error
     }
   },

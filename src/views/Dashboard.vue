@@ -407,13 +407,13 @@ const changeTimeframe = () => {
 
 const resubscribeDetection = () => {
   import('../services/websocket').then(({ websocketService }) => {
+    // 기존 구독 해제 후 새로 구독
+    websocketService.unsubscribe('detection')
     websocketService.subscribeToDetection()
   })
 }
 
 const handleNotification = (detection) => {
-  console.log('실시간 알림:', detection)
-
   const detectionId = `${detection.detectedAt}_${detection.conditionChangeX}_${detection.conditionVolumeX}`
   
   const newDetection = {

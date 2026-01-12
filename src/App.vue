@@ -52,13 +52,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import FloatingChannel from './components/FloatingChannel.vue'
 import AdminOnly from './components/AdminOnly.vue'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faUsers, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons'
-import { faSun, faMoon } from '@fortawesome/free-regular-svg-icons'
-import { useSettingsStore } from './stores/settings'
+import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
+import {faUsers, faVolumeHigh, faVolumeXmark} from '@fortawesome/free-solid-svg-icons'
+import {useSettingsStore} from './stores/settings'
 
 const activeUserCount = ref(0)
 const settingsStore = useSettingsStore()
@@ -101,11 +100,8 @@ const disconnectWebSocket = () => {
 const loadActiveUserCount = async () => {
   try {
     const response = await fetch('http://localhost:8080/api/websocket/activeUsers')
-    const count = await response.json()
-    console.log('현재 활성 사용자 수:', count)
-    activeUserCount.value = count
+    activeUserCount.value = await response.json()
   } catch (error) {
-    console.error('활성 사용자 수 로드 실패:', error)
     activeUserCount.value = 0
   }
 }

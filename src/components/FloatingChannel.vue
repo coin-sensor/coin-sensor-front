@@ -343,10 +343,8 @@ const loadChannels = async () => {
       const generalChannel = channels.value.find(channel => channel.name === '일반')
       if (generalChannel) {
         selectedChannel.value = generalChannel.id
-        console.log('"일반" 채팅방 선택:', generalChannel.id)
       } else {
         selectedChannel.value = channels.value[0].id
-        console.log('"일반" 채팅방이 없어서 첫 번째 방 선택:', selectedChannel.value)
       }
     }
   } catch (error) {
@@ -419,9 +417,7 @@ const checkAdminStatus = async () => {
   try {
     const { apiService } = await import('../services/api')
     isAdmin.value = await apiService.isAdmin()
-    console.log('관리자 상태:', isAdmin.value)
   } catch (error) {
-    console.error('관리자 권한 체크 실패:', error)
     isAdmin.value = false
   }
 }

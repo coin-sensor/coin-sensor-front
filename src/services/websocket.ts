@@ -49,17 +49,13 @@ class WebSocketService {
 
       this.stompClient = new Client({
         brokerURL: `ws://localhost:8080/ws?uuid=${uuid}`,
-        debug: (str) => console.log('STOMP:', str),
         connectHeaders: {
           'uuid': uuid
         },
         onConnect: (frame: Frame) => {
-          console.log('WebSocket 연결됨:', frame)
+          console.log('WebSocket 연결됨')
           this.connected = true
           this.reconnectAttempts = 0
-          
-          // 탐지 알림 구독
-          this.subscribeToDetection()
           
           // 실시간 활성 사용자 수 구독
           this.subscribeToActiveUsers()
@@ -81,6 +77,11 @@ class WebSocketService {
   }
 
   subscribeToDetection(): void {
+    // 이미 구독 중이면 중복 구독 방지
+    if (this.subscriptions.has('detection')) {
+      return
+    }
+    
     // Pinia 스토어에서 값 읽기
     const settingsStore = useSettingsStore()
     const selectedExchange = settingsStore.selectedExchange
@@ -92,7 +93,6 @@ class WebSocketService {
     this.subscribe('detection', topic, (message) => {
       try {
         const detection: DetectionData = JSON.parse(message.body)
-        console.log('탐지 알림 수신:', detection)
         
         // 탐지 시 알림 소리 재생 및 윈도우 알림 표시
         const settingsStore = useSettingsStore()
@@ -128,9 +128,6 @@ class WebSocketService {
       console.error('WebSocket이 연결되지 않음')
       return
     }
-    
-    // 기존 구독 해제
-    this.unsubscribe(key)
     
     // 새 구독 생성
     const subscription = this.stompClient.subscribe(topic, callback)
