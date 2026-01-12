@@ -1,6 +1,6 @@
 export interface ApiResponse<T> {
   status: string
-  data: T
+  result: T
   message: string | null
   serverTime: string
 }

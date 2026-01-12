@@ -55,7 +55,7 @@ export const apiService = {
       this.channelsLoading = true
 
       const response: AxiosResponse<ApiResponse<Channel[]>> = await api.get('/channels')
-      return response.data.data
+      return response.data.result
     } catch (error) {
       throw error
     } finally {
@@ -66,7 +66,7 @@ export const apiService = {
   async createChannel(channelData: { name: string }): Promise<Channel> {
     try {
       const response: AxiosResponse<ApiResponse<Channel>> = await api.post('/channels', channelData)
-      return response.data.data
+      return response.data.result
     } catch (error) {
       throw error
     }
@@ -75,7 +75,7 @@ export const apiService = {
   async updateChannel(channelId: number, channelData: { name: string }): Promise<Channel> {
     try {
       const response: AxiosResponse<ApiResponse<Channel>> = await api.put(`/channels/${channelId}`, channelData)
-      return response.data.data
+      return response.data.result
     } catch (error) {
       console.error('Failed to update channel channel:', error)
       throw error
@@ -85,7 +85,7 @@ export const apiService = {
   async deleteChannel(channelId: number): Promise<void> {
     try {
       const response: AxiosResponse<ApiResponse<void>> = await api.delete(`/channels/${channelId}`)
-      return response.data.data
+      return response.data.result
     } catch (error) {
       console.error('Failed to delete channel channel:', error)
       throw error
@@ -97,7 +97,7 @@ export const apiService = {
       const response: AxiosResponse<ApiResponse<Message[]>> = await api.get(`/channels/${channelId}/messages`, {
         params: { limit }
       })
-      return response.data.data
+      return response.data.result
     } catch (error) {
       console.error('Failed to fetch recent messages:', error)
       return []
@@ -109,7 +109,7 @@ export const apiService = {
       const response: AxiosResponse<ApiResponse<Message[]>> = await api.get(`/channels/${channelId}/messages/before/${lastMessageId}`, {
         params: { limit }
       })
-      return response.data.data
+      return response.data.result
     } catch (error) {
       console.error('Failed to fetch messages before:', error)
       return []
@@ -120,7 +120,7 @@ export const apiService = {
   async getUserInfo(): Promise<UserInfo> {
     try {
       const response: AxiosResponse<ApiResponse<UserInfo>> = await api.get('/users/info')
-      return response.data.data
+      return response.data.result
     } catch (error) {
       console.error('Failed to fetch user info:', error)
       throw error
@@ -130,7 +130,7 @@ export const apiService = {
   async updateNickname(nickname: string): Promise<UserInfo> {
     try {
       const response: AxiosResponse<ApiResponse<UserInfo>> = await api.put('/users/nickname', { nickname })
-      return response.data.data
+      return response.data.result
     } catch (error) {
       console.error('Failed to update nickname:', error)
       throw error
@@ -140,7 +140,7 @@ export const apiService = {
   async isAdmin(): Promise<boolean> {
     try {
       const response: AxiosResponse<ApiResponse<boolean>> = await api.get('/users/admin')
-      return response.data.data
+      return response.data.result
     } catch (error) {
       console.error('Failed to check admin status:', error)
       return false

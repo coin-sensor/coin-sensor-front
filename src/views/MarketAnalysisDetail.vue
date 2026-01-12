@@ -30,8 +30,6 @@ import InsightSidebar from '../components/InsightSidebar.vue'
   margin: 0 auto;
 }
 
-
-
 .main-content {
   flex: 1;
   min-width: 0;

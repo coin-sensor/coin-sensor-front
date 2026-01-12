@@ -111,7 +111,7 @@ const loadData = async () => {
       }
     })
     
-    coinsData.value = topResponse.data.data
+    coinsData.value = topResponse.data.result
     totalViews.value = coinsData.value.reduce((sum, coin) => sum + coin.totalViewCount, 0)
     
     try {
@@ -121,7 +121,7 @@ const loadData = async () => {
           limit: 10
         }
       })
-      createTrendChart(trendResponse.data.data)
+      createTrendChart(trendResponse.data.result)
     } catch (trendError) {
       console.error('추이 데이터 로드 실패:', trendError)
     }

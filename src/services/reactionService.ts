@@ -15,6 +15,6 @@ export interface ReactionCountResponse {
 export const reactionService = {
   async toggleReaction(request: ReactionRequest): Promise<ReactionCountResponse[]> {
     const response = await api.post<ApiResponse<ReactionCountResponse[]>>('/reactions', request)
-    return response.data.data
+    return response.data.result
   }
 }

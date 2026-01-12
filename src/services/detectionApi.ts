@@ -5,6 +5,6 @@ export const detectionApi = {
         const response = await api.get('/detections', {
             params: {exchange, exchangeType, coinCategory, timeframe}
         })
-        return { data: response.data.data }
+        return { data: response.data.result }
     }
 }

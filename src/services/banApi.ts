@@ -30,17 +30,17 @@ export const banApi = {
   // 금지 유형 관리
   async createBanType(request: BanTypeRequest): Promise<BanTypeResponse> {
     const response = await api.post<ApiResponse<BanTypeResponse>>('/banTypes', request)
-    return response.data.data
+    return response.data.result
   },
 
   async getAllBanTypes(): Promise<BanTypeResponse[]> {
     const response = await api.get<ApiResponse<BanTypeResponse[]>>('/banTypes')
-    return response.data.data
+    return response.data.result
   },
 
   async updateBanType(banTypeId: number, request: BanTypeRequest): Promise<BanTypeResponse> {
     const response = await api.put<ApiResponse<BanTypeResponse>>(`/banTypes/${banTypeId}`, request)
-    return response.data.data
+    return response.data.result
   },
 
   async deleteBanType(banTypeId: number): Promise<void> {
@@ -50,12 +50,12 @@ export const banApi = {
   // 사용자 금지 관리
   async banUser(request: UserBanRequest): Promise<UserBanResponse> {
     const response = await api.post<ApiResponse<UserBanResponse>>('/userBans', request)
-    return response.data.data
+    return response.data.result
   },
 
   async getAllBannedUsers(): Promise<UserBanResponse[]> {
     const response = await api.get<ApiResponse<UserBanResponse[]>>('/userBans')
-    return response.data.data
+    return response.data.result
   },
 
   async unbanUser(userBanId: number): Promise<void> {
@@ -65,7 +65,7 @@ export const banApi = {
   async getActiveBan(): Promise<UserBanResponse | null> {
     try {
       const response = await api.get<ApiResponse<UserBanResponse>>('/userBans/active')
-      return response.data.data
+      return response.data.result
     } catch (error) {
       return null
     }
