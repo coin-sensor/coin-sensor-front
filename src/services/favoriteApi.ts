@@ -1,7 +1,14 @@
 import { api } from './api'
 
+export interface FavoriteCoinResponse {
+  exchangeCoinId: number
+  coinTicker: string
+  exchangeName: string
+  exchangeType: string
+}
+
 export const favoriteApi = {
-  async getFavoriteCoins() {
+  async getFavoriteCoins(): Promise<{ data: FavoriteCoinResponse[] }> {
     const response = await api.get('/favoriteCoins')
     return { data: response.data.result }
   },
