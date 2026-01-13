@@ -55,7 +55,7 @@
           <div class="detection-header">
             <div class="detection-info">
               <span class="detection-time">탐지 시간: {{ formatTime(detection.detectedAt) }}</span>
-              <span class="condition">{{ detection.exchangeName }} {{ detection.exchangeType }} | {{ detection.timeframeName }} | 변동성 {{ detection.conditionChangeX }}% | 거래량 {{ detection.conditionVolumeX }}배</span>
+              <span class="condition">{{ detection.exchangeName }} {{ detection.exchangeType }} | {{ detection.timeframeName }} | 변동률 {{ detection.conditionChangeX }}% | 거래량 {{ detection.conditionVolumeX }}배</span>
             </div>
             <span class="detection-count">{{ detection.coins.length}}개 코인</span>
           </div>
@@ -64,7 +64,7 @@
               <div class="coin-info">
                 <div class="coin-symbol clickable" @click="openChartModal(coin.coinTicker, detection.timeframeName, detection.exchangeType, coin.detectedCoinId)">{{ coin.coinTicker }}</div>
                 <div class="coin-metrics">
-                  <span class="metric-item">📈 변동성: <strong>{{ Number(coin.changeX || 0).toFixed(2) }}%</strong></span>
+                  <span class="metric-item">📈 변동률: <strong>{{ Number(coin.changeX || 0).toFixed(2) }}%</strong></span>
                   <span class="metric-separator">|</span>
                   <span class="metric-item">📊 거래량: <strong>{{ Number(coin.volumeX || 0).toFixed(2) }}배</strong></span>
                   <span class="metric-separator">|</span>

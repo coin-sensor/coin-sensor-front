@@ -103,10 +103,28 @@ class WebSocketService {
 
         // 윈도우 알림 표시 (권한이 있고 페이지가 백그라운드에 있을 때만)
         if (Notification.permission === 'granted' && document.hidden) {
-          const notification = new Notification('코인 탐지 알림 ' + "[" + `${detection.coins?.length || 0}` +"개]", {
-            body: detection.summary,
+          // 시간 정보 포맷팅
+          const date = new Date(detection.detectedAt)
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const day = String(date.getDate()).padStart(2, '0')
+          const dayNames = ['일', '월', '화', '수', '목', '금', '토']
+          const dayName = dayNames[date.getDay()]
+          const hour = String(date.getHours()).padStart(2, '0')
+          const minute = String(date.getMinutes()).padStart(2, '0')
+          const second = String(date.getSeconds()).padStart(2, '0')
+          const timeStr = `${year}-${month}-${day}(${dayName}) ${hour}시 ${minute}분 ${second}초`
+          
+          // 알림 본문을 간결하게 구성
+          const coinCount = detection.coins?.length || 0
+          const exchangeInfo = `거래소: ${detection.exchangeName}-${detection.exchangeType}`
+          const timeframeInfo = detection.timeframeName
+          const conditionInfo = `기준 : ${timeframeInfo}, 📈변동률 : ${detection.conditionChangeX}%, 📊거래량 : ${detection.conditionVolumeX}배`
+          
+          const notification = new Notification(`🚨 코인 탐지 알림 [${coinCount}개]`, {
+            body: `${timeStr}\n${exchangeInfo}\n${conditionInfo}`,
             icon: '/favicon.png',
-            tag: 'coin-detection'
+            tag: 'coin-detection',
           })
 
           // 알림 클릭 시 기존 탭으로 포커스만 이동
