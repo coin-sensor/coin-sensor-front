@@ -48,16 +48,16 @@ jobs:
           script: |
             # Create release directory
             DEPLOY_DATE=$(date +%Y%m%d_%H%M%S)
-            RELEASE_PATH=/home/ubuntu/coinsensor/coinsensor-front/releases/$DEPLOY_DATE
+            RELEASE_PATH=/home/ubuntu/coinsensor/content/coinsensor/releases/$DEPLOY_DATE
             mkdir -p $RELEASE_PATH
             
             # Move build files
             mv /tmp/coinsensor-build/* $RELEASE_PATH/
             
             # Atomic symlink switch
-            ln -sfn $RELEASE_PATH /home/ubuntu/coinsensor/coinsensor-front/current
+            ln -sfn $RELEASE_PATH /home/ubuntu/coinsensor/content/coinsensor/current
             
             # Cleanup old releases (keep last 5)
-            cd /home/ubuntu/coinsensor/coinsensor-front/releases && ls -t | tail -n +6 | xargs rm -rf
+            cd /home/ubuntu/coinsensor/content/coinsensor/releases && ls -t | tail -n +6 | xargs rm -rf
             
             echo "Deployment successful: $DEPLOY_DATE"
