@@ -431,9 +431,12 @@ const loadBanTypes = async () => {
   }
 }
 
-const showBanModal = (message) => {
+const showBanModal = async (message) => {
   selectedMessage.value = message
   showBanUserModal.value = true
+  
+  // 모달이 열릴 때마다 최신 banTypes 로드
+  await loadBanTypes()
 }
 
 const closeBanModal = () => {
@@ -494,7 +497,7 @@ const isActiveBan = (banInfoData) => {
 onMounted(() => {
   loadUserInfo()
   checkAdminStatus()
-  loadBanTypes()
+  // banTypes는 모달이 열릴 때만 로드
 })
 </script>
 

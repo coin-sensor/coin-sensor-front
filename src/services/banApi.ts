@@ -27,7 +27,6 @@ export interface UserBanResponse {
 }
 
 export const banApi = {
-  // 금지 유형 관리
   async createBanType(request: BanTypeRequest): Promise<BanTypeResponse> {
     const response = await api.post<ApiResponse<BanTypeResponse>>('/banTypes', request)
     return response.data.result
@@ -47,7 +46,6 @@ export const banApi = {
     await api.delete(`/banTypes/${banTypeId}`)
   },
 
-  // 사용자 금지 관리
   async banUser(request: UserBanRequest): Promise<UserBanResponse> {
     const response = await api.post<ApiResponse<UserBanResponse>>('/userBans', request)
     return response.data.result

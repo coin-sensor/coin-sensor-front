@@ -246,8 +246,14 @@ const handleThemeChange = () => {
 
 onMounted(() => {
   initTradingView()
-  loadInitialData()
-  loadFavoriteCoins()
+  // 데이터 로딩을 병렬로 처리하여 성능 개선
+  Promise.all([
+    loadInitialData(),
+    loadFavoriteCoins()
+  ]).catch(error => {
+    console.error('초기 데이터 로드 실패:', error)
+  })
+  
   initWebSocketSubscriptions()
   requestNotificationPermission()
   window.addEventListener('theme-changed', handleThemeChange)

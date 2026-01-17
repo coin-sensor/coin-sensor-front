@@ -58,9 +58,11 @@ import AdminOnly from './components/AdminOnly.vue'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import {faUsers, faVolumeHigh, faVolumeXmark} from '@fortawesome/free-solid-svg-icons'
 import {useSettingsStore} from './stores/settings'
+import {useGlobalStore} from './stores/global'
 
 const activeUserCount = ref(0)
 const settingsStore = useSettingsStore()
+const globalStore = useGlobalStore()
 
 const isNotification = computed(() => settingsStore.isNotification)
 const isDarkMode = computed(() => settingsStore.isDarkMode)
@@ -78,6 +80,7 @@ const toggleDarkMode = () => {
 const initWebSocket = () => {
   import('./services/websocket').then(({ websocketService }) => {
     websocketService.onConnect(() => {
+      // WebSocket 연결 직후 초기 활성 사용자 수 요청
       loadActiveUserCount()
     })
     
@@ -87,13 +90,6 @@ const initWebSocket = () => {
     
     websocketService.connect()
     console.log('전역 WebSocket 연결 초기화')
-  })
-}
-
-const disconnectWebSocket = () => {
-  import('./services/websocket').then(({ websocketService }) => {
-    websocketService.disconnect()
-    console.log('전역 WebSocket 연결 해제')
   })
 }
 
@@ -107,7 +103,15 @@ const loadActiveUserCount = async () => {
   }
 }
 
-onMounted(() => {
+const disconnectWebSocket = () => {
+  import('./services/websocket').then(({ websocketService }) => {
+    websocketService.disconnect()
+    console.log('전역 WebSocket 연결 해제')
+  })
+}
+
+onMounted(async () => {
+  await globalStore.initialize()
   initWebSocket()
 })
 

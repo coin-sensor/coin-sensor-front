@@ -113,6 +113,7 @@ const newUserBan = ref<UserBanRequest>({
 })
 
 const loadBanTypes = async () => {
+  // 전역 초기화에서 이미 로드되었으므로 캐시된 데이터 사용
   try {
     banTypes.value = await banApi.getAllBanTypes()
   } catch (error) {

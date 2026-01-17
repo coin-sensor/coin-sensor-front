@@ -25,6 +25,10 @@ interface UserInfo {
   nickname: string
 }
 
+// 전역 캐시 및 진행 중인 요청 추적
+const requestCache = new Map<string, any>()
+const pendingRequests = new Map<string, Promise<any>>()
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
@@ -38,6 +42,28 @@ api.interceptors.request.use(config => {
   config.headers['uuid'] = getOrCreateUUID()
   return config
 })
+
+// 캐시된 요청 함수
+const cachedRequest = async <T>(key: string, requestFn: () => Promise<T>): Promise<T> => {
+  if (requestCache.has(key)) {
+    return requestCache.get(key)
+  }
+  
+  if (pendingRequests.has(key)) {
+    return await pendingRequests.get(key)
+  }
+  
+  const promise = requestFn()
+  pendingRequests.set(key, promise)
+  
+  try {
+    const result = await promise
+    requestCache.set(key, result)
+    return result
+  } finally {
+    pendingRequests.delete(key)
+  }
+}
 
 // 다른 API 파일에서 사용할 수 있도록 export
 export { api }
@@ -118,18 +144,16 @@ export const apiService = {
 
   // 사용자 관련 API
   async getUserInfo(): Promise<UserInfo> {
-    try {
+    return cachedRequest('userInfo', async () => {
       const response: AxiosResponse<ApiResponse<UserInfo>> = await api.get('/users/info')
       return response.data.result
-    } catch (error) {
-      console.error('Failed to fetch user info:', error)
-      throw error
-    }
+    })
   },
 
   async updateNickname(nickname: string): Promise<UserInfo> {
     try {
       const response: AxiosResponse<ApiResponse<UserInfo>> = await api.put('/users/nickname', { nickname })
+      requestCache.delete('userInfo')
       return response.data.result
     } catch (error) {
       console.error('Failed to update nickname:', error)
@@ -138,12 +162,9 @@ export const apiService = {
   },
 
   async isAdmin(): Promise<boolean> {
-    try {
+    return cachedRequest('isAdmin', async () => {
       const response: AxiosResponse<ApiResponse<boolean>> = await api.get('/users/admin')
       return response.data.result
-    } catch (error) {
-      console.error('Failed to check admin status:', error)
-      return false
-    }
+    })
   }
 }
