@@ -273,7 +273,7 @@ const createChart = (data: any) => {
             tooltipFormat: 'MM/dd HH:mm'
           },
           min: timeData[0]?.x,
-          max: new Date(),
+          max: Date.now(),
           ticks: {
             color: settingsStore.isDarkMode ? '#94a3b8' : '#6b7280',
             maxTicksLimit: 6,

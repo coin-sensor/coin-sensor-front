@@ -26,7 +26,7 @@
         <div class="coins-grid">
           <div 
             v-for="(coin, index) in topLikedCoins" 
-            :key="coin.detectedCoinId"
+            :key="coin.coinTicker"
             class="coin-card liked"
           >
             <div class="rank-badge" :style="{ background: getLikedRankColor(index) }">
@@ -66,7 +66,7 @@
         <div class="coins-grid">
           <div 
             v-for="(coin, index) in topDislikedCoins" 
-            :key="coin.detectedCoinId"
+            :key="coin.coinTicker"
             class="coin-card disliked"
           >
             <div class="rank-badge" :style="{ background: getDislikedRankColor(index) }">
@@ -210,9 +210,9 @@ const createReactionChart = () => {
   
   const isDarkMode = settingsStore.isDarkMode
   
-  const labels = []
-  const data = []
-  const backgroundColor = []
+  const labels: string[] = []
+  const data: number[] = []
+  const backgroundColor: string[] = []
   
   // 추천 코인들 추가
   topLikedCoins.value.forEach((coin, index) => {
