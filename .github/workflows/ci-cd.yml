@@ -54,8 +54,15 @@ jobs:
             # Move build files
             mv /tmp/coinsensor-build/* $RELEASE_PATH/
             
-            # Atomic symlink switch
-            ln -sfn $RELEASE_PATH /home/ubuntu/coinsensor/content/coinsensor/current
+            # Set proper permissions
+            chmod -R 755 $RELEASE_PATH
+            
+            # Atomic symlink switch (use relative path)
+            cd /home/ubuntu/coinsensor/content/coinsensor
+            ln -sfn releases/$DEPLOY_DATE current
+            
+            # Set permissions for symlink target
+            chmod -R 755 /home/ubuntu/coinsensor/content/coinsensor/current
             
             # Cleanup old releases (keep last 5)
             cd /home/ubuntu/coinsensor/content/coinsensor/releases && ls -t | tail -n +6 | xargs rm -rf
