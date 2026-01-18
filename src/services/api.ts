@@ -166,5 +166,15 @@ export const apiService = {
       const response: AxiosResponse<ApiResponse<boolean>> = await api.get('/users/admin')
       return response.data.result
     })
+  },
+
+  async getActiveUserCount(): Promise<number> {
+    try {
+      const response: AxiosResponse<ApiResponse<number>> = await api.get('/websocket/activeUsers')
+      return response.data.result
+    } catch (error) {
+      console.error('Failed to fetch active user count:', error)
+      return 0
+    }
   }
 }

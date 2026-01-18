@@ -1,5 +1,4 @@
 import { Client, Frame, StompSubscription } from '@stomp/stompjs'
-import { API_CONFIG } from '../config'
 import { getOrCreateUUID } from '../utils/uuid'
 import { notificationSound } from '../utils/notification'
 import { useSettingsStore } from '../stores/settings'
@@ -32,6 +31,7 @@ interface DetectionParams {
 
 type CallbackEvent = 'connect' | 'detection' | 'channel' | 'error' | 'activeUsers'
 type CallbackFunction = (data?: any) => void
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 class WebSocketService {
   private stompClient: Client | null = null

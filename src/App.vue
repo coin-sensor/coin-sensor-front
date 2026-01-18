@@ -59,6 +59,7 @@ import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import {faUsers, faVolumeHigh, faVolumeXmark} from '@fortawesome/free-solid-svg-icons'
 import {useSettingsStore} from './stores/settings'
 import {useGlobalStore} from './stores/global'
+import {apiService} from './services/api'
 
 const activeUserCount = ref(0)
 const settingsStore = useSettingsStore()
@@ -95,10 +96,9 @@ const initWebSocket = () => {
 
 const loadActiveUserCount = async () => {
   try {
-    const response = await fetch('http://localhost:8080/api/websocket/activeUsers')
-    const apiResponse = await response.json()
-    activeUserCount.value = apiResponse.result
+    activeUserCount.value = await apiService.getActiveUserCount()
   } catch (error) {
+    console.error('Failed to load active user count:', error)
     activeUserCount.value = 0
   }
 }
