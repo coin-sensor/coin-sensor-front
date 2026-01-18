@@ -46,9 +46,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # Create release directory
-            DEPLOY_DATE=$(date +%Y%m%d_%H%M%S)
-            RELEASE_PATH=/home/ubuntu/coinsensor/content/coinsensor/releases/$DEPLOY_DATE
+            # Deploy to releases directory
+            RELEASE_PATH=/home/ubuntu/content/coinsensor/releases
+            
+            # Clear and recreate releases directory
+            rm -rf $RELEASE_PATH
             mkdir -p $RELEASE_PATH
             
             # Move build files
@@ -57,14 +59,7 @@ jobs:
             # Set proper permissions
             chmod -R 755 $RELEASE_PATH
             
-            # Atomic symlink switch (use relative path)
-            cd /home/ubuntu/coinsensor/content/coinsensor
-            ln -sfn releases/$DEPLOY_DATE current
+            # Reload nginx
+            docker exec nginx nginx -s reload
             
-            # Set permissions for symlink target
-            chmod -R 755 /home/ubuntu/coinsensor/content/coinsensor/current
-            
-            # Cleanup old releases (keep last 5)
-            cd /home/ubuntu/coinsensor/content/coinsensor/releases && ls -t | tail -n +6 | xargs rm -rf
-            
-            echo "Deployment successful: $DEPLOY_DATE"
+            echo "Deployment successful"
