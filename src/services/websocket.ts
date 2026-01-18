@@ -31,7 +31,6 @@ interface DetectionParams {
 
 type CallbackEvent = 'connect' | 'detection' | 'channel' | 'error' | 'activeUsers'
 type CallbackFunction = (data?: any) => void
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 class WebSocketService {
   private stompClient: Client | null = null
@@ -48,7 +47,7 @@ class WebSocketService {
       const uuid = getOrCreateUUID()
 
       this.stompClient = new Client({
-        brokerURL: `ws://localhost:8080/ws?uuid=${uuid}`,
+        brokerURL: `${import.meta.env.VITE_WS_BASE_URL}?uuid=${uuid}`,
         connectHeaders: {
           'uuid': uuid
         },
