@@ -17,6 +17,23 @@ import './assets/styles/navbar.css'
 // 앱 시작 전에 전역 fetch 설정
 setupGlobalFetch()
 
+// Google Analytics 초기화 (프로덕션 환경에서만)
+if (import.meta.env.PROD) {
+  const script1 = document.createElement('script')
+  script1.async = true
+  script1.src = 'https://www.googletagmanager.com/gtag/js?id=G-1XVERTFZ1T'
+  document.head.appendChild(script1)
+
+  const script2 = document.createElement('script')
+  script2.innerHTML = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1XVERTFZ1T');
+  `
+  document.head.appendChild(script2)
+}
+
 library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes, faThumbsUp, faThumbsDown, faUsers, faSun, faMoon, faVolumeHigh, faVolumeXmark)
 
 const pinia = createPinia()
