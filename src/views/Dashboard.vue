@@ -51,7 +51,8 @@
       </div>
       
       <div v-if="detections.length > 0" class="detection-list">
-        <div v-for="detection in detections" :key="detection.id" class="detection-item">
+        <template v-for="(detection, index) in detections" :key="detection.id">
+        <div class="detection-item">
           <div class="detection-header">
             <div class="detection-info">
               <span class="detection-time">탐지 시간: {{ formatTime(detection.detectedAt) }}</span>
@@ -93,6 +94,9 @@
             </div>
           </div>
         </div>
+        <!-- 3번째마다 광고 삽입 -->
+        <CoupangAd v-if="(index + 1) % 3 === 0" />
+        </template>
       </div>
       
       <div v-else class="no-detection">
@@ -141,6 +145,7 @@ import { useSettingsStore } from '../stores/settings'
 import ReactionButtons from '../components/ReactionButtons.vue'
 import FloatingChannel from '../components/FloatingChannel.vue'
 import FloatingFavorites from '../components/FloatingFavorites.vue'
+import CoupangAd from '../components/CoupangAd.vue'
 
 const settingsStore = useSettingsStore()
 
