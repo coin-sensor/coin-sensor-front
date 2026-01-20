@@ -1280,19 +1280,145 @@ const handleFavoriteRemoved = (exchangeCoinId) => {
 }
 
 @media (max-width: 768px) {
+  .chart-section {
+    margin-bottom: 1rem;
+  }
+
+  .tradingview-widget-container {
+    height: 300px;
+  }
+
+  .detection-section {
+    height: auto;
+    max-height: 1500px;
+  }
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.75rem;
   }
-  
-  .coin-item {
+
+  .header-left {
+    width: 100%;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 0.5rem;
   }
-  
+
+  .header-left h2 {
+    font-size: 1.25rem;
+  }
+
+  .timeframe-select {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+
+  .status-indicator {
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 6px;
+  }
+
+  .detection-list {
+    gap: 1rem;
+    padding-right: 0;
+  }
+
+  .detection-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .detection-count {
+    align-self: flex-start;
+  }
+
+  .detection-time {
+    font-size: 0.75rem;
+  }
+
+  .condition {
+    font-size: 0.7rem;
+    line-height: 1.4;
+  }
+
+  .coin-item {
+    position: relative;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .coin-info {
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .coin-symbol {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .coin-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .metric-separator {
+    display: none;
+  }
+
+  .metric-item {
+    white-space: nowrap;
+  }
+
   .coin-change {
-    text-align: left;
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 1.125rem;
+    min-width: auto;
+  }
+
+  .favorite-btn {
+    position: absolute;
+    top: 2.5rem;
+    right: 0.75rem;
+    padding: 0.25rem;
+    font-size: 1rem;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 90%;
+  }
+
+  .modal-header {
+    padding: 0.75rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .modal-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .modal-body {
+    height: 300px;
   }
 }
 </style>
