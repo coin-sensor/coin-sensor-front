@@ -686,15 +686,44 @@ const handleFavoriteRemoved = (exchangeCoinId) => {
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #ef4444;
-  animation: pulse 2s infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.status-dot {
+  background: radial-gradient(circle, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+  animation: pulse-disconnected 2s ease-in-out infinite;
 }
 
 .status-dot.active {
-  background: #10b981;
+  background: radial-gradient(circle, #10b981 0%, #059669 50%, #047857 100%);
+  animation: pulse-connected 2s ease-in-out infinite;
+}
+
+@keyframes pulse-connected {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    transform: scale(1.1);
+  }
+}
+
+@keyframes pulse-disconnected {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    transform: scale(1.1);
+  }
 }
 
 .detection-list {
@@ -1244,7 +1273,7 @@ const handleFavoriteRemoved = (exchangeCoinId) => {
   color: #f1f5f9;
 }
 
-@keyframes pulse {
+@keyframes pulse-liked {
   0% { opacity: 1; }
   50% { opacity: 0.5; }
   100% { opacity: 1; }
