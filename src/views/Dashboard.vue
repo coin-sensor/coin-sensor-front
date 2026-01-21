@@ -434,8 +434,8 @@ const handleNotification = (detection) => {
   
   detections.value.unshift(newDetection)
   
-  if (detections.value.length > 24) {
-    detections.value = detections.value.slice(0, 24)
+  if (detections.value.length > 20) {
+    detections.value = detections.value.slice(0, 20)
   }
 }
 
