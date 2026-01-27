@@ -47,6 +47,7 @@
       </div>
     </main>
     
+    <Footer />
     <FloatingChannel />
   </div>
 </template>
@@ -54,6 +55,7 @@
 <script setup>
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue'
 import FloatingChannel from './components/FloatingChannel.vue'
+import Footer from './components/Footer.vue'
 import AdminOnly from './components/AdminOnly.vue'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import {faUsers, faVolumeHigh, faVolumeXmark} from '@fortawesome/free-solid-svg-icons'

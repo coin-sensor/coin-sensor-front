@@ -1,7 +1,6 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 import Heatmap from '../views/Heatmap.vue'
-
 import News from '../views/News.vue'
 import Admin from '../views/Admin.vue'
 import Detection from '../views/Detection.vue'
@@ -13,6 +12,10 @@ import RecommendedCoinsDetail from '../views/RecommendedCoinsDetail.vue'
 import ChannelManagement from '../views/ChannelManagement.vue'
 import UserManagement from '../views/UserManagement.vue'
 import ExchangeCoinManagement from '../views/ExchangeCoinManagement.vue'
+import About from '../views/About.vue'
+import Privacy from '../views/Privacy.vue'
+import Contact from '../views/Contact.vue'
+import Terms from '../views/Terms.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -85,6 +88,26 @@ const routes = [
         name: 'ExchangeCoinManagement',
         component: ExchangeCoinManagement,
         meta: { requiresAdmin: true }
+    },
+    {
+        path: '/about',
+        name: 'About',
+        component: About
+    },
+    {
+        path: '/privacy',
+        name: 'Privacy',
+        component: Privacy
+    },
+    {
+        path: '/contact',
+        name: 'Contact',
+        component: Contact
+    },
+    {
+        path: '/terms',
+        name: 'Terms',
+        component: Terms
     }
 ]
 
