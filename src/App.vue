@@ -34,9 +34,22 @@
           <button @click="toggleNotification" class="theme-toggle">
             <font-awesome-icon :icon="isNotification ? faVolumeHigh : faVolumeXmark" />
           </button>
-          <button @click="toggleDarkMode" class="theme-toggle">
-            <font-awesome-icon :icon="isDarkMode ? 'fa-regular fa-sun' : 'fa-regular fa-moon'" />
-          </button>
+          <div class="theme-selector" ref="themeSelector">
+            <button @click="toggleThemeDropdown" class="theme-toggle">
+              <font-awesome-icon :icon="isDarkMode ? 'fa-regular fa-moon' : 'fa-regular fa-sun'" />
+            </button>
+            <div v-if="showThemeDropdown" class="theme-dropdown">
+              <button @click="setTheme('light')" :class="{ active: themeMode === 'light' }">
+                <font-awesome-icon icon="fa-regular fa-sun" /> 데이모드
+              </button>
+              <button @click="setTheme('dark')" :class="{ active: themeMode === 'dark' }">
+                <font-awesome-icon icon="fa-regular fa-moon" /> 다크모드
+              </button>
+              <button @click="setTheme('system')" :class="{ active: themeMode === 'system' }">
+                <font-awesome-icon icon="fa-solid fa-desktop" /> 기기 기본값
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -58,26 +71,43 @@ import FloatingChannel from './components/FloatingChannel.vue'
 import Footer from './components/Footer.vue'
 import AdminOnly from './components/AdminOnly.vue'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
-import {faUsers, faVolumeHigh, faVolumeXmark} from '@fortawesome/free-solid-svg-icons'
+import {faUsers, faVolumeHigh, faVolumeXmark, faDesktop} from '@fortawesome/free-solid-svg-icons'
 import {useSettingsStore} from './stores/settings'
 import {useGlobalStore} from './stores/global'
 import {apiService} from './services/api'
 
 const activeUserCount = ref(0)
+const showThemeDropdown = ref(false)
+const themeSelector = ref(null)
 const settingsStore = useSettingsStore()
 const globalStore = useGlobalStore()
 
 const isNotification = computed(() => settingsStore.isNotification)
-const isDarkMode = computed(() => settingsStore.isDarkMode)
+const isDarkMode = computed(() => {
+  if (settingsStore.themeMode === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  return settingsStore.themeMode === 'dark'
+})
+const themeMode = computed(() => settingsStore.themeMode)
 
 const toggleNotification = () => {
   settingsStore.toggleNotification()
 }
 
+const toggleThemeDropdown = () => {
+  showThemeDropdown.value = !showThemeDropdown.value
+}
+
+const setTheme = (mode) => {
+  settingsStore.setThemeMode(mode)
+  showThemeDropdown.value = false
+  window.dispatchEvent(new CustomEvent('theme-changed', { detail: { isDarkMode: isDarkMode.value } }))
+}
+
 const toggleDarkMode = () => {
   settingsStore.toggleDarkMode()
   window.dispatchEvent(new CustomEvent('theme-changed', { detail: { isDarkMode: isDarkMode.value } }))
-  window.location.reload()
 }
 
 const initWebSocket = () => {
@@ -114,10 +144,21 @@ const disconnectWebSocket = () => {
 
 onMounted(async () => {
   await globalStore.initialize()
+  
+  // 드롭다운 외부 클릭 감지
+  const handleClickOutside = (event) => {
+    if (themeSelector.value && !themeSelector.value.contains(event.target)) {
+      showThemeDropdown.value = false
+    }
+  }
+  document.addEventListener('click', handleClickOutside)
+  
   initWebSocket()
-})
-
-onBeforeUnmount(() => {
-  disconnectWebSocket()
+  
+  // cleanup 함수 등록
+  onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside)
+    disconnectWebSocket()
+  })
 })
 </script>

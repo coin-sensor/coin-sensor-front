@@ -17,8 +17,8 @@ export const useSettingsStore = defineStore('settings', {
       // 알림 설정
       isNotification: getStoredValue('isNotification', 'true') === 'true',
       
-      // 테마 설정
-      isDarkMode: getStoredValue('isDarkMode', 'false') === 'true',
+      // 테마 설정 ('light', 'dark', 'system')
+      themeMode: getStoredValue('themeMode', 'system'),
       
       // 차트 설정
       selectedChart: getStoredValue('selectedChart', 'BINANCE:BTCUSDT.P'),
@@ -37,6 +37,15 @@ export const useSettingsStore = defineStore('settings', {
     }
   },
   
+  getters: {
+    isDarkMode: (state) => {
+      if (state.themeMode === 'system') {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches
+      }
+      return state.themeMode === 'dark'
+    }
+  },
+  
   actions: {
     // 알림 토글
     toggleNotification() {
@@ -44,10 +53,16 @@ export const useSettingsStore = defineStore('settings', {
       localStorage.setItem('isNotification', this.isNotification.toString())
     },
     
+    // 테마 모드 설정
+    setThemeMode(mode: 'light' | 'dark' | 'system') {
+      this.themeMode = mode
+      localStorage.setItem('themeMode', mode)
+    },
+    
     // 다크모드 토글
     toggleDarkMode() {
-      this.isDarkMode = !this.isDarkMode
-      localStorage.setItem('isDarkMode', this.isDarkMode.toString())
+      const nextMode = this.themeMode === 'dark' ? 'light' : 'dark'
+      this.setThemeMode(nextMode)
     },
     
     // 차트 타입 설정

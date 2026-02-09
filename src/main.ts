@@ -5,7 +5,7 @@ import router from './router'
 import { setupGlobalFetch } from './utils/api'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faEye, faStar, faSyncAlt, faSpinner, faTimes, faUsers, faVolumeHigh, faVolumeXmark } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faStar, faSyncAlt, faSpinner, faTimes, faUsers, faVolumeHigh, faVolumeXmark, faDesktop } from '@fortawesome/free-solid-svg-icons'
 import { faStar as farStar, faThumbsUp, faThumbsDown, faSun, faMoon } from '@fortawesome/free-regular-svg-icons'
 import { useAuthStore } from '@/stores/auth'
 
@@ -34,7 +34,7 @@ if (import.meta.env.PROD) {
   document.head.appendChild(script2)
 }
 
-library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes, faThumbsUp, faThumbsDown, faUsers, faSun, faMoon, faVolumeHigh, faVolumeXmark)
+library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes, faThumbsUp, faThumbsDown, faUsers, faSun, faMoon, faVolumeHigh, faVolumeXmark, faDesktop)
 
 const pinia = createPinia()
 const app = createApp(App)
