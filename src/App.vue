@@ -20,6 +20,19 @@
           <router-link to="/news" :class="{ active: $route.path === '/news' }" class="nav-link">
             뉴스
           </router-link>
+          <div class="nav-dropdown" ref="communityDropdown" @mouseenter="showCommunityDropdown = true" @mouseleave="showCommunityDropdown = false">
+            <button class="nav-link dropdown-toggle" :class="{ active: $route.path.startsWith('/community') }">
+              커뮤니티
+            </button>
+            <div v-if="showCommunityDropdown" class="dropdown-menu">
+              <router-link to="/community/notice" @click="showCommunityDropdown = false" class="dropdown-item">
+                공지사항
+              </router-link>
+              <router-link to="/community/trader" @click="showCommunityDropdown = false" class="dropdown-item">
+                트레이더
+              </router-link>
+            </div>
+          </div>
           <AdminOnly>
             <router-link to="/admin" :class="{ active: $route.path.startsWith('/admin') }" class="nav-link">
               관리자
@@ -78,7 +91,9 @@ import {apiService} from './services/api'
 
 const activeUserCount = ref(0)
 const showThemeDropdown = ref(false)
+const showCommunityDropdown = ref(false)
 const themeSelector = ref(null)
+const communityDropdown = ref(null)
 const settingsStore = useSettingsStore()
 const globalStore = useGlobalStore()
 
@@ -97,6 +112,19 @@ const toggleNotification = () => {
 
 const toggleThemeDropdown = () => {
   showThemeDropdown.value = !showThemeDropdown.value
+}
+
+const toggleCommunityDropdown = () => {
+  showCommunityDropdown.value = !showCommunityDropdown.value
+}
+
+const selectCommunity = (category) => {
+  showCommunityDropdown.value = false
+  if (category === 'notice') {
+    router.push('/community/notice')
+  } else if (category === 'trader') {
+    router.push('/community/trader')
+  }
 }
 
 const setTheme = (mode) => {
@@ -150,6 +178,9 @@ onMounted(async () => {
     if (themeSelector.value && !themeSelector.value.contains(event.target)) {
       showThemeDropdown.value = false
     }
+    if (communityDropdown.value && !communityDropdown.value.contains(event.target)) {
+      showCommunityDropdown.value = false
+    }
   }
   document.addEventListener('click', handleClickOutside)
   
@@ -162,3 +193,63 @@ onMounted(async () => {
   })
 })
 </script>
+
+<style>
+/* 기존 스타일들... */
+
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 120px;
+  z-index: 1000;
+  padding: 8px 0;
+  margin-top: 0;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 8px 16px;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* 다크모드에서 드롭다운 스타일 */
+.dark-mode .dropdown-menu {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .dropdown-item {
+  color: var(--text-primary);
+}
+
+.dark-mode .dropdown-item:hover {
+  background: var(--bg-hover);
+}
+</style>

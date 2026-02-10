@@ -16,6 +16,9 @@ import About from '../views/About.vue'
 import Privacy from '../views/Privacy.vue'
 import Contact from '../views/Contact.vue'
 import Terms from '../views/Terms.vue'
+import Community from '../views/Community.vue'
+import CreatePost from '../views/CreatePost.vue'
+import PostDetail from '../views/PostDetail.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const routes = [
@@ -39,6 +42,31 @@ const routes = [
         path: '/news',
         name: 'News',
         component: News
+    },
+    {
+        path: '/community',
+        name: 'Community',
+        component: Community
+    },
+    {
+        path: '/community/notice',
+        name: 'CommunityNotice',
+        component: Community
+    },
+    {
+        path: '/community/trader',
+        name: 'CommunityTrader',
+        component: Community
+    },
+    {
+        path: '/community/create',
+        name: 'CreatePost',
+        component: CreatePost
+    },
+    {
+        path: '/community/post/:id',
+        name: 'PostDetail',
+        component: PostDetail
     },
     {
         path: '/admin',
