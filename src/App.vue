@@ -25,10 +25,10 @@
               커뮤니티
             </button>
             <div v-if="showCommunityDropdown" class="dropdown-menu">
-              <router-link to="/community/notice" @click="showCommunityDropdown = false" class="dropdown-item">
+              <router-link to="/community/notice/1" @click="showCommunityDropdown = false" class="dropdown-item">
                 공지사항
               </router-link>
-              <router-link to="/community/trader" @click="showCommunityDropdown = false" class="dropdown-item">
+              <router-link to="/community/trader/1" @click="showCommunityDropdown = false" class="dropdown-item">
                 트레이더
               </router-link>
             </div>

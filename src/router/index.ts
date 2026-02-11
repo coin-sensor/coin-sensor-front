@@ -44,18 +44,8 @@ const routes = [
         component: News
     },
     {
-        path: '/community',
+        path: '/community/:category/:page?',
         name: 'Community',
-        component: Community
-    },
-    {
-        path: '/community/notice',
-        name: 'CommunityNotice',
-        component: Community
-    },
-    {
-        path: '/community/trader',
-        name: 'CommunityTrader',
         component: Community
     },
     {

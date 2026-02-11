@@ -32,15 +32,25 @@ export interface PostUpdateRequest {
   content: string
 }
 
+export interface PageResponse<T> {
+  content: T[]
+  pageNumber: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
+  first: boolean
+  last: boolean
+}
+
 export const postApi = {
   async createPost(request: PostCreateRequest): Promise<PostResponse> {
     const response = await api.post<ApiResponse<PostResponse>>('/posts', request)
     return response.data.result
   },
 
-  async getPosts(categoryName: string): Promise<PostListResponse[]> {
-    const response = await api.get<ApiResponse<PostListResponse[]>>('/posts', {
-      params: { categoryName }
+  async getPosts(categoryName: string, page: number = 0, size: number = 10): Promise<PageResponse<PostListResponse>> {
+    const response = await api.get<ApiResponse<PageResponse<PostListResponse>>>('/posts', {
+      params: { categoryName, page, size }
     })
     return response.data.result
   },

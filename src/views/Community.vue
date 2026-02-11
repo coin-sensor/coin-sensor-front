@@ -29,12 +29,21 @@
           </div>
         </div>
       </div>
+      
+      <!-- 페이지네이션 -->
+      <div v-if="totalPages > 1" class="pagination">
+        <button @click="goToPage(1)" :disabled="currentPage <= 1" class="page-btn">처음</button>
+        <button @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1" class="page-btn">이전</button>
+        <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+        <button @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages" class="page-btn">다음</button>
+        <button @click="goToPage(totalPages)" :disabled="currentPage >= totalPages" class="page-btn">마지막</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { postApi } from '../services/postApi'
 import { useAuthStore } from '../stores/auth'
@@ -50,10 +59,12 @@ const categories = [
   { id: 2, name: 'trader', displayName: '트레이더' }
 ]
 
-const selectedCategory = ref('notice')
+const selectedCategory = computed(() => route.params.category || 'notice')
+const currentPage = computed(() => parseInt(route.params.page) || 1)
 const posts = ref([])
 const loading = ref(false)
-const isCreateMode = ref(false)
+const totalPages = ref(0)
+const totalElements = ref(0)
 const newPost = ref({
   categoryId: 1,
   title: '',
@@ -65,26 +76,22 @@ function getCategoryDisplayName(categoryName) {
   return category ? category.displayName : categoryName
 }
 
-async function selectCategory(categoryName) {
-  selectedCategory.value = categoryName
-  const category = categories.find(c => c.name === categoryName)
-  newPost.value.categoryId = category?.id || 1
-  
-  // URL 변경
-  if (categoryName === 'notice') {
-    router.push('/community/notice')
-  } else if (categoryName === 'trader') {
-    router.push('/community/trader')
-  }
+function goToPage(page) {
+  router.push(`/community/${selectedCategory.value}/${page}`)
 }
 
 async function loadPosts() {
   loading.value = true
   try {
-    const categoryDisplayName = getCategoryDisplayName(selectedCategory.value)
-    posts.value = await postApi.getPosts(categoryDisplayName)
+    const response = await postApi.getPosts(selectedCategory.value, currentPage.value - 1)
+    posts.value = response.content || []
+    totalPages.value = response.totalPages || 1
+    totalElements.value = response.totalElements || 0
   } catch (error) {
     console.error('Failed to load posts:', error)
+    posts.value = []
+    totalPages.value = 1
+    totalElements.value = 0
   } finally {
     loading.value = false
   }
@@ -92,32 +99,6 @@ async function loadPosts() {
 
 function viewPost(postId) {
   router.push(`/community/post/${postId}`)
-}
-
-function startCreate() {
-  isCreateMode.value = true
-}
-
-function cancelCreate() {
-  isCreateMode.value = false
-  newPost.value.title = ''
-  newPost.value.content = ''
-}
-
-async function createPost() {
-  if (!newPost.value.title.trim() || !newPost.value.content.trim()) {
-    alert('제목과 내용을 입력해주세요.')
-    return
-  }
-
-  try {
-    await postApi.createPost(newPost.value)
-    cancelCreate()
-    await loadPosts()
-  } catch (error) {
-    console.error('Failed to create post:', error)
-    alert('글 작성에 실패했습니다.')
-  }
 }
 
 function formatDate(dateString) {
@@ -132,14 +113,12 @@ function formatDate(dateString) {
 }
 
 onMounted(async () => {
-  // 관리자 권한 확인
   isAdmin.value = await authStore.checkAdminStatus()
   
-  // URL에 따라 카테고리 설정
-  if (route.path === '/community/notice') {
-    selectedCategory.value = 'notice'
-  } else if (route.path === '/community/trader') {
-    selectedCategory.value = 'trader'
+  // URL에 카테고리가 없으면 기본값으로 리다이렉트
+  if (!route.params.category) {
+    router.replace('/community/notice/1')
+    return
   }
   
   const category = categories.find(c => c.name === selectedCategory.value)
@@ -149,16 +128,9 @@ onMounted(async () => {
 })
 
 // URL 변경 감지
-watch(() => route.path, (newPath) => {
-  if (newPath === '/community/notice') {
-    selectedCategory.value = 'notice'
-  } else if (newPath === '/community/trader') {
-    selectedCategory.value = 'trader'
-  }
-  
+watch(() => [route.params.category, route.params.page], () => {
   const category = categories.find(c => c.name === selectedCategory.value)
   newPost.value.categoryId = category?.id || 1
-  
   loadPosts()
 })
 </script>
@@ -372,6 +344,39 @@ watch(() => route.path, (newPath) => {
 
 .submit-btn:hover {
   background: var(--primary-hover);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.page-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  padding: 8px 16px;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .create-actions {

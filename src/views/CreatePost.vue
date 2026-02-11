@@ -62,8 +62,9 @@ async function createPost() {
   }
 
   try {
-    await postApi.createPost(newPost.value)
-    router.push('/community')
+    const createdPost = await postApi.createPost(newPost.value)
+    // 작성된 게시글로 리다이렉트
+    router.push(`/community/post/${createdPost.postId}`)
   } catch (error) {
     console.error('Failed to create post:', error)
     alert('글 작성에 실패했습니다.')

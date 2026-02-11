@@ -17,7 +17,7 @@
 
       <div class="post-content">
         <div class="post-meta">
-          <span class="category-badge">{{ post.categoryName }}</span>
+          <span class="category-badge">{{ getCategoryDisplayName(post.categoryName) }}</span>
           <span class="post-date">{{ formatDate(post.createdAt) }}</span>
           <span class="post-views">조회 {{ post.viewCount }}</span>
         </div>
@@ -84,7 +84,11 @@ const loadPost = async () => {
 }
 
 const goBack = () => {
-  router.push('/community')
+  if (post.value) {
+    router.push(`/community/${post.value.categoryName}/1`)
+  } else {
+    router.push('/community/notice/1')
+  }
 }
 
 function editPost() {
@@ -146,6 +150,10 @@ const formatDate = (dateString) => {
 
 const formatContent = (content) => {
   return content.replace(/\n/g, '<br>')
+}
+
+const getCategoryDisplayName = (categoryName) => {
+  return categoryName === 'notice' ? '공지사항' : '트레이더'
 }
 
 onMounted(async () => {
