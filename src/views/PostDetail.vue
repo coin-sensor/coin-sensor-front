@@ -129,8 +129,9 @@ const deletePost = async () => {
 
   try {
     const postId = Number(route.params.id)
+    const categoryName = post.value.categoryName
     await postApi.deletePost(postId)
-    router.push('/community')
+    router.push(`/community/${categoryName}/1`)
   } catch (error) {
     console.error('Failed to delete post:', error)
     alert('게시글 삭제에 실패했습니다.')
