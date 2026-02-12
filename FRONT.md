@@ -203,3 +203,5 @@ User Input → Event Handler → State Update → API Call → UI Update
 - **Lazy loading**
 - **WebP 포맷 지원**
 - **이미지 압축**
+
+테스트
