@@ -35,7 +35,23 @@ if (import.meta.env.PROD) {
   document.head.appendChild(script2)
 }
 
-library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes, faThumbsUp, faThumbsDown, faUsers, faSun, faMoon, faVolumeHigh, faVolumeXmark, faDesktop, faTelegram)
+library.add(
+  faEye as any,
+  faStar as any,
+  farStar as any,
+  faSyncAlt as any,
+  faSpinner as any,
+  faTimes as any,
+  faThumbsUp as any,
+  faThumbsDown as any,
+  faUsers as any,
+  faSun as any,
+  faMoon as any,
+  faVolumeHigh as any,
+  faVolumeXmark as any,
+  faDesktop as any,
+  faTelegram as any
+)
 
 const pinia = createPinia()
 const app = createApp(App)
