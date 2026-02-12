@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faEye, faStar, faSyncAlt, faSpinner, faTimes, faUsers, faVolumeHigh, faVolumeXmark, faDesktop } from '@fortawesome/free-solid-svg-icons'
 import { faStar as farStar, faThumbsUp, faThumbsDown, faSun, faMoon } from '@fortawesome/free-regular-svg-icons'
+import { faTelegram } from '@fortawesome/free-brands-svg-icons'
 import { useAuthStore } from '@/stores/auth'
 
 // 전역 스타일 import
@@ -34,7 +35,7 @@ if (import.meta.env.PROD) {
   document.head.appendChild(script2)
 }
 
-library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes, faThumbsUp, faThumbsDown, faUsers, faSun, faMoon, faVolumeHigh, faVolumeXmark, faDesktop)
+library.add(faEye, faStar, farStar, faSyncAlt, faSpinner, faTimes, faThumbsUp, faThumbsDown, faUsers, faSun, faMoon, faVolumeHigh, faVolumeXmark, faDesktop, faTelegram)
 
 const pinia = createPinia()
 const app = createApp(App)

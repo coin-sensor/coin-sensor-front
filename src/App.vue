@@ -40,14 +40,17 @@
           </AdminOnly>
         </div>
         <div class="nav-actions">
-          <div class="active-users">
+          <a href="https://t.me/coinsensor2026" target="_blank" class="telegram-link" title="텔레그램 알림방">
+            <font-awesome-icon :icon="['fab', 'telegram']" />
+          </a>
+          <div class="active-users" title="접속자 수">
             <FontAwesomeIcon :icon="faUsers" class="user-icon" />
             <span class="user-count">{{ activeUserCount }}</span>
           </div>
-          <button @click="toggleNotification" class="theme-toggle">
+          <button @click="toggleNotification" class="theme-toggle" title="알림 소리 On/OFF">
             <font-awesome-icon :icon="isNotification ? faVolumeHigh : faVolumeXmark" />
           </button>
-          <div class="theme-selector" ref="themeSelector">
+          <div class="theme-selector" ref="themeSelector" title="테마">
             <button @click="toggleThemeDropdown" class="theme-toggle">
               <font-awesome-icon :icon="isDarkMode ? 'fa-regular fa-moon' : 'fa-regular fa-sun'" />
             </button>
@@ -251,5 +254,33 @@ onMounted(async () => {
 
 .dark-mode .dropdown-item:hover {
   background: var(--bg-hover);
+}
+
+.telegram-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: #0088cc;
+  font-size: 20px;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: rgba(0, 136, 204, 0.1);
+}
+
+.telegram-link:hover {
+  background: rgba(0, 136, 204, 0.2);
+  transform: scale(1.05);
+  color: #0088cc;
+}
+
+.dark-mode .telegram-link {
+  background: rgba(0, 136, 204, 0.15);
+}
+
+.dark-mode .telegram-link:hover {
+  background: rgba(0, 136, 204, 0.25);
 }
 </style>
