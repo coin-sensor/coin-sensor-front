@@ -22,7 +22,7 @@ setupGlobalFetch()
 if (import.meta.env.PROD) {
   const script1 = document.createElement('script')
   script1.async = true
-  script1.src = 'https://www.googletagmanager.com/gtag/js?id=G-1XVERTFZ1T'
+  script1.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-TMW4FWR2'
   document.head.appendChild(script1)
 
   const script2 = document.createElement('script')
@@ -30,7 +30,6 @@ if (import.meta.env.PROD) {
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-1XVERTFZ1T');
   `
   document.head.appendChild(script2)
 }
